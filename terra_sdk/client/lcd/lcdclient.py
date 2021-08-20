@@ -17,15 +17,9 @@ from .api.auth import AsyncAuthAPI, AuthAPI
 from .api.bank import AsyncBankAPI, BankAPI
 from .api.distribution import AsyncDistributionAPI, DistributionAPI
 from .api.gov import AsyncGovAPI, GovAPI
-from .api.market import AsyncMarketAPI, MarketAPI
-from .api.mint import AsyncMintAPI, MintAPI
-from .api.msgauth import AsyncMsgAuthAPI, MsgAuthAPI
-from .api.oracle import AsyncOracleAPI, OracleAPI
-from .api.slashing import AsyncSlashingAPI, SlashingAPI
 from .api.staking import AsyncStakingAPI, StakingAPI
 from .api.supply import AsyncSupplyAPI, SupplyAPI
 from .api.tendermint import AsyncTendermintAPI, TendermintAPI
-from .api.treasury import AsyncTreasuryAPI, TreasuryAPI
 from .api.tx import AsyncTxAPI, TxAPI
 from .api.wasm import AsyncWasmAPI, WasmAPI
 from .lcdutils import AsyncLCDUtils, LCDUtils
@@ -60,15 +54,9 @@ class AsyncLCDClient:
         self.bank = AsyncBankAPI(self)
         self.distribution = AsyncDistributionAPI(self)
         self.gov = AsyncGovAPI(self)
-        self.market = AsyncMarketAPI(self)
-        self.mint = AsyncMintAPI(self)
-        self.msgauth = AsyncMsgAuthAPI(self)
-        self.oracle = AsyncOracleAPI(self)
-        self.slashing = AsyncSlashingAPI(self)
         self.staking = AsyncStakingAPI(self)
         self.supply = AsyncSupplyAPI(self)
         self.tendermint = AsyncTendermintAPI(self)
-        self.treasury = AsyncTreasuryAPI(self)
         self.wasm = AsyncWasmAPI(self)
         self.tx = AsyncTxAPI(self)
         self.utils = AsyncLCDUtils(self)
@@ -148,21 +136,6 @@ class LCDClient(AsyncLCDClient):
     gov: GovAPI
     """:class:`GovAPI<terra_sdk.client.lcd.api.gov.GovAPI>`."""
 
-    market: MarketAPI
-    """:class:`MarketAPI<terra_sdk.client.lcd.api.market.MarketAPI>`."""
-
-    mint: MintAPI
-    """:class:`MintAPI<terra_sdk.client.lcd.api.mint.MintAPI>`."""
-
-    msgauth: MsgAuthAPI
-    """:class:`MsgAuthAPI<terra_sdk.client.lcd.api.msgauth.MsgAuthAPI>`."""
-
-    oracle: OracleAPI
-    """:class:`OracleAPI<terra_sdk.client.lcd.api.oracle.OracleAPI>`."""
-
-    slashing: SlashingAPI
-    """:class:`SlashingAPI<terra_sdk.client.lcd.api.slashing.SlashingAPI>`."""
-
     staking: StakingAPI
     """:class:`StakingAPI<terra_sdk.client.lcd.api.staking.StakingAPI>`."""
 
@@ -171,9 +144,6 @@ class LCDClient(AsyncLCDClient):
 
     tendermint: TendermintAPI
     """:class:`TendermintAPI<terra_sdk.client.lcd.api.tendermint.TendermintAPI>`."""
-
-    treasury: TreasuryAPI
-    """:class:`TreasuryAPI<terra_sdk.client.lcd.api.treasury.TreasuryAPI>`."""
 
     wasm: WasmAPI
     """:class:`WasmAPI<terra_sdk.client.lcd.api.wasm.WasmAPI>`."""
@@ -201,15 +171,9 @@ class LCDClient(AsyncLCDClient):
         self.bank = BankAPI(self)
         self.distribution = DistributionAPI(self)
         self.gov = GovAPI(self)
-        self.market = MarketAPI(self)
-        self.mint = MintAPI(self)
-        self.msgauth = MsgAuthAPI(self)
-        self.oracle = OracleAPI(self)
-        self.slashing = SlashingAPI(self)
         self.staking = StakingAPI(self)
         self.supply = SupplyAPI(self)
         self.tendermint = TendermintAPI(self)
-        self.treasury = TreasuryAPI(self)
         self.wasm = WasmAPI(self)
         self.tx = TxAPI(self)
         self.utils = LCDUtils(self)

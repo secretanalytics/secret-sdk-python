@@ -17,6 +17,7 @@ __all__ = [
     "MsgExecuteContract",
     "MsgMigrateContract",
     "MsgUpdateContractOwner",
+    "MsgSend"
 ]
 
 
@@ -79,6 +80,8 @@ class MsgInstantiateContract(Msg):
         )
 
 
+
+
 @attr.s
 class MsgExecuteContract(Msg):
     """Execute a state-mutating function on a smart contract.
@@ -96,12 +99,13 @@ class MsgExecuteContract(Msg):
 
     sender: AccAddress = attr.ib()
     contract: AccAddress = attr.ib()
-    execute_msg: dict = attr.ib()
-    coins: Coins = attr.ib(converter=Coins, factory=Coins)
+    msg: str = attr.ib()
+    sent_funds: Coins = attr.ib(converter=Coins, factory=Coins)
+    callback_code_hash: str = attr.ib(default = "")
+    callback_sig: str = attr.ib(default = None)
 
     def to_data(self) -> dict:
         d = copy.deepcopy(self.__dict__)
-        d["execute_msg"] = dict_to_b64(d["execute_msg"])
         return {"type": self.type, "value": dict_to_data(d)}
 
     @classmethod
@@ -110,8 +114,8 @@ class MsgExecuteContract(Msg):
         return cls(
             sender=data["sender"],
             contract=data["contract"],
-            execute_msg=b64_to_dict(data["execute_msg"]),
-            coins=Coins.from_data(data["coins"]),
+            msg=data["msg"],
+            sent_funds=Coins.from_data(data["sent_funds"]),
         )
 
 

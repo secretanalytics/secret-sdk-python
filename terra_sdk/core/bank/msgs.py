@@ -1,12 +1,13 @@
 """Bank module message types."""
 
 from __future__ import annotations
+import copy
 
 from typing import List
 
 from terra_sdk.core import AccAddress, Coins
 from terra_sdk.core.msg import Msg
-from terra_sdk.util.json import JSONSerializable
+from terra_sdk.util.json import JSONSerializable, dict_to_data
 
 __all__ = ["MsgSend", "MsgMultiSend", "MultiSendIO"]
 
@@ -15,23 +16,25 @@ import attr
 
 @attr.s
 class MsgSend(Msg):
-    """Sends native Terra assets (Luna or Terra stablecoins) from ``from_address`` to
-    ``to_address``.
+    """Send tokens message
 
     Args:
-        from_address: sender
-        to_address: recipient
-        amount (Coins): coins to send
+        from_address: address of sender
+        to_address: address of recipient
+        coins: coins to be sent.
+
     """
 
-    type = "bank/MsgSend"
-    """"""
-    action = "send"
+    type = "cosmos-sdk/MsgSend"
     """"""
 
     from_address: AccAddress = attr.ib()
     to_address: AccAddress = attr.ib()
-    amount: Coins = attr.ib(converter=Coins)
+    amount: Coins = attr.ib(converter=Coins, factory=Coins)
+
+    def to_data(self) -> dict:
+        d = copy.deepcopy(self.__dict__)
+        return {"type": self.type, "value": dict_to_data(d)}
 
     @classmethod
     def from_data(cls, data: dict) -> MsgSend:
@@ -39,7 +42,7 @@ class MsgSend(Msg):
         return cls(
             from_address=data["from_address"],
             to_address=data["to_address"],
-            amount=Coins.from_data(data["amount"]),
+            amount=Coins.from_data(data["amount"])
         )
 
 

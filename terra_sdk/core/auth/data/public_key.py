@@ -39,4 +39,6 @@ class PublicKey(JSONSerializable):
     def from_data(cls, data: dict) -> PublicKey:
         if data is None:
             return None
+        if isinstance(data, (str,)):
+            return cls(PublicKey.SIMPLE, data)
         return cls(data["type"], data.get("value"))

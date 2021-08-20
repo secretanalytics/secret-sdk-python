@@ -5,9 +5,9 @@ from mnemonic import Mnemonic
 
 from .raw import RawKey
 
-__all__ = ["MnemonicKey", "LUNA_COIN_TYPE"]
+__all__ = ["MnemonicKey", "SCRT_COIN_TYPE"]
 
-LUNA_COIN_TYPE = 330
+SCRT_COIN_TYPE = 529
 
 
 class MnemonicKey(RawKey):
@@ -52,7 +52,7 @@ class MnemonicKey(RawKey):
         mnemonic: str = None,
         account: int = 0,
         index: int = 0,
-        coin_type: int = LUNA_COIN_TYPE,
+        coin_type: int = SCRT_COIN_TYPE,
     ):
         if mnemonic is None:
             mnemonic = Mnemonic("english").generate(256)

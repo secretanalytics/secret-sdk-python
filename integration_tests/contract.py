@@ -1,60 +1,32 @@
-import asyncio
-import base64
-from pathlib import Path
-
 from terra_sdk.client.localterra import LocalTerra
 from terra_sdk.core import Coins
 from terra_sdk.core.auth import StdFee
-from terra_sdk.core.wasm import MsgExecuteContract, MsgInstantiateContract, MsgStoreCode
-from terra_sdk.util.contract import get_code_id, get_contract_address, read_file_as_b64
-
+from terra_sdk.core.bank.msgs import MsgSend
 
 def main():
     terra = LocalTerra()
     test1 = terra.wallets["test1"]
-    store_code_tx = test1.create_and_sign_tx(
-        msgs=[
-            MsgStoreCode(
-                test1.key.acc_address,
-                read_file_as_b64(Path(__file__).parent / "./contract.wasm"),
-            )
-        ]
-    )
-    store_code_tx_result = terra.tx.broadcast(store_code_tx)
-    print(store_code_tx_result)
-    code_id = get_code_id(store_code_tx_result)
-    instantiate_tx = test1.create_and_sign_tx(
-        msgs=[
-            MsgInstantiateContract(
-                test1.key.acc_address,
-                code_id,
-                {"count": 0},
-                {"uluna": 10000000, "ukrw": 1000000},
-                False,
-            )
-        ]
-    )
-    instantiate_tx_result = terra.tx.broadcast(instantiate_tx)
-    print(instantiate_tx_result)
-    contract_address = get_contract_address(instantiate_tx_result)
 
-    execute_tx = test1.create_and_sign_tx(
-        msgs=[
-            MsgExecuteContract(
-                test1.key.acc_address,
-                contract_address,
-                {"increment": {}},
-                {"uluna": 100000},
-            )
-        ],
-        fee=StdFee(1000000, Coins(uluna=1000000)),
-    )
+    gas = 300_000
+    gas_price = 0.25
+    fee = StdFee(gas, Coins.from_data([{"amount": int(gas * gas_price), "denom": "uscrt"}]))
 
-    execute_tx_result = terra.tx.broadcast(execute_tx)
-    print(execute_tx_result)
+    # test net addresses
+    send_msg = MsgSend("secret1ljtckgv3gsgrnhf7f3ygquyse5urwkamx7ln27", "secret16a7hp3wr4esccstuat4syavv6ylpzpd4kn0jp9",
+                       Coins.from_str("5000000uscrt"))
+    tx = test1.create_and_sign_tx([send_msg], fee=fee)
+    send_scrt_tx = terra.tx.broadcast(tx)
+    print('send scrt:\n', send_scrt_tx)
+    # pool query
+    pool_query = terra.wasm.contract_query('secret16krcdrqh6y6pazvkj58nrvkerk0q0ttg22kepl', {"pool": {}})
+    print('pool query scrt/sscrt:\n', pool_query)
 
-    result = terra.wasm.contract_query(contract_address, {"get_count": {}})
-    print(result)
+    # convert scrt / sscrt
+    addr = test1.key.acc_address
+    execute_msg = terra.wasm.contract_execute_msg(addr, 'secret1s7c6xp9wltthk5r6mmavql4xld5me3g37guhsx', {'deposit': {}},
+                                              Coins.from_str('1000000uscrt'))
 
-
+    convert_scrt_sscrt = test1.create_and_sign_tx([execute_msg], fee=fee)
+    convert_scrt_sscrt_tx = terra.tx.broadcast(convert_scrt_sscrt)
+    print('convert scrt/sscrt:\n',convert_scrt_sscrt_tx)
 main()
