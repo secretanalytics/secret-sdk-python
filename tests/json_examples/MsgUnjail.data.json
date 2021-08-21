@@ -42,7 +42,7 @@
           }],
           "fee": {
             "amount": [{
-              "denom": "uluna",
+              "denom": "uscrt",
               "amount": "5000"
             }],
             "gas": "200000"

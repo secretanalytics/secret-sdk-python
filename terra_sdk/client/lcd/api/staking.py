@@ -44,7 +44,7 @@ class AsyncStakingAPI(BaseAsyncAPI):
                 f"/staking/delegators/{delegator}/delegations/{validator}"
             )
             return [Delegation.from_data(res)]
-        elif delegator is not None:
+        elif delegator is not None  :
             res = await self._c._get(f"/staking/delegators/{delegator}/delegations")
             return [Delegation.from_data(d) for d in res]
         elif validator is not None:
@@ -192,8 +192,8 @@ class AsyncStakingAPI(BaseAsyncAPI):
         """
         res = await self._c._get("/staking/pool")
         return StakingPool(
-            bonded_tokens=Coin("uluna", res["bonded_tokens"]),
-            not_bonded_tokens=Coin("uluna", res["not_bonded_tokens"]),
+            bonded_tokens=Coin("uscrt", res["bonded_tokens"]),
+            not_bonded_tokens=Coin("uscrt", res["not_bonded_tokens"]),
         )
 
     async def parameters(self) -> dict:

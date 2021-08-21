@@ -49,10 +49,10 @@ Once you have your Wallet, you can simply create a StdTx using :meth:`Wallet.cre
         msgs=[MsgSend(
             wallet.key.acc_address,
             RECIPIENT,
-            "1000000uluna" # send 1 luna
+            "1000000uscrt" # send 1 luna
         )],
         memo="test transaction!",
-        fee=StdFee(200000, "120000uluna")
+        fee=StdFee(200000, "120000uscrt")
     )
 
 And that's it! You should now be able to broadcast your transaction to the network.
@@ -76,8 +76,8 @@ this behavior **per transaction**:
 
 .. note::
     By default, the estimated fee returned consists of a fee paid in every denom for which the
-    signing account hold a balance. For instance, if the signer has a balance of ``uusd`` and ``uluna``,
-    the fee reported will be both ``uusd`` and ``uluna``. 
+    signing account hold a balance. For instance, if the signer has a balance of ``uusd`` and ``uscrt``,
+    the fee reported will be both ``uusd`` and ``uscrt``.
     
     Use the ``denoms`` argument to restrict the estimated fee to specific denoms.
 
@@ -89,10 +89,10 @@ this behavior **per transaction**:
         msgs=[MsgSend(
             wallet.key.acc_address,
             RECIPIENT,
-            "1000000uluna" # send 1 luna
+            "1000000uscrt" # send 1 luna
         )],
         memo="test transaction!",
-        gas_prices="0.015uluna,0.11ukrw", # optional
+        gas_prices="0.015uscrt,0.11ukrw", # optional
         gas_adjustment="1.2", # optional
         denoms=["ukrw"] # optional
     )
@@ -128,11 +128,11 @@ A StdSignMsg contains the information required to build a StdTx:
         chain_id="columbus-4",
         account_number=23982,
         sequence=12,
-        fee=StdFee(200000, "120000uluna"),
+        fee=StdFee(200000, "120000uscrt"),
         msgs=[MsgSend(
             mk.acc_address,
             RECIPIENT,
-            "1000000uluna" # send 1 luna
+            "1000000uscrt" # send 1 luna
         )],
         memo="test transaction!"
     )
@@ -177,17 +177,17 @@ Each ``StdSignMsg`` should only differ by ``account`` and ``sequence``, which va
 
     multisend = MsgMultiSend(
         inputs=[
-            {"address": wallet1.key.acc_address, "coins": "12000uusd,11000uluna"},
-            {"address": wallet2.key.acc_address, "coins": "11000ukrw,10000uluna"}
+            {"address": wallet1.key.acc_address, "coins": "12000uusd,11000uscrt"},
+            {"address": wallet2.key.acc_address, "coins": "11000ukrw,10000uscrt"}
         ],
         outputs=[
-            {"address": wallet1.key.acc_address, "coins": "11000ukrw,10000uluna"},
-            {"address": wallet2.key.acc_address, "coins": "12000uusd,11000uluna"}
+            {"address": wallet1.key.acc_address, "coins": "11000ukrw,10000uscrt"},
+            {"address": wallet2.key.acc_address, "coins": "12000uusd,11000uscrt"}
         ]    
     )
 
     msgs = [multisend]
-    fee = StdFee(200000, "12000uluna")
+    fee = StdFee(200000, "12000uscrt")
     memo = "multisend example"
 
     # create unsigned_tx #1

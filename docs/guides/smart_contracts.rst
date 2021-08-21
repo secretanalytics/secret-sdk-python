@@ -18,7 +18,7 @@ Contract Deployment Example
     contract_file = open("./contract.wasm", "rb")
     file_bytes = base64.b64encode(contract_file.read()).decode()
     store_code = MsgStoreCode(test1.key.acc_address, file_bytes)
-    store_code_tx = test1.create_and_sign_tx(msgs=[store_code], fee=StdFee(2100000, "60000uluna"))
+    store_code_tx = test1.create_and_sign_tx(msgs=[store_code], fee=StdFee(2100000, "60000uscrt"))
     store_code_tx_result = terra.tx.broadcast(store_code_tx)
     print(store_code_tx_result)
 
@@ -27,7 +27,7 @@ Contract Deployment Example
         test1.key.acc_address,
         code_id,
         {"count": 0},
-        {"uluna": 10000000, "ukrw": 1000000},
+        {"uscrt": 10000000, "ukrw": 1000000},
         False,
     )
     instantiate_tx = test1.create_and_sign_tx(msgs=[instantiate])
@@ -42,11 +42,11 @@ Contract Deployment Example
         test1.key.acc_address,
         contract_address,
         {"increment": {}},
-        {"uluna": 100000},
+        {"uscrt": 100000},
     )
 
     execute_tx = test1.create_and_sign_tx(
-        msgs=[execute], fee=StdFee(1000000, Coins(uluna=1000000))
+        msgs=[execute], fee=StdFee(1000000, Coins(uscrt=1000000))
     )
 
     execute_tx_result = terra.tx.broadcast(execute_tx)

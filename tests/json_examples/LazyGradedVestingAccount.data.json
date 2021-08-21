@@ -7,7 +7,7 @@
         "amount": "3952727625434"
       },
       {
-        "denom": "uluna",
+        "denom": "uscrt",
         "amount": "48919046"
       },
       {
@@ -27,17 +27,17 @@
     "account_number": "684082",
     "sequence": "0",
     "original_vesting": [{
-      "denom": "uluna",
+      "denom": "uscrt",
       "amount": "5000000000000"
     }],
     "delegated_free": [],
     "delegated_vesting": [{
-      "denom": "uluna",
+      "denom": "uscrt",
       "amount": "1338029091449"
     }],
     "end_time": "0",
     "vesting_schedules": [{
-      "denom": "uluna",
+      "denom": "uscrt",
       "schedules": [{
           "start_time": "1558677600",
           "end_time": "1561356000",

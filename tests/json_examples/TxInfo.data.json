@@ -1668,14 +1668,14 @@
                             "from_address": "terra1rn9matun8arfgwwmw9z5hs9gtq4jclen7ad8ft",
                             "to_address": "terra17j3ygjr43slvwu8sq6zn9x69psmfzh7aykzpe9",
                             "amount": [{
-                                "denom": "uluna",
+                                "denom": "uscrt",
                                 "amount": "6000000000"
                             }]
                         }
                     }],
                     "fee": {
                         "amount": [{
-                            "denom": "uluna",
+                            "denom": "uscrt",
                             "amount": "622"
                         }],
                         "gas": "41466"

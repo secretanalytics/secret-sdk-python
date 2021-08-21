@@ -30,25 +30,25 @@ def check_prefix_and_length(prefix: str, data: str, length: int):
 
 
 AccAddress = NewType("AccAddress", str)
-AccAddress.__doc__ = """Terra Bech32 Account Address -- type alias of str."""
+AccAddress.__doc__ = """Secret Bech32 Account Address -- type alias of str."""
 
 ValAddress = NewType("ValAddress", str)
-ValAddress.__doc__ = """Terra Bech32 Validator Operator Address -- type alias of str."""
+ValAddress.__doc__ = """Secret Bech32 Validator Operator Address -- type alias of str."""
 
 AccPubKey = NewType("AccPubKey", str)
-AccPubKey.__doc__ = """Terra Bech32 Account Address -- type alias of str."""
+AccPubKey.__doc__ = """Secret Bech32 Account Address -- type alias of str."""
 
 ValPubKey = NewType("ValPubKey", str)
-ValPubKey.__doc__ = """Terra Bech32 Validator PubKey -- type alias of str."""
+ValPubKey.__doc__ = """Secret Bech32 Validator PubKey -- type alias of str."""
 
 ValConsPubKey = NewType("ValConsPubKey", str)
 ValConsPubKey.__doc__ = (
-    """Terra Bech32 Validator Conensus PubKey -- type alias of str."""
+    """Secret Bech32 Validator Conensus PubKey -- type alias of str."""
 )
 
 
 def is_acc_address(data: str) -> bool:
-    """Checks whether the given string is a properly formatted Terra account address.
+    """Checks whether the given string is a properly formatted Secret account address.
 
     Args:
         data (str): string to check
@@ -56,7 +56,7 @@ def is_acc_address(data: str) -> bool:
     Returns:
         bool: whether the string is a proper account address
     """
-    return check_prefix_and_length("secret", data, 44)
+    return check_prefix_and_length("secret", data, 45)
 
 
 def to_acc_address(data: ValAddress) -> AccAddress:
@@ -78,7 +78,7 @@ def to_acc_address(data: ValAddress) -> AccAddress:
 
 
 def is_val_address(data: str) -> bool:
-    """Checks whether the given string is a properly formatted Terra validator operator
+    """Checks whether the given string is a properly formatted Secret validator operator
     address.
 
     Args:
@@ -87,7 +87,7 @@ def is_val_address(data: str) -> bool:
     Returns:
         bool: whether the string is a proper validator address
     """
-    return check_prefix_and_length("secretvaloper", data, 51)
+    return check_prefix_and_length("secretvaloper", data, 52)
 
 
 def to_val_address(data: AccAddress) -> ValAddress:
@@ -109,7 +109,7 @@ def to_val_address(data: AccAddress) -> ValAddress:
 
 
 def is_acc_pubkey(data: str) -> bool:
-    """Checks whether the provided string is a properly formatted Terra account pubkey.
+    """Checks whether the provided string is a properly formatted Secret account pubkey.
 
     Args:
         data (str): string to check
@@ -117,7 +117,7 @@ def is_acc_pubkey(data: str) -> bool:
     Returns:
         bool: whether string is account pubkey
     """
-    return check_prefix_and_length("secretpub", data, 76)
+    return check_prefix_and_length("secretpub", data, 77)
 
 
 def to_acc_pubkey(data: ValPubKey) -> AccPubKey:
@@ -139,7 +139,7 @@ def to_acc_pubkey(data: ValPubKey) -> AccPubKey:
 
 
 def is_val_pubkey(data: str) -> bool:
-    """Checks whether provided string is a properly formatted Terra validator pubkey.
+    """Checks whether provided string is a properly formatted Secret validator pubkey.
 
     Args:
         data (str): string to check
@@ -147,7 +147,7 @@ def is_val_pubkey(data: str) -> bool:
     Returns:
         bool: whether string is validator pubkey
     """
-    return check_prefix_and_length("secretvaloperpub", data, 83)
+    return check_prefix_and_length("secretvaloperpub", data, 84)
 
 
 def to_val_pubkey(data: AccPubKey) -> ValPubKey:
@@ -169,7 +169,7 @@ def to_val_pubkey(data: AccPubKey) -> ValPubKey:
 
 
 def is_valcons_pubkey(data: str) -> ValConsPubKey:
-    """Checks whether provided string is a properly formatted Terra validator consensus
+    """Checks whether provided string is a properly formatted Secret validator consensus
     pubkey.
 
     Args:
@@ -178,4 +178,4 @@ def is_valcons_pubkey(data: str) -> ValConsPubKey:
     Returns:
         ValConsPubKey: validator consensus pubkey
     """
-    return check_prefix_and_length("secretvalconspub", data, 83)
+    return check_prefix_and_length("secretvalconspub", data, 84)

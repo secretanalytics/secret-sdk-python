@@ -376,11 +376,11 @@
                           },
                           {
                               "key": "swap_coin",
-                              "value": "3056uluna"
+                              "value": "3056uscrt"
                           },
                           {
                               "key": "swap_fee",
-                              "value": "62.989447419036158528uluna"
+                              "value": "62.989447419036158528uscrt"
                           }
                       ]
                   },
@@ -400,7 +400,7 @@
                           },
                           {
                               "key": "amount",
-                              "value": "3056uluna"
+                              "value": "3056uscrt"
                           }
                       ]
                   }
@@ -419,7 +419,7 @@
                               "denom": "ukrw",
                               "amount": "1000000"
                           },
-                          "ask_denom": "uluna"
+                          "ask_denom": "uscrt"
                       }
                   }],
                   "fee": {
@@ -472,11 +472,11 @@
                       },
                       {
                           "key": "swap_coin",
-                          "value": "3056uluna"
+                          "value": "3056uscrt"
                       },
                       {
                           "key": "swap_fee",
-                          "value": "62.989447419036158528uluna"
+                          "value": "62.989447419036158528uscrt"
                       }
                   ]
               },
@@ -496,7 +496,7 @@
                       },
                       {
                           "key": "amount",
-                          "value": "3056uluna"
+                          "value": "3056uscrt"
                       }
                   ]
               }
@@ -542,11 +542,11 @@
                           },
                           {
                               "key": "swap_coin",
-                              "value": "1432131uluna"
+                              "value": "1432131uscrt"
                           },
                           {
                               "key": "swap_fee",
-                              "value": "29227.313817330210772834uluna"
+                              "value": "29227.313817330210772834uscrt"
                           }
                       ]
                   },
@@ -566,7 +566,7 @@
                           },
                           {
                               "key": "amount",
-                              "value": "1432131uluna"
+                              "value": "1432131uscrt"
                           }
                       ]
                   }
@@ -585,7 +585,7 @@
                               "denom": "ukrw",
                               "amount": "468000000"
                           },
-                          "ask_denom": "uluna"
+                          "ask_denom": "uscrt"
                       }
                   }],
                   "fee": {
@@ -638,11 +638,11 @@
                       },
                       {
                           "key": "swap_coin",
-                          "value": "1432131uluna"
+                          "value": "1432131uscrt"
                       },
                       {
                           "key": "swap_fee",
-                          "value": "29227.313817330210772834uluna"
+                          "value": "29227.313817330210772834uscrt"
                       }
                   ]
               },
@@ -662,7 +662,7 @@
                       },
                       {
                           "key": "amount",
-                          "value": "1432131uluna"
+                          "value": "1432131uscrt"
                       }
                   ]
               }
@@ -708,11 +708,11 @@
                           },
                           {
                               "key": "swap_coin",
-                              "value": "6710226uluna"
+                              "value": "6710226uscrt"
                           },
                           {
                               "key": "swap_fee",
-                              "value": "136944.004784803505397649uluna"
+                              "value": "136944.004784803505397649uscrt"
                           }
                       ]
                   },
@@ -732,7 +732,7 @@
                           },
                           {
                               "key": "amount",
-                              "value": "6710226uluna"
+                              "value": "6710226uscrt"
                           }
                       ]
                   }
@@ -751,7 +751,7 @@
                               "denom": "usdr",
                               "amount": "1350147"
                           },
-                          "ask_denom": "uluna"
+                          "ask_denom": "uscrt"
                       }
                   }],
                   "fee": {
@@ -804,11 +804,11 @@
                       },
                       {
                           "key": "swap_coin",
-                          "value": "6710226uluna"
+                          "value": "6710226uscrt"
                       },
                       {
                           "key": "swap_fee",
-                          "value": "136944.004784803505397649uluna"
+                          "value": "136944.004784803505397649uscrt"
                       }
                   ]
               },
@@ -828,7 +828,7 @@
                       },
                       {
                           "key": "amount",
-                          "value": "6710226uluna"
+                          "value": "6710226uscrt"
                       }
                   ]
               }
@@ -874,11 +874,11 @@
                           },
                           {
                               "key": "swap_coin",
-                              "value": "3787823uluna"
+                              "value": "3787823uscrt"
                           },
                           {
                               "key": "swap_fee",
-                              "value": "77303.037383177570093458uluna"
+                              "value": "77303.037383177570093458uscrt"
                           }
                       ]
                   },
@@ -898,7 +898,7 @@
                           },
                           {
                               "key": "amount",
-                              "value": "3787823uluna"
+                              "value": "3787823uscrt"
                           }
                       ]
                   }
@@ -917,12 +917,12 @@
                               "denom": "ukrw",
                               "amount": "1240705458"
                           },
-                          "ask_denom": "uluna"
+                          "ask_denom": "uscrt"
                       }
                   }],
                   "fee": {
                       "amount": [{
-                          "denom": "uluna",
+                          "denom": "uscrt",
                           "amount": "2257"
                       }],
                       "gas": "150466"
@@ -970,11 +970,11 @@
                       },
                       {
                           "key": "swap_coin",
-                          "value": "3787823uluna"
+                          "value": "3787823uscrt"
                       },
                       {
                           "key": "swap_fee",
-                          "value": "77303.037383177570093458uluna"
+                          "value": "77303.037383177570093458uscrt"
                       }
                   ]
               },
@@ -994,7 +994,7 @@
                       },
                       {
                           "key": "amount",
-                          "value": "3787823uluna"
+                          "value": "3787823uscrt"
                       }
                   ]
               }
@@ -1040,11 +1040,11 @@
                           },
                           {
                               "key": "swap_coin",
-                              "value": "609608uluna"
+                              "value": "609608uscrt"
                           },
                           {
                               "key": "swap_fee",
-                              "value": "12441.844236760124610589uluna"
+                              "value": "12441.844236760124610589uscrt"
                           }
                       ]
                   },
@@ -1064,7 +1064,7 @@
                           },
                           {
                               "key": "amount",
-                              "value": "609608uluna"
+                              "value": "609608uscrt"
                           }
                       ]
                   }
@@ -1083,7 +1083,7 @@
                               "denom": "ukrw",
                               "amount": "199678000"
                           },
-                          "ask_denom": "uluna"
+                          "ask_denom": "uscrt"
                       }
                   }],
                   "fee": {
@@ -1136,11 +1136,11 @@
                       },
                       {
                           "key": "swap_coin",
-                          "value": "609608uluna"
+                          "value": "609608uscrt"
                       },
                       {
                           "key": "swap_fee",
-                          "value": "12441.844236760124610589uluna"
+                          "value": "12441.844236760124610589uscrt"
                       }
                   ]
               },
@@ -1160,7 +1160,7 @@
                       },
                       {
                           "key": "amount",
-                          "value": "609608uluna"
+                          "value": "609608uscrt"
                       }
                   ]
               }
@@ -1206,11 +1206,11 @@
                           },
                           {
                               "key": "swap_coin",
-                              "value": "609608uluna"
+                              "value": "609608uscrt"
                           },
                           {
                               "key": "swap_fee",
-                              "value": "12441.844236760124610589uluna"
+                              "value": "12441.844236760124610589uscrt"
                           }
                       ]
                   },
@@ -1230,7 +1230,7 @@
                           },
                           {
                               "key": "amount",
-                              "value": "609608uluna"
+                              "value": "609608uscrt"
                           }
                       ]
                   }
@@ -1249,7 +1249,7 @@
                               "denom": "ukrw",
                               "amount": "199678000"
                           },
-                          "ask_denom": "uluna"
+                          "ask_denom": "uscrt"
                       }
                   }],
                   "fee": {
@@ -1302,11 +1302,11 @@
                       },
                       {
                           "key": "swap_coin",
-                          "value": "609608uluna"
+                          "value": "609608uscrt"
                       },
                       {
                           "key": "swap_fee",
-                          "value": "12441.844236760124610589uluna"
+                          "value": "12441.844236760124610589uscrt"
                       }
                   ]
               },
@@ -1326,7 +1326,7 @@
                       },
                       {
                           "key": "amount",
-                          "value": "609608uluna"
+                          "value": "609608uscrt"
                       }
                   ]
               }
@@ -1372,11 +1372,11 @@
                           },
                           {
                               "key": "swap_coin",
-                              "value": "43390323uluna"
+                              "value": "43390323uscrt"
                           },
                           {
                               "key": "swap_fee",
-                              "value": "885517.565400409004283521uluna"
+                              "value": "885517.565400409004283521uscrt"
                           }
                       ]
                   },
@@ -1396,7 +1396,7 @@
                           },
                           {
                               "key": "amount",
-                              "value": "43390323uluna"
+                              "value": "43390323uscrt"
                           }
                       ]
                   }
@@ -1415,7 +1415,7 @@
                               "denom": "ukrw",
                               "amount": "14200000000"
                           },
-                          "ask_denom": "uluna"
+                          "ask_denom": "uscrt"
                       }
                   }],
                   "fee": {
@@ -1465,11 +1465,11 @@
                       },
                       {
                           "key": "swap_coin",
-                          "value": "43390323uluna"
+                          "value": "43390323uscrt"
                       },
                       {
                           "key": "swap_fee",
-                          "value": "885517.565400409004283521uluna"
+                          "value": "885517.565400409004283521uscrt"
                       }
                   ]
               },
@@ -1489,7 +1489,7 @@
                       },
                       {
                           "key": "amount",
-                          "value": "43390323uluna"
+                          "value": "43390323uscrt"
                       }
                   ]
               }
@@ -1859,7 +1859,7 @@
                       "type": "swap",
                       "attributes": [{
                               "key": "offer",
-                              "value": "10000000uluna"
+                              "value": "10000000uscrt"
                           },
                           {
                               "key": "trader",
@@ -1883,7 +1883,7 @@
                           },
                           {
                               "key": "amount",
-                              "value": "10000000uluna"
+                              "value": "10000000uscrt"
                           },
                           {
                               "key": "recipient",
@@ -1907,7 +1907,7 @@
                       "value": {
                           "trader": "terra1vqnhgc6d0jyggtytzqrnsc40r4zez6tx92a66a",
                           "offer_coin": {
-                              "denom": "uluna",
+                              "denom": "uscrt",
                               "amount": "10000000"
                           },
                           "ask_denom": "ukrw"
@@ -1915,7 +1915,7 @@
                   }],
                   "fee": {
                       "amount": [{
-                          "denom": "uluna",
+                          "denom": "uscrt",
                           "amount": "2304"
                       }],
                       "gas": "153600"
@@ -1955,7 +1955,7 @@
                   "type": "swap",
                   "attributes": [{
                           "key": "offer",
-                          "value": "10000000uluna"
+                          "value": "10000000uscrt"
                       },
                       {
                           "key": "trader",
@@ -1979,7 +1979,7 @@
                       },
                       {
                           "key": "amount",
-                          "value": "10000000uluna"
+                          "value": "10000000uscrt"
                       },
                       {
                           "key": "recipient",
@@ -2199,11 +2199,11 @@
                           },
                           {
                               "key": "swap_coin",
-                              "value": "3082084uluna"
+                              "value": "3082084uscrt"
                           },
                           {
                               "key": "swap_fee",
-                              "value": "62899.750917287189724090uluna"
+                              "value": "62899.750917287189724090uscrt"
                           }
                       ]
                   },
@@ -2223,7 +2223,7 @@
                           },
                           {
                               "key": "amount",
-                              "value": "3082084uluna"
+                              "value": "3082084uscrt"
                           }
                       ]
                   }
@@ -2242,7 +2242,7 @@
                               "denom": "ukrw",
                               "amount": "1000000000"
                           },
-                          "ask_denom": "uluna"
+                          "ask_denom": "uscrt"
                       }
                   }],
                   "fee": {
@@ -2295,11 +2295,11 @@
                       },
                       {
                           "key": "swap_coin",
-                          "value": "3082084uluna"
+                          "value": "3082084uscrt"
                       },
                       {
                           "key": "swap_fee",
-                          "value": "62899.750917287189724090uluna"
+                          "value": "62899.750917287189724090uscrt"
                       }
                   ]
               },
@@ -2319,7 +2319,7 @@
                       },
                       {
                           "key": "amount",
-                          "value": "3082084uluna"
+                          "value": "3082084uscrt"
                       }
                   ]
               }
@@ -2365,11 +2365,11 @@
                           },
                           {
                               "key": "swap_coin",
-                              "value": "9374359uluna"
+                              "value": "9374359uscrt"
                           },
                           {
                               "key": "swap_fee",
-                              "value": "191313.971132183981239305uluna"
+                              "value": "191313.971132183981239305uscrt"
                           }
                       ]
                   },
@@ -2389,7 +2389,7 @@
                           },
                           {
                               "key": "amount",
-                              "value": "9374359uluna"
+                              "value": "9374359uscrt"
                           }
                       ]
                   }
@@ -2408,7 +2408,7 @@
                               "denom": "ukrw",
                               "amount": "3043000000"
                           },
-                          "ask_denom": "uluna"
+                          "ask_denom": "uscrt"
                       }
                   }],
                   "fee": {
@@ -2461,11 +2461,11 @@
                       },
                       {
                           "key": "swap_coin",
-                          "value": "9374359uluna"
+                          "value": "9374359uscrt"
                       },
                       {
                           "key": "swap_fee",
-                          "value": "191313.971132183981239305uluna"
+                          "value": "191313.971132183981239305uscrt"
                       }
                   ]
               },
@@ -2485,7 +2485,7 @@
                       },
                       {
                           "key": "amount",
-                          "value": "9374359uluna"
+                          "value": "9374359uscrt"
                       }
                   ]
               }
@@ -2532,11 +2532,11 @@
                           },
                           {
                               "key": "swap_coin",
-                              "value": "11293736uluna"
+                              "value": "11293736uscrt"
                           },
                           {
                               "key": "swap_fee",
-                              "value": "230484.656146179538017925uluna"
+                              "value": "230484.656146179538017925uscrt"
                           }
                       ]
                   },
@@ -2556,7 +2556,7 @@
                           },
                           {
                               "key": "amount",
-                              "value": "11293736uluna"
+                              "value": "11293736uscrt"
                           }
                       ]
                   }
@@ -2575,7 +2575,7 @@
                               "denom": "ukrw",
                               "amount": "3700043112"
                           },
-                          "ask_denom": "uluna"
+                          "ask_denom": "uscrt"
                       }
                   }],
                   "fee": {
@@ -2628,11 +2628,11 @@
                       },
                       {
                           "key": "swap_coin",
-                          "value": "11293736uluna"
+                          "value": "11293736uscrt"
                       },
                       {
                           "key": "swap_fee",
-                          "value": "230484.656146179538017925uluna"
+                          "value": "230484.656146179538017925uscrt"
                       }
                   ]
               },
@@ -2652,7 +2652,7 @@
                       },
                       {
                           "key": "amount",
-                          "value": "11293736uluna"
+                          "value": "11293736uscrt"
                       }
                   ]
               }
@@ -2698,11 +2698,11 @@
                           },
                           {
                               "key": "swap_coin",
-                              "value": "924998uluna"
+                              "value": "924998uscrt"
                           },
                           {
                               "key": "swap_fee",
-                              "value": "18878.226571829129249484uluna"
+                              "value": "18878.226571829129249484uscrt"
                           }
                       ]
                   },
@@ -2722,7 +2722,7 @@
                           },
                           {
                               "key": "amount",
-                              "value": "924998uluna"
+                              "value": "924998uscrt"
                           }
                       ]
                   }
@@ -2741,7 +2741,7 @@
                               "denom": "ukrw",
                               "amount": "303000000"
                           },
-                          "ask_denom": "uluna"
+                          "ask_denom": "uscrt"
                       }
                   }],
                   "fee": {
@@ -2794,11 +2794,11 @@
                       },
                       {
                           "key": "swap_coin",
-                          "value": "924998uluna"
+                          "value": "924998uscrt"
                       },
                       {
                           "key": "swap_fee",
-                          "value": "18878.226571829129249484uluna"
+                          "value": "18878.226571829129249484uscrt"
                       }
                   ]
               },
@@ -2818,7 +2818,7 @@
                       },
                       {
                           "key": "amount",
-                          "value": "924998uluna"
+                          "value": "924998uscrt"
                       }
                   ]
               }
@@ -2864,11 +2864,11 @@
                           },
                           {
                               "key": "swap_coin",
-                              "value": "319020uluna"
+                              "value": "319020uscrt"
                           },
                           {
                               "key": "swap_fee",
-                              "value": "6511.498055483517237373uluna"
+                              "value": "6511.498055483517237373uscrt"
                           }
                       ]
                   },
@@ -2888,7 +2888,7 @@
                           },
                           {
                               "key": "amount",
-                              "value": "319020uluna"
+                              "value": "319020uscrt"
                           }
                       ]
                   }
@@ -2907,12 +2907,12 @@
                               "denom": "ukrw",
                               "amount": "104631249"
                           },
-                          "ask_denom": "uluna"
+                          "ask_denom": "uscrt"
                       }
                   }],
                   "fee": {
                       "amount": [{
-                          "denom": "uluna",
+                          "denom": "uscrt",
                           "amount": "2243"
                       }],
                       "gas": "149533"
@@ -2960,11 +2960,11 @@
                       },
                       {
                           "key": "swap_coin",
-                          "value": "319020uluna"
+                          "value": "319020uscrt"
                       },
                       {
                           "key": "swap_fee",
-                          "value": "6511.498055483517237373uluna"
+                          "value": "6511.498055483517237373uscrt"
                       }
                   ]
               },
@@ -2984,7 +2984,7 @@
                       },
                       {
                           "key": "amount",
-                          "value": "319020uluna"
+                          "value": "319020uscrt"
                       }
                   ]
               }
@@ -3030,11 +3030,11 @@
                           },
                           {
                               "key": "swap_coin",
-                              "value": "5679662316uluna"
+                              "value": "5679662316uscrt"
                           },
                           {
                               "key": "swap_fee",
-                              "value": "115911476.237465710376852488uluna"
+                              "value": "115911476.237465710376852488uscrt"
                           }
                       ]
                   },
@@ -3054,7 +3054,7 @@
                           },
                           {
                               "key": "amount",
-                              "value": "5679662316uluna"
+                              "value": "5679662316uscrt"
                           }
                       ]
                   }
@@ -3073,7 +3073,7 @@
                               "denom": "uusd",
                               "amount": "1586733047"
                           },
-                          "ask_denom": "uluna"
+                          "ask_denom": "uscrt"
                       }
                   }],
                   "fee": {
@@ -3126,11 +3126,11 @@
                       },
                       {
                           "key": "swap_coin",
-                          "value": "5679662316uluna"
+                          "value": "5679662316uscrt"
                       },
                       {
                           "key": "swap_fee",
-                          "value": "115911476.237465710376852488uluna"
+                          "value": "115911476.237465710376852488uscrt"
                       }
                   ]
               },
@@ -3150,7 +3150,7 @@
                       },
                       {
                           "key": "amount",
-                          "value": "5679662316uluna"
+                          "value": "5679662316uscrt"
                       }
                   ]
               }
@@ -3196,11 +3196,11 @@
                           },
                           {
                               "key": "swap_coin",
-                              "value": "7832891uluna"
+                              "value": "7832891uscrt"
                           },
                           {
                               "key": "swap_fee",
-                              "value": "159855.113989636834897746uluna"
+                              "value": "159855.113989636834897746uscrt"
                           }
                       ]
                   },
@@ -3220,7 +3220,7 @@
                           },
                           {
                               "key": "amount",
-                              "value": "7832891uluna"
+                              "value": "7832891uscrt"
                           }
                       ]
                   }
@@ -3239,7 +3239,7 @@
                               "denom": "ukrw",
                               "amount": "2571000000"
                           },
-                          "ask_denom": "uluna"
+                          "ask_denom": "uscrt"
                       }
                   }],
                   "fee": {
@@ -3292,11 +3292,11 @@
                       },
                       {
                           "key": "swap_coin",
-                          "value": "7832891uluna"
+                          "value": "7832891uscrt"
                       },
                       {
                           "key": "swap_fee",
-                          "value": "159855.113989636834897746uluna"
+                          "value": "159855.113989636834897746uscrt"
                       }
                   ]
               },
@@ -3316,7 +3316,7 @@
                       },
                       {
                           "key": "amount",
-                          "value": "7832891uluna"
+                          "value": "7832891uscrt"
                       }
                   ]
               }
@@ -3363,11 +3363,11 @@
                           },
                           {
                               "key": "swap_coin",
-                              "value": "3278258uluna"
+                              "value": "3278258uscrt"
                           },
                           {
                               "key": "swap_fee",
-                              "value": "66904.199544135772767719uluna"
+                              "value": "66904.199544135772767719uscrt"
                           }
                       ]
                   },
@@ -3387,7 +3387,7 @@
                           },
                           {
                               "key": "amount",
-                              "value": "3278258uluna"
+                              "value": "3278258uscrt"
                           }
                       ]
                   }
@@ -3406,7 +3406,7 @@
                               "denom": "ukrw",
                               "amount": "1076250185"
                           },
-                          "ask_denom": "uluna"
+                          "ask_denom": "uscrt"
                       }
                   }],
                   "fee": {
@@ -3459,11 +3459,11 @@
                       },
                       {
                           "key": "swap_coin",
-                          "value": "3278258uluna"
+                          "value": "3278258uscrt"
                       },
                       {
                           "key": "swap_fee",
-                          "value": "66904.199544135772767719uluna"
+                          "value": "66904.199544135772767719uscrt"
                       }
                   ]
               },
@@ -3483,7 +3483,7 @@
                       },
                       {
                           "key": "amount",
-                          "value": "3278258uluna"
+                          "value": "3278258uscrt"
                       }
                   ]
               }
@@ -3695,11 +3695,11 @@
                           },
                           {
                               "key": "swap_coin",
-                              "value": "32003178uluna"
+                              "value": "32003178uscrt"
                           },
                           {
                               "key": "swap_fee",
-                              "value": "653126.471544714286211613uluna"
+                              "value": "653126.471544714286211613uscrt"
                           }
                       ]
                   },
@@ -3719,7 +3719,7 @@
                           },
                           {
                               "key": "amount",
-                              "value": "32003178uluna"
+                              "value": "32003178uscrt"
                           }
                       ]
                   }
@@ -3738,7 +3738,7 @@
                               "denom": "ukrw",
                               "amount": "10443486170"
                           },
-                          "ask_denom": "uluna"
+                          "ask_denom": "uscrt"
                       }
                   }],
                   "fee": {
@@ -3791,11 +3791,11 @@
                       },
                       {
                           "key": "swap_coin",
-                          "value": "32003178uluna"
+                          "value": "32003178uscrt"
                       },
                       {
                           "key": "swap_fee",
-                          "value": "653126.471544714286211613uluna"
+                          "value": "653126.471544714286211613uscrt"
                       }
                   ]
               },
@@ -3815,7 +3815,7 @@
                       },
                       {
                           "key": "amount",
-                          "value": "32003178uluna"
+                          "value": "32003178uscrt"
                       }
                   ]
               }
@@ -3861,11 +3861,11 @@
                           },
                           {
                               "key": "swap_coin",
-                              "value": "15318081uluna"
+                              "value": "15318081uscrt"
                           },
                           {
                               "key": "swap_fee",
-                              "value": "312614.566091804674006934uluna"
+                              "value": "312614.566091804674006934uscrt"
                           }
                       ]
                   },
@@ -3885,7 +3885,7 @@
                           },
                           {
                               "key": "amount",
-                              "value": "15318081uluna"
+                              "value": "15318081uscrt"
                           }
                       ]
                   }
@@ -3904,7 +3904,7 @@
                               "denom": "ukrw",
                               "amount": "4999999000"
                           },
-                          "ask_denom": "uluna"
+                          "ask_denom": "uscrt"
                       }
                   }],
                   "fee": {
@@ -3957,11 +3957,11 @@
                       },
                       {
                           "key": "swap_coin",
-                          "value": "15318081uluna"
+                          "value": "15318081uscrt"
                       },
                       {
                           "key": "swap_fee",
-                          "value": "312614.566091804674006934uluna"
+                          "value": "312614.566091804674006934uscrt"
                       }
                   ]
               },
@@ -3981,7 +3981,7 @@
                       },
                       {
                           "key": "amount",
-                          "value": "15318081uluna"
+                          "value": "15318081uscrt"
                       }
                   ]
               }
@@ -4027,11 +4027,11 @@
                           },
                           {
                               "key": "swap_coin",
-                              "value": "44246uluna"
+                              "value": "44246uscrt"
                           },
                           {
                               "key": "swap_fee",
-                              "value": "903.125747892567670983uluna"
+                              "value": "903.125747892567670983uscrt"
                           }
                       ]
                   },
@@ -4051,7 +4051,7 @@
                           },
                           {
                               "key": "amount",
-                              "value": "44246uluna"
+                              "value": "44246uscrt"
                           }
                       ]
                   }
@@ -4070,7 +4070,7 @@
                               "denom": "umnt",
                               "amount": "33545673"
                           },
-                          "ask_denom": "uluna"
+                          "ask_denom": "uscrt"
                       }
                   }],
                   "fee": {
@@ -4123,11 +4123,11 @@
                       },
                       {
                           "key": "swap_coin",
-                          "value": "44246uluna"
+                          "value": "44246uscrt"
                       },
                       {
                           "key": "swap_fee",
-                          "value": "903.125747892567670983uluna"
+                          "value": "903.125747892567670983uscrt"
                       }
                   ]
               },
@@ -4147,7 +4147,7 @@
                       },
                       {
                           "key": "amount",
-                          "value": "44246uluna"
+                          "value": "44246uscrt"
                       }
                   ]
               }

@@ -17,7 +17,7 @@ class Coin(JSONSerializable):
     """
 
     denom: str = attr.ib()
-    """Coin's denomination, ex ``uusd``, ``uluna``, etc."""
+    """Coin's denomination, ex ``uusd``, ``uscrt``, etc."""
 
     amount: Numeric.Output = attr.ib(converter=Numeric.parse)  # type: ignore
     """Coin's amount -- can be a ``int`` or :class:`Dec`"""
@@ -73,9 +73,9 @@ class Coin(JSONSerializable):
         'uusd'
         >>> int_coin.amount
         230920
-        >>> dec_coin = Coin.from_str("203922.223uluna")
+        >>> dec_coin = Coin.from_str("203922.223uscrt")
         >>> dec_coin.denom
-        'uluna'
+        'uscrt'
         >>> dec_coin.amount
         Dec('203922.223')
 

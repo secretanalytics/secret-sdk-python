@@ -7,7 +7,7 @@ def test_deserializes_msg_send(load_msg_examples):
         "value": {
             "from_address": "terra1y4umfuqfg76t8mfcff6zzx7elvy93jtp4xcdvw",
             "to_address": "terra1v9ku44wycfnsucez6fp085f5fsksp47u9x8jr4",
-            "amount": [{"denom": "uluna", "amount": "8102024952"}],
+            "amount": [{"denom": "uscrt", "amount": "8102024952"}],
         },
     }
 
@@ -18,12 +18,12 @@ def test_msg_multi_send_io():
 
     multisend = MsgMultiSend(
         inputs=[
-            {"address": "", "coins": "12000uusd,11000uluna"},
-            {"address": "", "coins": "11000ukrw,10000uluna"},
+            {"address": "", "coins": "12000uusd,11000uscrt"},
+            {"address": "", "coins": "11000ukrw,10000uscrt"},
         ],
         outputs=[
-            {"address": "", "coins": "11000ukrw,10000uluna"},
-            {"address": "", "coins": "12000uusd,11000uluna"},
+            {"address": "", "coins": "11000ukrw,10000uscrt"},
+            {"address": "", "coins": "12000uusd,11000uscrt"},
         ],
     )
 

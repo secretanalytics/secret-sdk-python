@@ -62,7 +62,7 @@ are also asychronous and therefore must be awaited.
             wallet = terra.wallet(mk)
             account_number = await wallet.account_number()
             tx = await wallet.create_and_sign_tx(
-                msgs=[MsgSend(wallet.key.acc_address, recipient, Coins(uluna=10202))]
+                msgs=[MsgSend(wallet.key.acc_address, recipient, Coins(uscrt=10202))]
             )
     
     asyncio.get_event_loop().run_until_complete(main())

@@ -17,7 +17,6 @@ __all__ = [
     "MsgExecuteContract",
     "MsgMigrateContract",
     "MsgUpdateContractOwner",
-    "MsgSend"
 ]
 
 

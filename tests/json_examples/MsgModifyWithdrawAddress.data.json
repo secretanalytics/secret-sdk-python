@@ -315,7 +315,7 @@
           }],
           "fee": {
             "amount": [{
-              "denom": "uluna",
+              "denom": "uscrt",
               "amount": "5000"
             }],
             "gas": "100000"
@@ -403,7 +403,7 @@
           }],
           "fee": {
             "amount": [{
-              "denom": "uluna",
+              "denom": "uscrt",
               "amount": "3750"
             }],
             "gas": "250000"
@@ -491,7 +491,7 @@
           }],
           "fee": {
             "amount": [{
-              "denom": "uluna",
+              "denom": "uscrt",
               "amount": "3750"
             }],
             "gas": "250000"
@@ -579,7 +579,7 @@
           }],
           "fee": {
             "amount": [{
-              "denom": "uluna",
+              "denom": "uscrt",
               "amount": "1343"
             }],
             "gas": "38355"
@@ -667,7 +667,7 @@
           }],
           "fee": {
             "amount": [{
-              "denom": "uluna",
+              "denom": "uscrt",
               "amount": "1301"
             }],
             "gas": "37167"
@@ -755,7 +755,7 @@
           }],
           "fee": {
             "amount": [{
-              "denom": "uluna",
+              "denom": "uscrt",
               "amount": "1309"
             }],
             "gas": "37383"
@@ -843,7 +843,7 @@
           }],
           "fee": {
             "amount": [{
-              "denom": "uluna",
+              "denom": "uscrt",
               "amount": "1309"
             }],
             "gas": "37383"
@@ -931,7 +931,7 @@
           }],
           "fee": {
             "amount": [{
-              "denom": "uluna",
+              "denom": "uscrt",
               "amount": "1309"
             }],
             "gas": "37383"
@@ -1019,7 +1019,7 @@
           }],
           "fee": {
             "amount": [{
-              "denom": "uluna",
+              "denom": "uscrt",
               "amount": "1309"
             }],
             "gas": "37383"
@@ -1107,7 +1107,7 @@
           }],
           "fee": {
             "amount": [{
-              "denom": "uluna",
+              "denom": "uscrt",
               "amount": "1309"
             }],
             "gas": "37383"
@@ -1195,7 +1195,7 @@
           }],
           "fee": {
             "amount": [{
-              "denom": "uluna",
+              "denom": "uscrt",
               "amount": "1312"
             }],
             "gas": "37482"
@@ -1283,7 +1283,7 @@
           }],
           "fee": {
             "amount": [{
-              "denom": "uluna",
+              "denom": "uscrt",
               "amount": "1326"
             }],
             "gas": "37860"
@@ -1371,7 +1371,7 @@
           }],
           "fee": {
             "amount": [{
-              "denom": "uluna",
+              "denom": "uscrt",
               "amount": "5000"
             }],
             "gas": "100000"
@@ -1459,7 +1459,7 @@
           }],
           "fee": {
             "amount": [{
-              "denom": "uluna",
+              "denom": "uscrt",
               "amount": "5000"
             }],
             "gas": "100000"
@@ -1547,7 +1547,7 @@
           }],
           "fee": {
             "amount": [{
-              "denom": "uluna",
+              "denom": "uscrt",
               "amount": "5000"
             }],
             "gas": "100000"
@@ -1635,7 +1635,7 @@
           }],
           "fee": {
             "amount": [{
-              "denom": "uluna",
+              "denom": "uscrt",
               "amount": "5000"
             }],
             "gas": "100000"

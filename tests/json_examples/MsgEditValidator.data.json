@@ -1831,7 +1831,7 @@
                     }],
                     "fee": {
                         "amount": [{
-                            "denom": "uluna",
+                            "denom": "uscrt",
                             "amount": "3000"
                         }],
                         "gas": "200000"
@@ -1915,7 +1915,7 @@
                     }],
                     "fee": {
                         "amount": [{
-                            "denom": "uluna",
+                            "denom": "uscrt",
                             "amount": "3000"
                         }],
                         "gas": "200000"
@@ -2369,7 +2369,7 @@
                     }],
                     "fee": {
                         "amount": [{
-                            "denom": "uluna",
+                            "denom": "uscrt",
                             "amount": "3000"
                         }],
                         "gas": "200000"
@@ -4062,7 +4062,7 @@
                     }],
                     "fee": {
                         "amount": [{
-                            "denom": "uluna",
+                            "denom": "uscrt",
                             "amount": "111200"
                         }],
                         "gas": "55600"
