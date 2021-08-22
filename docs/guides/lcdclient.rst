@@ -39,15 +39,15 @@ Using the module APIs
 ---------------------
 
 LCDClient includes functions for interacting with each of the core modules (see sidebar). These functions are divided and
-and organized by module name (eg. :class:`terra.market<terra_sdk.client.lcd.api.market.MarketAPI>`), and handle 
+and organized by module name (eg. :class:`terra.wasm<terra_sdk.client.lcd.api.wasm.WasmAPI>`), and handle 
 the tedium of building HTTP requests, parsing the results, and handling errors. 
 
 Each request fetches live data from the blockchain:
 
 .. code-block:: python
 
-    >>> terra.market.parameters()
-    {'base_pool': '7000000000000.000000000000000000', 'pool_recovery_period': '200', 'min_spread': '0.005000000000000000'}
+    >>> terra.wasm.contract_query('...', {"pool": {}})
+    {'assets': [{'info': {'native_token': {'denom': 'uscrt'}}, 'amount': '...'}, {'info': {'token': {'contract_addr': '...', 'token_code_hash': '...', 'viewing_key': '...'}}, 'amount': '...'}], 'total_share': '...'}
 
 The height of the last result (if applicable) is available:
 

@@ -239,11 +239,6 @@ blockchain (which will not have been updated).
     )
 
     tx2 = wallet.create_and_sign_tx(
-        msgs=[MsgSwap(...)],
-        sequence=sequence+1
-    )
-
-    tx3 = wallet.create_and_sign_tx(
         msgs=[MsgExecuteContract(...)],
         sequence=sequence+2
     )

@@ -6,7 +6,6 @@ from terra_sdk.core.distribution import (
     MsgWithdrawValidatorCommission,
 )
 from terra_sdk.core.gov.msgs import MsgDeposit, MsgSubmitProposal, MsgVote
-from terra_sdk.core.market import MsgSwap, MsgSwapSend
 from terra_sdk.core.msgauth import (
     MsgExecAuthorized,
     MsgGrantAuthorization,
@@ -45,7 +44,6 @@ distribution_msgs = [
     MsgWithdrawValidatorCommission,
 ]
 gov_msgs = [MsgDeposit, MsgSubmitProposal, MsgVote]
-market_msgs = [MsgSwap, MsgSwapSend]
 msgauth_msgs = [
     MsgExecAuthorized,
     MsgGrantAuthorization,
@@ -79,7 +77,6 @@ parse_msg = create_demux(
         *bank_msgs,
         *distribution_msgs,
         *gov_msgs,
-        *market_msgs,
         *oracle_msgs,
         *slashing_msgs,
         *staking_msgs,

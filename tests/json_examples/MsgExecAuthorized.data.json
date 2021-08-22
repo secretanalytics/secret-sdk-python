@@ -12,16 +12,6 @@
                     "amount": "999"
                 }]
             }
-        }, {
-            "type": "market/MsgSwap",
-            "value": {
-                "trader": "terra...",
-                "offer_coin": {
-                    "denom": "uusd",
-                    "amount": "120391203"
-                },
-                "ask_denom": "ukrw"
-            }
         }]
     }
 }]
