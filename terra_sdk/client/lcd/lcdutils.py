@@ -110,7 +110,8 @@ class AsyncLCDUtils(BaseAsyncAPI):
             algorithm=hashes.SHA256(),
             length=32,
             salt=hkdf_salt,
-            info=b''
+            info=b'',
+            backend=None
         ).derive(master_secret)
 
         return tx_encryption_key

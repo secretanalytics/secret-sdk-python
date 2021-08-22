@@ -67,7 +67,7 @@ class AsyncWasmAPI(BaseAsyncAPI):
         query_result = await BaseAsyncAPI._try_await(self._c._get(query_path))
         encoded_result = base64.b64decode(bytes(query_result['smart'], 'utf-8'))
         decrypted = await BaseAsyncAPI._try_await(self._c.utils.decrypt(encoded_result, nonce))
-        return eval(base64.b64decode(decrypted))
+        return json.loads(base64.b64decode(decrypted))
 
     async def contract_execute_msg(self, sender_address: AccAddress, contract_address: AccAddress, handle_msg: dict,
                                    transfer_amount: Coins) -> MsgExecuteContract :
