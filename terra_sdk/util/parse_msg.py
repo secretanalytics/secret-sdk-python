@@ -6,18 +6,6 @@ from terra_sdk.core.distribution import (
     MsgWithdrawValidatorCommission,
 )
 from terra_sdk.core.gov.msgs import MsgDeposit, MsgSubmitProposal, MsgVote
-from terra_sdk.core.msgauth import (
-    MsgExecAuthorized,
-    MsgGrantAuthorization,
-    MsgRevokeAuthorization,
-)
-from terra_sdk.core.oracle import (
-    MsgAggregateExchangeRatePrevote,
-    MsgAggregateExchangeRateVote,
-    MsgDelegateFeedConsent,
-    MsgExchangeRatePrevote,
-    MsgExchangeRateVote,
-)
 from terra_sdk.core.slashing import MsgUnjail
 from terra_sdk.core.staking import (
     MsgBeginRedelegate,
@@ -44,18 +32,6 @@ distribution_msgs = [
     MsgWithdrawValidatorCommission,
 ]
 gov_msgs = [MsgDeposit, MsgSubmitProposal, MsgVote]
-msgauth_msgs = [
-    MsgExecAuthorized,
-    MsgGrantAuthorization,
-    MsgRevokeAuthorization,
-]
-oracle_msgs = [
-    MsgAggregateExchangeRatePrevote,
-    MsgAggregateExchangeRateVote,
-    MsgDelegateFeedConsent,
-    MsgExchangeRatePrevote,
-    MsgExchangeRateVote,
-]
 slashing_msgs = [MsgUnjail]
 staking_msgs = [
     MsgBeginRedelegate,
@@ -77,7 +53,6 @@ parse_msg = create_demux(
         *bank_msgs,
         *distribution_msgs,
         *gov_msgs,
-        *oracle_msgs,
         *slashing_msgs,
         *staking_msgs,
         *wasm_msgs,
