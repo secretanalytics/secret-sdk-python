@@ -178,4 +178,4 @@ def is_valcons_pubkey(data: str) -> ValConsPubKey:
     Returns:
         ValConsPubKey: validator consensus pubkey
     """
-    return check_prefix_and_length("secretvalconspub", data, 84)
+    return check_prefix_and_length("secretvalconspub", data, 83)

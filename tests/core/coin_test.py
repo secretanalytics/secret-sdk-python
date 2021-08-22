@@ -30,7 +30,7 @@ def test_arithmetic():
     zero = Coin("uscrt", 0)
     coin = Coin("uscrt", 1000)
     coin2 = Coin("uscrt", 2000)
-    coin3 = Coin("ukrw", 2000)
+    coin3 = Coin("sscrt", 2000)
 
     # addition
     sum = coin.add(coin2)

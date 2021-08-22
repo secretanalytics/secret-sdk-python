@@ -34,13 +34,13 @@ class Account(JSONSerializable):
 
     def to_data(self) -> dict:
         return {
-            "type": "core/Account",
+            "type": "cosmos-sdk/Account",
             "value": {
                 "address": self.address,
                 "coins": self.coins.to_data(),
                 "public_key": self.public_key.to_data(),
-                "account_number": str(self.account_number),
-                "sequence": str(self.sequence),
+                "account_number": self.account_number,
+                "sequence": self.sequence,
             },
         }
 

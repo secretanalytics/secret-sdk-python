@@ -1,87 +1,77 @@
-[{
-    "type": "core/Account",
+[
+  {
+    "type": "cosmos-sdk/Account",
     "value": {
-      "address": "terra1h0d5kq5p64jcyqysvja3h2gysxnfudk9h73fnn",
-      "coins": [{
-          "denom": "ukrw",
-          "amount": "3981685437"
-        },
+      "address": "secret1xey4ymz4tmlgy6pp54e2ccj307ff6kx6ye0v6f",
+      "coins": [
         {
           "denom": "uscrt",
-          "amount": "2041"
-        },
-        {
-          "denom": "umnt",
-          "amount": "363613"
+          "amount": "499999887500"
         }
       ],
-      "public_key": {
-        "type": "tendermint/PubKeySecp256k1",
-        "value": "Av0uQ9R72aq0dgu1H+F1+1p2daQLl0JsWhwkA07ftTq/"
-      },
-      "account_number": "572696",
-      "sequence": "251409"
+      "public_key": "secretpub1addwnpepqvfgz2syfyed50sp5yj4ltd503wkqrlxd2x5du0ukry4fkk3xv8svz2jphr",
+      "account_number": 8828,
+      "sequence": 2
     }
   },
   {
-    "type": "core/Account",
+    "type": "cosmos-sdk/Account",
     "value": {
-      "address": "terra1fex9f78reuwhfsnc8sun6mz8rl9zwqh03fhwf3",
-      "coins": [{
-        "denom": "ukrw",
-        "amount": "15464712273121303"
-      }],
-      "public_key": {
-        "type": "tendermint/PubKeySecp256k1",
-        "value": "AxYEJ7m2BMIzrugTG5Rl8Pz2RNU6eGfnsn2TfMXWEruf"
-      },
-      "account_number": "238665",
-      "sequence": "1650113"
+      "address": "secret1jajwgdsfv8e88utlgxjndlvcm8aldyn3ecsk72",
+      "coins": [
+        {
+          "denom": "uscrt",
+          "amount": "53763271098"
+        }
+      ],
+      "public_key": "secretpub1addwnpepqwl5txmn3mgrajcryl8r56jssufprf9g5gxez6n2agfwgplesh6ucnxr4st",
+      "account_number": 2420,
+      "sequence": 204
     }
   },
   {
-    "type": "core/Account",
+    "type": "cosmos-sdk/Account",
     "value": {
-      "address": "terra12fm3tql2uu0gheuj3st9cwz7ml97tq9mla88c2",
-      "coins": [{
-        "denom": "ukrw",
-        "amount": "1077000000"
-      }],
-      "public_key": {
-        "type": "tendermint/PubKeySecp256k1",
-        "value": "AvBeqhogW0wd7OtF8M8hJ/P1A/IBY1+uNvBO/tbVlfq2"
-      },
-      "account_number": "251248",
-      "sequence": "58"
+      "address": "secret1v5y7as75cqd0trtq62hgzj7u4ck9slhnrf3k4c",
+      "coins": [
+        {
+          "denom": "uscrt",
+          "amount": "54857412010"
+        }
+      ],
+      "public_key": "secretpub1addwnpepqv8zs74glf7lw34cd0fge9ryl50m3xdv86epnffds57gqp30yxr7qer489t",
+      "account_number": 11268,
+      "sequence": 349
     }
   },
   {
-    "type": "core/Account",
+    "type": "cosmos-sdk/Account",
     "value": {
-      "address": "terra1kcc65k0ru6qq946ztqljxd67d5wltqstln5d5k",
-      "coins": [],
-      "public_key": {
-        "type": "tendermint/PubKeySecp256k1",
-        "value": "AsPdLO1QwuajkAP/MlVe17WwTimT7gUAE2iXDjaScrxH"
-      },
-      "account_number": "987828",
-      "sequence": "28"
+      "address": "secret16krcdrqh6y6pazvkj58nrvkerk0q0ttg22kepl",
+      "coins": [
+        {
+          "denom": "uscrt",
+          "amount": "58942989450"
+        }
+      ],
+      "public_key": "",
+      "account_number": 3730,
+      "sequence": 0
     }
   },
   {
-    "type": "core/Account",
+    "type": "cosmos-sdk/Account",
     "value": {
-      "address": "terra1ax7xtll5v6u6vdnymxa4k4648w80zhkggl0u24",
-      "coins": [{
-        "denom": "ukrw",
-        "amount": "31999000000"
-      }],
-      "public_key": {
-        "type": "tendermint/PubKeySecp256k1",
-        "value": "A/vzuSK9wCAvmFXorv/KTbUFsF9Av5r9XuplqF+4OLfR"
-      },
-      "account_number": "712869",
-      "sequence": "65"
+      "address": "secret14hevdc4hfzdkqjqk38pgmk4kj9988l3ce80lkr",
+      "coins": [
+        {
+          "denom": "uscrt",
+          "amount": "84447491667"
+        }
+      ],
+      "public_key": "secretpub1addwnpepqgshr62zydwv65k9p68an07g4vy6zw7d6kg0fsxjrhddw927f7x6cjxnmgf",
+      "account_number": 1088,
+      "sequence": 11
     }
   }
 ]

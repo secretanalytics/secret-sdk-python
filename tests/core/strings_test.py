@@ -12,68 +12,75 @@ from terra_sdk.core.strings import (
 
 
 def test_validates_acc_address():
-    assert not is_acc_address("terravaloper1pdx498r0hrc2fj36sjhs8vuhrz9hd2cw0yhqtk")
+    assert not is_acc_address("secretvaloper1xey4ymz4tmlgy6pp54e2ccj307ff6kx647p3hq")
     assert not is_acc_address(
-        "terra1pdx498r0h7c2fj36sjhs8vu8rz9hd2cw0tmam9"
+        "secret1xey4ymz4tmlgy6pp54e2ccj307ff6kx6ye0v7f"
     )  # bad checksum
     assert not is_acc_address("cosmos176m2p8l3fps3dal7h8gf9jvrv98tu3rqfdht86")
 
-    assert is_acc_address("terra1pdx498r0hrc2fj36sjhs8vuhrz9hd2cw0tmam9")
+    assert is_acc_address("secret1ljtckgv3gsgrnhf7f3ygquyse5urwkamx7ln27")
 
 
 def test_convert_to_acc_address():
     assert (
-        to_acc_address("terravaloper1pdx498r0hrc2fj36sjhs8vuhrz9hd2cw0yhqtk")
-        == "terra1pdx498r0hrc2fj36sjhs8vuhrz9hd2cw0tmam9"
+        to_acc_address("secretvaloper1xey4ymz4tmlgy6pp54e2ccj307ff6kx647p3hq")
+        == "secret1xey4ymz4tmlgy6pp54e2ccj307ff6kx6ye0v6f"
     )
 
 
 def test_validates_val_address():
-    assert not is_val_address("terra1pdx498r0hrc2fj36sjhs8vuhrz9hd2cw0tmam9")
+    assert not is_val_address("secret1xey4ymz4tmlgy6pp54e2ccj307ff6kx6ye0v6f")
     assert not is_val_address(
-        "terravaloper1pdx498r0hrc2fj36sjhs8vuhrz9hd2cw0ygqtk"
+        "secretvaloper1xey4ymz4tmlgy6pp54e2ccj307ff6kx64rp3hq"
     )  # bad checksum
-    assert is_val_address("terravaloper1pdx498r0hrc2fj36sjhs8vuhrz9hd2cw0yhqtk")
+    assert is_val_address("secretvaloper1xey4ymz4tmlgy6pp54e2ccj307ff6kx647p3hq")
 
 
 def test_convert_to_val_address():
     assert (
-        to_val_address("terra1pdx498r0hrc2fj36sjhs8vuhrz9hd2cw0tmam9")
-        == "terravaloper1pdx498r0hrc2fj36sjhs8vuhrz9hd2cw0yhqtk"
+        to_val_address("secret1xey4ymz4tmlgy6pp54e2ccj307ff6kx6ye0v6f")
+        == "secretvaloper1xey4ymz4tmlgy6pp54e2ccj307ff6kx647p3hq"
     )
 
 
 def test_validates_acc_pubkey():
     assert not is_acc_pubkey(
-        "terravaloperpub1addwnpepqt8ha594svjn3nvfk4ggfn5n8xd3sm3cz6ztxyugwcuqzsuuhhfq5y7accr"
+        "secretvaloperpub1addwnpepqvfgz2syfyed50sp5yj4ltd503wkqrlxd2x5du0ukry4fkk3xv8svhuzz0n"
     )
     assert is_acc_pubkey(
-        "terrapub1addwnpepqt8ha594svjn3nvfk4ggfn5n8xd3sm3cz6ztxyugwcuqzsuuhhfq5nwzrf9"
+        "secretpub1addwnpepqvfgz2syfyed50sp5yj4ltd503wkqrlxd2x5du0ukry4fkk3xv8svz2jphr"
     )
 
 
 def test_converts_to_acc_pubkey():
     assert (
         to_acc_pubkey(
-            "terravaloperpub1addwnpepqt8ha594svjn3nvfk4ggfn5n8xd3sm3cz6ztxyugwcuqzsuuhhfq5y7accr"
+            "secretvaloperpub1addwnpepqvfgz2syfyed50sp5yj4ltd503wkqrlxd2x5du0ukry4fkk3xv8svhuzz0n"
         )
-        == "terrapub1addwnpepqt8ha594svjn3nvfk4ggfn5n8xd3sm3cz6ztxyugwcuqzsuuhhfq5nwzrf9"
+        == "secretpub1addwnpepqvfgz2syfyed50sp5yj4ltd503wkqrlxd2x5du0ukry4fkk3xv8svz2jphr"
     )
 
 
 def test_validates_val_pubkey():
     assert not is_val_pubkey(
-        "terrapub1addwnpepqt8ha594svjn3nvfk4ggfn5n8xd3sm3cz6ztxyugwcuqzsuuhhfq5nwzrf9"
+        "secretpub1addwnpepqvfgz2syfyed50sp5yj4ltd503wkqrlxd2x5du0ukry4fkk3xv8svz2jphr"
     )
     assert is_val_pubkey(
-        "terravaloperpub1addwnpepqt8ha594svjn3nvfk4ggfn5n8xd3sm3cz6ztxyugwcuqzsuuhhfq5y7accr"
+        "secretvaloperpub1addwnpepqvfgz2syfyed50sp5yj4ltd503wkqrlxd2x5du0ukry4fkk3xv8svhuzz0n"
     )
 
 
 def test_converts_to_val_pubkey():
     assert (
         to_val_pubkey(
-            "terrapub1addwnpepqt8ha594svjn3nvfk4ggfn5n8xd3sm3cz6ztxyugwcuqzsuuhhfq5nwzrf9"
+            "secretpub1addwnpepqvfgz2syfyed50sp5yj4ltd503wkqrlxd2x5du0ukry4fkk3xv8svz2jphr"
         )
-        == "terravaloperpub1addwnpepqt8ha594svjn3nvfk4ggfn5n8xd3sm3cz6ztxyugwcuqzsuuhhfq5y7accr"
+        == "secretvaloperpub1addwnpepqvfgz2syfyed50sp5yj4ltd503wkqrlxd2x5du0ukry4fkk3xv8svhuzz0n"
     )
+
+
+def test_validates_valcons_pubkey():
+    assert not is_valcons_pubkey(
+        "secretvaloperpub1addwnpepqvfgz2syfyed50sp5yj4ltd503wkqrlxd2x5du0ukry4fkk3xv8svhuzz0n"
+    )
+    assert is_valcons_pubkey("secretvalconspub1zcjduepqsth37qgh8365d3m0t99fkuze9ldhnt2gjngg0ahfhlff7vsd0c5qjwwtcr")
