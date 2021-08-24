@@ -31,7 +31,19 @@ class AsyncWasmAPI(BaseAsyncAPI):
         res = await self._c._get(f"/wasm/contract/{contract_address}")
         return res
 
-    async def contract_hash(self, contract_address: str) -> dict:
+    async def contract_hash_by_code_id(self, code_id: int) -> str:
+        """Fetches contract hash from an instantiated contract using its code id
+
+                Args:
+                    code_id (str): contract code id
+
+                Returns:
+                    dict: contract hash
+        """
+        contract_code_hash = await self._c._get(f"/wasm/code/{code_id}/hash")
+        return contract_code_hash
+
+    async def contract_hash(self, contract_address: str) -> str:
         """Fetches information about an instantiated contract.
 
         Args:
@@ -77,7 +89,6 @@ class AsyncWasmAPI(BaseAsyncAPI):
         encrypted_msg = base64.b64encode(bytes(encrypted_msg)).decode()
         return MsgExecuteContract(sender_address, contract_address, encrypted_msg, transfer_amount)
 
-
     async def parameters(self) -> dict:
         """Fetches the Wasm module parameters.
 
@@ -99,6 +110,12 @@ class WasmAPI(AsyncWasmAPI):
         pass
 
     contract_info.__doc__ = AsyncWasmAPI.code_info.__doc__
+
+    @sync_bind(AsyncWasmAPI.contract_hash_by_code_id)
+    def contract_hash_by_code_id(self, code_id: int) -> dict:
+        pass
+
+    contract_hash_by_code_id.__doc__ = AsyncWasmAPI.contract_hash_by_code_id.__doc__
 
     @sync_bind(AsyncWasmAPI.contract_hash)
     def contract_hash(self, contract_address: str) -> dict:
