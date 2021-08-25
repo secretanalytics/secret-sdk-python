@@ -1,7 +1,7 @@
 from typing import List, Optional, Union
 
 from terra_sdk.core import AccAddress, Coin, Coins, Numeric
-from terra_sdk.core.auth import StdFee, StdSignMsg, StdTx, TxInfo
+from terra_sdk.core.auth import StdFee, StdSignMsg, StdTx, TxInfo, SearchTxsResponse
 from terra_sdk.core.broadcast import (
     AsyncTxBroadcastResult,
     BlockTxBroadcastResult,
@@ -210,8 +210,8 @@ class AsyncTxAPI(BaseAsyncAPI):
             codespace=res.get("codespace"),
         )
 
-    async def search(self, options: dict = {}) -> dict:
-        """Searches for transactions given critera.
+    async def search(self, options: dict = {}) -> SearchTxsResponse:
+        """Searches for transactions given criteria.
 
         Args:
             options (dict, optional): dictionary containing options. Defaults to {}.
@@ -220,7 +220,7 @@ class AsyncTxAPI(BaseAsyncAPI):
             dict: transaction search results
         """
         res = await self._c._get("/txs", options, raw=True)
-        return res
+        return SearchTxsResponse.from_data(res)
 
 
 class TxAPI(AsyncTxAPI):
@@ -290,7 +290,7 @@ class TxAPI(AsyncTxAPI):
     broadcast.__doc__ = AsyncTxAPI.broadcast.__doc__
 
     @sync_bind(AsyncTxAPI.search)
-    def search(self, options: dict = {}) -> dict:
+    def search(self, options: dict = {}) -> SearchTxsResponse:
         pass
 
     search.__doc__ = AsyncTxAPI.search.__doc__

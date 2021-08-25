@@ -35,7 +35,7 @@ class AsyncWasmAPI(BaseAsyncAPI):
         """Fetches contract hash from an instantiated contract using its code id
 
                 Args:
-                    code_id (str): contract code id
+                    code_id (int): contract code id
 
                 Returns:
                     dict: contract hash

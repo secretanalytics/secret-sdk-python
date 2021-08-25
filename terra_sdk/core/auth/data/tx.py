@@ -20,6 +20,7 @@ __all__ = [
     "TxLog",
     "TxInfo",
     "parse_tx_logs",
+    "SearchTxsResponse"
 ]
 
 
@@ -280,4 +281,53 @@ class TxInfo(JSONSerializable):
             data["timestamp"],
             data.get("code"),
             data.get("codespace"),
+        )
+
+@attr.s
+class SearchTxsResponse(JSONSerializable):
+    """Holds information of the result of a search tx query
+
+    .. note::
+        Users are not expected to create this object directly. It is returned by
+        :meth:`TxAPI.search()<terra_sdk.client.lcd.api.tx.TxAPI.search>`
+    """
+
+    total_count: int = attr.ib(converter=int)
+    """Total number of txs found"""
+
+    count: int = attr.ib(converter=int)
+    """Number of txs in the page"""
+
+    page_number: int = attr.ib(converter=int)
+    """Page number of the page"""
+
+    page_total: int = attr.ib(converter=int)
+    """Total number of pages"""
+
+    limit: int = attr.ib(converter=int)
+    """Maximum amount of transactions in the page"""
+
+    txs: List[TxInfo] = attr.ib()
+    """Transaction list for the page"""
+
+    def to_data(self) -> dict:
+        data = {
+            "total_count": str(self.total_count),
+            "count": str(self.count),
+            "page_number": str(self.page_number),
+            "page_total": str(self.page_total),
+            "limit": str(self.limit),
+            "txs": [tx.to_data() for tx in self.txs] if self.txs else None
+        }
+        return data
+
+    @classmethod
+    def from_data(cls, data: dict) -> SearchTxsResponse:
+        return cls(
+            data["total_count"],
+            data["count"],
+            data["page_number"],
+            data["page_total"],
+            data["limit"],
+            [TxInfo.from_data(m) for m in data["txs"]],
         )

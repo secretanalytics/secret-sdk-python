@@ -1,6 +1,6 @@
 from .account import Account
 from .public_key import PublicKey
-from .tx import StdFee, StdSignature, StdSignMsg, StdTx, TxInfo, TxLog, parse_tx_logs
+from .tx import StdFee, StdSignature, StdSignMsg, StdTx, TxInfo, TxLog, parse_tx_logs, SearchTxsResponse
 
 __all__ = [
     "Account",
@@ -12,4 +12,5 @@ __all__ = [
     "TxInfo",
     "PublicKey",
     "parse_tx_logs",
+    "SearchTxsResponse"
 ]
