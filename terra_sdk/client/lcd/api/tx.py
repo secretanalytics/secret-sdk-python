@@ -27,6 +27,17 @@ class AsyncTxAPI(BaseAsyncAPI):
         """
         return TxInfo.from_data(await self._c._get(f"/txs/{tx_hash}", raw=True))
 
+    async def tx_by_id(self, id: str) -> TxInfo:
+        """Fetches information for an included transaction given a tx hash.
+
+        Args:
+            tx_hash (str): hash of transaction to lookup
+
+        Returns:
+            TxInfo: transaction info
+        """
+        return TxInfo.from_data(await self._c._get(f"/txs/{id}", raw=True))
+
     async def create(
         self,
         source_address: AccAddress,
