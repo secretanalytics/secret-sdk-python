@@ -16,7 +16,6 @@ from terra_sdk.util.json import dict_to_data
 from .api.auth import AsyncAuthAPI, AuthAPI
 from .api.bank import AsyncBankAPI, BankAPI
 from .api.distribution import AsyncDistributionAPI, DistributionAPI
-from .api.gov import AsyncGovAPI, GovAPI
 from .api.staking import AsyncStakingAPI, StakingAPI
 from .api.supply import AsyncSupplyAPI, SupplyAPI
 from .api.tendermint import AsyncTendermintAPI, TendermintAPI
@@ -53,7 +52,6 @@ class AsyncLCDClient:
         self.auth = AsyncAuthAPI(self)
         self.bank = AsyncBankAPI(self)
         self.distribution = AsyncDistributionAPI(self)
-        self.gov = AsyncGovAPI(self)
         self.staking = AsyncStakingAPI(self)
         self.supply = AsyncSupplyAPI(self)
         self.tendermint = AsyncTendermintAPI(self)
@@ -170,7 +168,6 @@ class LCDClient(AsyncLCDClient):
         self.auth = AuthAPI(self)
         self.bank = BankAPI(self)
         self.distribution = DistributionAPI(self)
-        self.gov = GovAPI(self)
         self.staking = StakingAPI(self)
         self.supply = SupplyAPI(self)
         self.tendermint = TendermintAPI(self)

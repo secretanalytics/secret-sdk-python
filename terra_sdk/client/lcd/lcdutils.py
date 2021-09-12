@@ -9,7 +9,7 @@ from cryptography.hazmat.primitives.kdf.hkdf import HKDF
 
 from functools import reduce
 from math import ceil
-from typing import Any, Dict, Union
+from typing import Any, Dict, Union, List
 
 from terra_sdk.core import Coin
 
@@ -37,20 +37,6 @@ class AsyncLCDUtils(BaseAsyncAPI):
         self.seed = self.generate_new_seed()
         self.privkey, self.pubkey = self.generate_new_key_pair_from_seed(self.seed)
 
-
-    async def calculate_tax(self, coin: Union[Coin, str, dict]) -> Coin:
-        """Calculates the tax that would be applied for the Coin if sent.
-
-        Args:
-            coin (Union[Coin, str, dict]): coin to be sent
-
-        Returns:
-            Coin: tax to be paid
-        """
-        coin = Coin.parse(coin)
-        rate = await BaseAsyncAPI._try_await(self._c.treasury.tax_rate())
-        cap = await BaseAsyncAPI._try_await(self._c.treasury.tax_cap(coin.denom))
-        return Coin(coin.denom, min(ceil(coin.amount * rate), cap.amount))
 
     async def validators_with_voting_power(self) -> Dict[str, dict]:
         """Gets current validators and merges their voting power from the validator set query.
@@ -116,7 +102,7 @@ class AsyncLCDUtils(BaseAsyncAPI):
 
         return tx_encryption_key
 
-    async def  encrypt(self, contract_code_hash, msg):
+    async def  encrypt(self, contract_code_hash:str, msg:Any):
         nonce = self.generate_new_seed()
         tx_encryption_key = await BaseAsyncAPI._try_await(self.get_tx_encryption_key(nonce))
 
@@ -132,7 +118,7 @@ class AsyncLCDUtils(BaseAsyncAPI):
 
         return nonce + [x for x in key_dump] + [x for x in ciphertext]
 
-    async def  decrypt(self, ciphertext, nonce) -> str:
+    async def  decrypt(self, ciphertext: bytes, nonce: List[int]) -> bytes:
         if not ciphertext:
             return bytes([])
 
@@ -149,17 +135,12 @@ class LCDUtils(AsyncLCDUtils):
         self.privkey, self.pubkey = self.generate_new_key_pair_from_seed(self.seed)
         self.consensus_io_pubkey = self.get_consensus_io_pubkey()
 
-    @sync_bind(AsyncLCDUtils.calculate_tax)
-    def calculate_tax(self, coin: Union[Coin, str, dict]) -> Coin:
-        pass
-
-    calculate_tax.__doc__ = AsyncLCDUtils.calculate_tax.__doc__
 
     @sync_bind(AsyncLCDUtils.validators_with_voting_power)
     async def validators_with_voting_power(self) -> Dict[str, dict]:
         pass
 
-    validators_with_voting_power.__doc__ = AsyncLCDUtils.calculate_tax.__doc__
+    validators_with_voting_power.__doc__ = AsyncLCDUtils.validators_with_voting_power.__doc__
 
     @sync_bind(AsyncLCDUtils.get_consensus_io_pubkey)
     async def get_consensus_io_pubkey(self):
