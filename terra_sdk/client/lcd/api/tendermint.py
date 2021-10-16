@@ -46,6 +46,15 @@ class AsyncTendermintAPI(BaseAsyncAPI):
         x = "latest" if height is None else height
         return await self._c._get(f"/blocks/{x}", raw=True)
 
+    async def latest_block_height(self) -> int:
+        """Fetches the latest height.
+
+        Returns:
+            int: height
+        """
+        block_dict = await BaseAsyncAPI._try_await(self.block_info())
+        return int(block_dict['block']['header']['height'])
+
 
 class TendermintAPI(AsyncTendermintAPI):
     @sync_bind(AsyncTendermintAPI.node_info)
@@ -71,3 +80,9 @@ class TendermintAPI(AsyncTendermintAPI):
         pass
 
     block_info.__doc__ = AsyncTendermintAPI.block_info.__doc__
+
+    @sync_bind(AsyncTendermintAPI.latest_block_height)
+    def latest_block_height(self) -> int:
+        pass
+
+    latest_block_height.__doc__ = AsyncTendermintAPI.latest_block_height.__doc__
