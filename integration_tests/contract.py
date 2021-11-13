@@ -17,6 +17,7 @@ def main():
     tx = test1.create_and_sign_tx([send_msg], fee=fee)
     send_scrt_tx = terra.tx.broadcast(tx)
     print('send scrt:\n', send_scrt_tx)
+
     # pool query
     pool_query = terra.wasm.contract_query('secret16krcdrqh6y6pazvkj58nrvkerk0q0ttg22kepl', {"pool": {}})
     print('pool query scrt/sscrt:\n', pool_query)
@@ -29,4 +30,5 @@ def main():
     convert_scrt_sscrt = test1.create_and_sign_tx([execute_msg], fee=fee)
     convert_scrt_sscrt_tx = terra.tx.broadcast(convert_scrt_sscrt)
     print('convert scrt/sscrt:\n',convert_scrt_sscrt_tx)
+
 main()

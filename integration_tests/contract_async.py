@@ -1,5 +1,4 @@
 import asyncio
-from pathlib import Path
 
 from terra_sdk.client.localterra import AsyncLocalTerra
 from terra_sdk.core import Coins

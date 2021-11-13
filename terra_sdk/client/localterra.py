@@ -12,7 +12,7 @@ LOCALTERRA_MNEMONICS = {
 }
 
 test_net_chain_id = "holodeck-2"
-main_net_chain_id = "secret-2"
+main_net_chain_id = "secret-4"
 
 test_net_api = "https://bootstrap.secrettestnet.io"
 main_net_api = "https://api.secretapi.io"
