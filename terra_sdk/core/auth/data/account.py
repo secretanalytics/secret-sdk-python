@@ -34,7 +34,7 @@ class Account(JSONSerializable):
 
     def to_data(self) -> dict:
         return {
-            "type": "cosmos-sdk/Account",
+            "type": "cosmos-sdk/BaseAccount",
             "value": {
                 "address": self.address,
                 "coins": self.coins.to_data(),
@@ -49,9 +49,9 @@ class Account(JSONSerializable):
         data = data["value"]
         return cls(
             address=data["address"],
-            coins=Coins.from_data(data["coins"]),
+            coins=Coins.from_data(data.get("coins", {})),
             public_key=PublicKey.from_data(data["public_key"]),
             account_number=data["account_number"],
-            sequence=data["sequence"],
+            sequence=data["sequence"]
         )
 

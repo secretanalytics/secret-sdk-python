@@ -19,7 +19,7 @@ class AsyncAuthAPI(BaseAsyncAPI):
             Account: account information
         """
         result = await self._c._get(f"/auth/accounts/{address}")
-        if result["type"] == "cosmos-sdk/Account":
+        if result["type"] == "cosmos-sdk/BaseAccount":
             return Account.from_data(result)
         else:
             raise

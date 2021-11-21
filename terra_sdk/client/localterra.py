@@ -8,7 +8,8 @@ __all__ = ["LOCALTERRA_MNEMONICS", "LocalTerra", "AsyncLocalTerra"]
 
 LOCALTERRA_MNEMONICS = {
     "test1": "hero innocent acquire shoulder captain plug clutch gloom increase use narrow impact woman warm cushion proud cereal sail theory expire funny wife panda tragic",
-    "test2": "base bunker skin catalog assault field arctic often west problem bracket water diagram wing crunch series resource symptom call team sketch south ignore find"
+    "test2": "base bunker skin catalog assault field arctic often west problem bracket water diagram wing crunch series resource symptom call team sketch south ignore find",
+    "test3": "wrist oak pool pond foot decrease excite theme work fresh punch film"
 }
 
 test_net_chain_id = "holodeck-2"
@@ -16,6 +17,7 @@ main_net_chain_id = "secret-4"
 
 test_net_api = "https://bootstrap.secrettestnet.io"
 main_net_api = "https://api.secretapi.io"
+
 
 LOCALTERRA_DEFAULTS = {
     "url": test_net_api,

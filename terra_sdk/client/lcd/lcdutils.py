@@ -8,7 +8,10 @@ from cryptography.hazmat.primitives.asymmetric.x25519 import X25519PrivateKey, X
 from cryptography.hazmat.primitives.kdf.hkdf import HKDF
 
 from functools import reduce
-from typing import Any, Dict, List
+from math import ceil
+from typing import Any, Dict, Union, List
+
+from terra_sdk.core import Coin
 
 from .api._base import BaseAsyncAPI, sync_bind
 
@@ -33,7 +36,6 @@ class AsyncLCDUtils(BaseAsyncAPI):
         super().__init__(c)
         self.seed = self.generate_new_seed()
         self.privkey, self.pubkey = self.generate_new_key_pair_from_seed(self.seed)
-
 
     async def validators_with_voting_power(self) -> Dict[str, dict]:
         """Gets current validators and merges their voting power from the validator set query.
@@ -61,10 +63,10 @@ class AsyncLCDUtils(BaseAsyncAPI):
         return res
 
     def generate_new_seed(self):
-        return [secrets.randbits(8) for x in range(32)]
+        return [secrets.randbits(8) for _ in range(32)]
 
     def generate_key_pair(self, seed):
-        privkey = X25519PrivateKey.generate()
+        privkey = X25519PrivateKey.from_private_bytes(bytes(seed))
         pubkey = privkey.public_key()
         return privkey, pubkey
 
@@ -76,8 +78,8 @@ class AsyncLCDUtils(BaseAsyncAPI):
         return self.generate_new_key_pair_from_seed(self.generate_new_seed())
 
     async def get_consensus_io_pubkey(self):
-        io_exch_pubkey = await BaseAsyncAPI._try_await(self._c._get("/reg/consensus-io-exch-pubkey"))
-        io_exch_pubkey = io_exch_pubkey['ioExchPubkey']
+        io_exch_pubkey = await BaseAsyncAPI._try_await(self._c._get("/reg/tx-key"))
+        io_exch_pubkey = io_exch_pubkey['TxKey']
         consensus_io_pubkey = base64.b64decode(io_exch_pubkey)
         return bytes([x for x in consensus_io_pubkey])
 
@@ -127,8 +129,15 @@ class AsyncLCDUtils(BaseAsyncAPI):
     async def get_pub_key(self):
         return self.pubkey.public_bytes(
             encoding=serialization.Encoding.Raw,
-            format=serialization.PublicFormat.Raw
-        )
+            format=serialization.PublicFormat.Raw)
+
+    async def decrypt_data_field(self, data_field, nonces):
+        # nonces are a list of nonce in the case of multi execute
+        wasm_output_data_cipher_bz = bytes.fromhex(data_field)
+        for nonce in nonces:
+            decrypted_data = await self.decrypt(wasm_output_data_cipher_bz, nonce)
+            decrypted = base64.b64decode(decrypted_data.decode("utf-8"))
+            return decrypted
 
 
 class LCDUtils(AsyncLCDUtils):
@@ -137,7 +146,6 @@ class LCDUtils(AsyncLCDUtils):
         self.seed = self.generate_new_seed()
         self.privkey, self.pubkey = self.generate_new_key_pair_from_seed(self.seed)
         self.consensus_io_pubkey = self.get_consensus_io_pubkey()
-
 
     @sync_bind(AsyncLCDUtils.validators_with_voting_power)
     async def validators_with_voting_power(self) -> Dict[str, dict]:

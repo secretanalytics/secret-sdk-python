@@ -40,7 +40,7 @@ class EnigmaUtils():
         return self.generate_new_key_pair_from_seed(self.generate_new_seed())
         
     def get_consensus_io_pubkey(self, api_url):
-        io_exch_pubkey = requests.get(self.api_url + "/reg/consensus-io-exch-pubkey").json()['result']['ioExchPubkey']
+        io_exch_pubkey = requests.get(self.api_url + "/reg/tx-key").json()['result']['TxKey']
         consensus_io_pubkey = base64.b64decode(io_exch_pubkey)
         return bytes([x for x in consensus_io_pubkey])
     
