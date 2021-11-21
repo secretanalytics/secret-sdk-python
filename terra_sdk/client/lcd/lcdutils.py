@@ -8,10 +8,7 @@ from cryptography.hazmat.primitives.asymmetric.x25519 import X25519PrivateKey, X
 from cryptography.hazmat.primitives.kdf.hkdf import HKDF
 
 from functools import reduce
-from math import ceil
-from typing import Any, Dict, Union, List
-
-from terra_sdk.core import Coin
+from typing import Any, Dict, List
 
 from .api._base import BaseAsyncAPI, sync_bind
 
@@ -102,7 +99,7 @@ class AsyncLCDUtils(BaseAsyncAPI):
 
         return tx_encryption_key
 
-    async def  encrypt(self, contract_code_hash:str, msg:Any):
+    async def encrypt(self, contract_code_hash:str, msg:Any):
         nonce = self.generate_new_seed()
         tx_encryption_key = await BaseAsyncAPI._try_await(self.get_tx_encryption_key(nonce))
 
@@ -118,7 +115,7 @@ class AsyncLCDUtils(BaseAsyncAPI):
 
         return nonce + [x for x in key_dump] + [x for x in ciphertext]
 
-    async def  decrypt(self, ciphertext: bytes, nonce: List[int]) -> bytes:
+    async def decrypt(self, ciphertext: bytes, nonce: List[int]) -> bytes:
         if not ciphertext:
             return bytes([])
 
@@ -126,6 +123,12 @@ class AsyncLCDUtils(BaseAsyncAPI):
         siv = SIV(tx_encryption_key)
         plaintext = siv.open(ciphertext, [bytes()])
         return plaintext
+
+    async def get_pub_key(self):
+        return self.pubkey.public_bytes(
+            encoding=serialization.Encoding.Raw,
+            format=serialization.PublicFormat.Raw
+        )
 
 
 class LCDUtils(AsyncLCDUtils):
