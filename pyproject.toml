@@ -6,20 +6,19 @@ classifiers = [
     "License :: OSI Approved :: MIT License",
     "Natural Language :: English",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.6",
     "Programming Language :: Python :: 3.7",
     "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
 ]
 description = "The Python SDK for Terra"
-documentation = "https://docs.terra.money/sdk"
-homepage = "https://docs.terra.money/sdk"
+documentation = "https://terra-money.github.io/terra-sdk-python/index.html"
+homepage = "https://github.com/terra-money/terra-sdk-python"
 keywords = ["jigu", "blockchain", "terra", "defi", "crypto"]
 license = "MIT"
 packages = [{ include = "terra_sdk" }]
 readme = "README.md"
-repository = "https://github.com/terra-project/terra-sdk-python"
-version = "0.14.0"
+repository = "https://github.com/terra-money/terra-sdk-python"
+version = "1.0.2"
 
 [tool.poetry.dependencies]
 aiohttp = "^3.7.3"
@@ -28,9 +27,12 @@ bech32 = "^1.2.0"
 bip32utils = "^0.3.post4"
 ecdsa = "^0.16.1"
 mnemonic = "^0.19"
-python = "^3.6"
+python = "^3.7"
 wrapt = "^1.12.1"
 nest-asyncio = "^1.5.1"
+protobuf = "^3.17.3"
+furl = "^2.1.3"
+boltons = "^21.0.0"
 miscreant = "^0.3.0"
 
 [tool.poetry.dev-dependencies]
@@ -52,6 +54,8 @@ sphinx-rtd-theme = "^0.5.1"
 sphinx-autodoc-typehints = "^1.11.1"
 sphinx-autobuild = "^2020.9.1"
 uvloop = "^0.14.0"
+aioresponses = "^0.7.2"
+asynctest = "^0.13.0"
 
 [tool.pytest.ini_options]
 addopts = "-ra -q"
