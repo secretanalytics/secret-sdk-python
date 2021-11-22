@@ -3,7 +3,6 @@ from __future__ import annotations
 from asyncio import AbstractEventLoop, get_event_loop
 from json import JSONDecodeError
 from typing import Optional, Union
-from urllib.parse import urljoin
 
 import nest_asyncio
 from aiohttp import ClientSession
@@ -12,6 +11,7 @@ from terra_sdk.core import Coins, Dec, Numeric
 from terra_sdk.exceptions import LCDResponseError
 from terra_sdk.key.key import Key
 from terra_sdk.util.json import dict_to_data
+from terra_sdk.util.url import urljoin
 
 from .api.auth import AsyncAuthAPI, AuthAPI
 from .api.bank import AsyncBankAPI, BankAPI
@@ -130,9 +130,6 @@ class LCDClient(AsyncLCDClient):
 
     distribution: DistributionAPI
     """:class:`DistributionAPI<terra_sdk.client.lcd.api.distribution.DistributionAPI>`."""
-
-    gov: GovAPI
-    """:class:`GovAPI<terra_sdk.client.lcd.api.gov.GovAPI>`."""
 
     staking: StakingAPI
     """:class:`StakingAPI<terra_sdk.client.lcd.api.staking.StakingAPI>`."""
