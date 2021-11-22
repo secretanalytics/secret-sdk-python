@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
-
+from typing import Optional
 import attr
 
-from terra_sdk.core import AccAddress, Coins
+from terra_sdk.core import AccAddresss
 from terra_sdk.util.json import JSONSerializable
 
 from .public_key import PublicKey
@@ -20,10 +20,7 @@ class Account(JSONSerializable):
     address: AccAddress = attr.ib()
     """"""
 
-    coins: Coins = attr.ib(converter=Coins)
-    """"""
-
-    public_key: PublicKey = attr.ib()
+    public_key: Optional[PublicKey] = attr.ib()
     """"""
 
     account_number: int = attr.ib(converter=int)
@@ -37,8 +34,7 @@ class Account(JSONSerializable):
             "type": "cosmos-sdk/BaseAccount",
             "value": {
                 "address": self.address,
-                "coins": self.coins.to_data(),
-                "public_key": self.public_key.to_data(),
+                "public_key": self.public_key and self.public_key.to_data(),
                 "account_number": self.account_number,
                 "sequence": self.sequence,
             },
@@ -49,9 +45,9 @@ class Account(JSONSerializable):
         data = data["value"]
         return cls(
             address=data["address"],
-            coins=Coins.from_data(data.get("coins", {})),
-            public_key=PublicKey.from_data(data["public_key"]),
-            account_number=data["account_number"],
-            sequence=data["sequence"]
+            public_key=data.get("public_key")
+                       and PublicKey.from_data(data["public_key"]),
+            account_number=data.get("account_number") or 0,
+            sequence=data.get("sequence") or 0,
         )
 
