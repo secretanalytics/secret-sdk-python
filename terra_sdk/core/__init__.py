@@ -3,7 +3,6 @@ __all__ = [
     "Coins",
     "Dec",
     "Numeric",
-    "PublicKey",
     "AccAddress",
     "AccPubKey",
     "ValAddress",

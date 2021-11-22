@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import Optional
 import attr
 
-from terra_sdk.core import AccAddresss
+from terra_sdk.core import AccAddress
 from terra_sdk.util.json import JSONSerializable
 
 from .public_key import PublicKey
