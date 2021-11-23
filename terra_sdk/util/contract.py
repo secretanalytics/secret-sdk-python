@@ -1,11 +1,13 @@
 """Useful contract-related functions."""
 
 import base64
+import json
 from typing import Dict, List, Union
 
 from terra_sdk.core import AccAddress
 from terra_sdk.core.auth import TxInfo
 from terra_sdk.core.broadcast import BlockTxBroadcastResult
+from terra_sdk.util.json import dict_to_data
 
 __all__ = [
     "read_file_as_b64",
@@ -13,6 +15,11 @@ __all__ = [
     "get_contract_address",
     "get_contract_events",
 ]
+
+def msg_dict_as_b64(msg_dict: Dict) -> str:
+    str_dict = dict_to_data(msg_dict)
+    msg_str = base64.b64encode(bytes(json.dumps(str_dict, separators=(",", ":")).encode('utf-8'))).decode('utf-8')
+    return msg_str
 
 
 def read_file_as_b64(path: Union[str, bytes, int]) -> str:

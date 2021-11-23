@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import List, Optional
+from typing import List, Optional, Dict
 
 from terra_sdk.core import Coins, Numeric
 from terra_sdk.core.auth import StdFee, StdSignMsg, StdTx
@@ -34,6 +34,30 @@ class AsyncWallet:
         tx = await self.create_tx(*args, **kwargs)
         return self.key.sign_tx(tx)
 
+    async def execute_tx(self, handle_msg: Dict, contract_addr: str, transfer_amount: Coins = None, memo: str = "",
+                         gas_price: float = 0.25, gas_cost: int = 500_000) -> StdTx:
+        #TODO figure out where we want to move this, generate fee in a smarter way, decrypt the final tx
+        fee = StdFee(gas_cost, Coins.from_data([{"amount": int(gas_cost * gas_price), "denom": "uscrt"}]))
+        execute_msg = await self.lcd.wasm.contract_execute_msg(self.key.acc_address, contract_addr, handle_msg,
+                                                                 transfer_amount)
+        signed_tx = await self.create_and_sign_tx([execute_msg], fee=fee, memo = memo)
+        tx = await self.lcd.tx.broadcast(signed_tx)
+        return tx
+
+    async def multi_execute_tx(self, input_msgs: List[Dict], memo: str = "", gas_price: float = 0.25, gas_cost: int = 500_000):
+        fee = StdFee(gas_cost, Coins.from_data([{"amount": int(gas_cost * gas_price), "denom": "uscrt"}]))
+        msgs = []
+        for input_msg in input_msgs:
+            # input_msg should be a Dict with contract_addr and handle_msg keys
+            contract_addr = input_msg['contract_addr']
+            handle_msg = input_msg['handle_msg']
+            transfer_amount = input_msg.get('transfer_amount', Coins())
+            execute_msg = await self.lcd.wasm.contract_execute_msg(self.key.acc_address, contract_addr, handle_msg,
+                                                                   transfer_amount)
+            msgs.append(execute_msg)
+        signed_tx = await self.create_and_sign_tx(msgs, fee=fee, memo=memo)
+        tx = await self.lcd.tx.broadcast(signed_tx)
+        return tx
 
 class Wallet:
     """Wraps around a :class:`Key` implementation and provides transaction building and
@@ -145,3 +169,28 @@ class Wallet:
                 sequence,
             )
         )
+
+    def execute_tx(self, handle_msg: Dict, contract_addr: str, transfer_amount: Coins = None, memo: str = "",
+                         gas_price: float = 0.25, gas_cost: int = 150_000) -> StdTx:
+        #TODO figure out where we want to move this, generate fee in a smarter way, decrypt the final tx
+        fee = StdFee(gas_cost, Coins.from_data([{"amount": int(gas_cost * gas_price), "denom": "uscrt"}]))
+        execute_msg = self.lcd.wasm.contract_execute_msg(self.key.acc_address, contract_addr, handle_msg,
+                                                                 transfer_amount)
+        signed_tx = self.create_and_sign_tx([execute_msg], fee=fee, memo = memo)
+        tx = self.lcd.tx.broadcast(signed_tx)
+        return tx
+
+    def multi_execute_tx(self, input_msgs: List[Dict], memo: str = "", gas_price: float = 0.25, gas_cost: int = 150_000):
+        fee = StdFee(gas_cost, Coins.from_data([{"amount": int(gas_cost * gas_price), "denom": "uscrt"}]))
+        msgs = []
+        for input_msg in input_msgs:
+            # input_msg should be a Dict with contract_addr and handle_msg keys
+            contract_addr = input_msg['contract_addr']
+            handle_msg = input_msg['handle_msg']
+            transfer_amount = input_msg.get('transfer_amount', Coins())
+            execute_msg = self.lcd.wasm.contract_execute_msg(self.key.acc_address, contract_addr, handle_msg,
+                                                                   transfer_amount)
+            msgs.append(execute_msg)
+        signed_tx = self.create_and_sign_tx(msgs, fee=fee, memo=memo)
+        tx = self.lcd.tx.broadcast(signed_tx)
+        return tx
