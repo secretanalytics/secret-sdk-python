@@ -1,77 +1,26 @@
 [
   {
-    "type": "cosmos-sdk/Account",
+    "type": "cosmos-sdk/BaseAccount",
     "value": {
-      "address": "secret1xey4ymz4tmlgy6pp54e2ccj307ff6kx6ye0v6f",
-      "coins": [
-        {
-          "denom": "uscrt",
-          "amount": "499999887500"
-        }
-      ],
-      "public_key": "secretpub1addwnpepqvfgz2syfyed50sp5yj4ltd503wkqrlxd2x5du0ukry4fkk3xv8svz2jphr",
-      "account_number": 8828,
-      "sequence": 2
+      "address": "secret19y0n2ru9dae9w6vt7fwgfptp5nxq3hwtsz4u75",
+      "public_key": {
+        "type": "tendermint/PubKeySecp256k1",
+        "value": "ArvXpwZ5TSHkkel/AnTA4HFe+sej2+jDvisy2R7JfmKN"
+      },
+      "account_number": "1294",
+      "sequence": "58866"
     }
   },
   {
-    "type": "cosmos-sdk/Account",
+    "type": "cosmos-sdk/BaseAccount",
     "value": {
-      "address": "secret1jajwgdsfv8e88utlgxjndlvcm8aldyn3ecsk72",
-      "coins": [
-        {
-          "denom": "uscrt",
-          "amount": "53763271098"
-        }
-      ],
-      "public_key": "secretpub1addwnpepqwl5txmn3mgrajcryl8r56jssufprf9g5gxez6n2agfwgplesh6ucnxr4st",
-      "account_number": 2420,
-      "sequence": 204
-    }
-  },
-  {
-    "type": "cosmos-sdk/Account",
-    "value": {
-      "address": "secret1v5y7as75cqd0trtq62hgzj7u4ck9slhnrf3k4c",
-      "coins": [
-        {
-          "denom": "uscrt",
-          "amount": "54857412010"
-        }
-      ],
-      "public_key": "secretpub1addwnpepqv8zs74glf7lw34cd0fge9ryl50m3xdv86epnffds57gqp30yxr7qer489t",
-      "account_number": 11268,
-      "sequence": 349
-    }
-  },
-  {
-    "type": "cosmos-sdk/Account",
-    "value": {
-      "address": "secret16krcdrqh6y6pazvkj58nrvkerk0q0ttg22kepl",
-      "coins": [
-        {
-          "denom": "uscrt",
-          "amount": "58942989450"
-        }
-      ],
-      "public_key": "",
-      "account_number": 3730,
-      "sequence": 0
-    }
-  },
-  {
-    "type": "cosmos-sdk/Account",
-    "value": {
-      "address": "secret14hevdc4hfzdkqjqk38pgmk4kj9988l3ce80lkr",
-      "coins": [
-        {
-          "denom": "uscrt",
-          "amount": "84447491667"
-        }
-      ],
-      "public_key": "secretpub1addwnpepqgshr62zydwv65k9p68an07g4vy6zw7d6kg0fsxjrhddw927f7x6cjxnmgf",
-      "account_number": 1088,
-      "sequence": 11
+      "address": "secret1c7rjffp9clkvrzul20yy60yhy6arnv7sde0kjj",
+      "public_key": {
+        "type": "tendermint/PubKeySecp256k1",
+        "value": "A+ZCpoKoUKYuo4MtcSETc/KcssOQKbk31pfXxP7sV/zW"
+      },
+      "account_number": "1084",
+      "sequence": "72"
     }
   }
 ]
