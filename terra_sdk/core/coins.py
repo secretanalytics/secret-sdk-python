@@ -110,7 +110,7 @@ class Coins(JSONSerializable):
         Args:
             data (list): list of Coin-data objects
         """
-        coins = map(Coin.from_data, data)
+        coins = map(Coin.from_data, data or [])
         return cls(coins)
 
     def to_data(self) -> List[dict]:

@@ -35,8 +35,8 @@ class Account(JSONSerializable):
             "value": {
                 "address": self.address,
                 "public_key": self.public_key and self.public_key.to_data(),
-                "account_number": self.account_number,
-                "sequence": self.sequence,
+                "account_number": str(self.account_number),
+                "sequence": str(self.sequence),
             },
         }
 
