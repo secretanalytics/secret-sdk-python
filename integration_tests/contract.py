@@ -1,10 +1,10 @@
-from terra_sdk.client.localterra import LocalTerra
-from terra_sdk.core import Coins
-from terra_sdk.core.auth import StdFee
-from terra_sdk.core.bank.msgs import MsgSend
+from secret_sdk.client.localsecret import LocalSecret
+from secret_sdk.core import Coins
+from secret_sdk.core.auth import StdFee
+from secret_sdk.core.bank.msgs import MsgSend
 
 def main():
-    terra = LocalTerra()
+    terra = LocalSecret()
     test1 = terra.wallets["test1"]
 
     gas = 300_000

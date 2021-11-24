@@ -1,6 +1,6 @@
 import pytest
 
-from terra_sdk.core import Coin, Coins
+from secret_sdk.core import Coin, Coins
 
 
 def test_clobbers_similar_denom():

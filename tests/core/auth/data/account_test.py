@@ -1,4 +1,4 @@
-from terra_sdk.core.auth import Account
+from secret_sdk.core.auth import Account
 
 
 def test_deserializes_account_example(load_json_examples):

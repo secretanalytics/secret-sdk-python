@@ -1,5 +1,5 @@
 import asynctest
-from terra_sdk.client.lcd import LCDClient
+from secret_sdk.client.lcd import LCDClient
 from aioresponses import aioresponses
 
 

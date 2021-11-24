@@ -1,4 +1,4 @@
-from terra_sdk.core.auth import StdTx
+from secret_sdk.core.auth import StdTx
 
 
 def test_deserializes_stdtx(load_json_examples):

@@ -1,4 +1,4 @@
-from terra_sdk.core.distribution import (
+from secret_sdk.core.distribution import (
     MsgModifyWithdrawAddress,
     MsgWithdrawDelegationReward,
     MsgWithdrawValidatorCommission,

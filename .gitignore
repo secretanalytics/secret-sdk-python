@@ -105,3 +105,6 @@ ENV/
 .vscode/
 
 .idea*
+
+# random
+secret_sdk/my_test/

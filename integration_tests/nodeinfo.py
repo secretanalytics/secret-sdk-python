@@ -1,8 +1,9 @@
-from terra_sdk.client.lcd import LCDClient
+from secret_sdk.client.lcd import LCDClient
+from integration_tests.config import api_url
 
-terra = LCDClient(
+secret = LCDClient(
     chain_id="secret-4",
-    url="https://secret-4--lcd--full.datahub.figment.io/apikey/528a747ecdb5c88f843eaa9e8e59dce5/",
+    url = api_url,
 )
-res = terra.tendermint.node_info()
+res = secret.tendermint.node_info()
 print(res)
