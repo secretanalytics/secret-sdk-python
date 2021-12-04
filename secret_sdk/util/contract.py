@@ -10,6 +10,7 @@ from secret_sdk.core.broadcast import BlockTxBroadcastResult
 from secret_sdk.util.json import dict_to_data
 
 __all__ = [
+    "msg_dict_as_b64",
     "read_file_as_b64",
     "get_code_id",
     "get_contract_address",
