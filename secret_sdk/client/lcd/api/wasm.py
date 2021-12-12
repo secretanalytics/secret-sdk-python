@@ -54,7 +54,10 @@ class AsyncWasmAPI(BaseAsyncAPI):
         """
 
         # if contract_address in _contract_code_hash: return _contract_code_hash.get(contract_address)
-        contract_code_hash = await self._c._get(f"/wasm/contract/{contract_address}/code-hash")
+        if contract_address not in _contract_code_hash:
+            contract_code_hash = await self._c._get(f"/wasm/contract/{contract_address}/code-hash")
+            _contract_code_hash[contract_address] = contract_code_hash
+        contract_code_hash = _contract_code_hash[contract_address]
         # _contract_code_hash[contract_address] = contract_code_hash
         # if not contract_code_hash:
         #     raise ValueError(f'contract hash not found for {contract_address}')
