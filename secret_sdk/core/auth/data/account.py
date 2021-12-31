@@ -46,8 +46,7 @@ class Account(JSONSerializable):
         return cls(
             address=data["address"],
             public_key=data.get("public_key")
-                       and PublicKey.from_data(data["public_key"]),
+            and PublicKey.from_data(data["public_key"]),
             account_number=data.get("account_number") or 0,
             sequence=data.get("sequence") or 0,
         )
-

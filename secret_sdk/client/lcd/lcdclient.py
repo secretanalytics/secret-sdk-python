@@ -17,7 +17,6 @@ from .api.auth import AsyncAuthAPI, AuthAPI
 from .api.bank import AsyncBankAPI, BankAPI
 from .api.distribution import AsyncDistributionAPI, DistributionAPI
 from .api.staking import AsyncStakingAPI, StakingAPI
-from .api.supply import AsyncSupplyAPI, SupplyAPI
 from .api.tendermint import AsyncTendermintAPI, TendermintAPI
 from .api.tx import AsyncTxAPI, TxAPI
 from .api.wasm import AsyncWasmAPI, WasmAPI
@@ -53,7 +52,6 @@ class AsyncLCDClient:
         self.bank = AsyncBankAPI(self)
         self.distribution = AsyncDistributionAPI(self)
         self.staking = AsyncStakingAPI(self)
-        self.supply = AsyncSupplyAPI(self)
         self.tendermint = AsyncTendermintAPI(self)
         self.wasm = AsyncWasmAPI(self)
         self.tx = AsyncTxAPI(self)
@@ -134,9 +132,6 @@ class LCDClient(AsyncLCDClient):
     staking: StakingAPI
     """:class:`StakingAPI<secret_sdk.client.lcd.api.staking.StakingAPI>`."""
 
-    supply: SupplyAPI
-    """:class:`SupplyAPI<secret_sdk.client.lcd.api.supply.SupplyAPI>`."""
-
     tendermint: TendermintAPI
     """:class:`TendermintAPI<secret_sdk.client.lcd.api.tendermint.TendermintAPI>`."""
 
@@ -166,7 +161,6 @@ class LCDClient(AsyncLCDClient):
         self.bank = BankAPI(self)
         self.distribution = DistributionAPI(self)
         self.staking = StakingAPI(self)
-        self.supply = SupplyAPI(self)
         self.tendermint = TendermintAPI(self)
         self.wasm = WasmAPI(self)
         self.tx = TxAPI(self)

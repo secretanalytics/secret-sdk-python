@@ -56,6 +56,7 @@ Unfamiliar with Terra? → `Check out Terra Docs <https://docs.terra.money>`_
     core_modules/bank
     core_modules/distribution
     core_modules/gov
+    core_modules/market
     core_modules/mint
     core_modules/msgauth
     core_modules/oracle

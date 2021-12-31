@@ -16,7 +16,7 @@ using ``pip`` as follows:
 
 .. code-block:: shell
 
-   $ pip install terra_sdk 
+   $ pip install secret_sdk 
 
 
 .. note:: If you run into problems during installation, you might have a
@@ -33,7 +33,7 @@ This can be done through setting up an LCDClient:
 
 .. code-block:: python
 
-    from terra_sdk.client.lcd import LCDClient
+    from secret_sdk.client.lcd import LCDClient
 
     terra = LCDClient(chain_id="columbus-4", url="https://lcd.terra.dev")
     print(terra.tendermint.node_info())

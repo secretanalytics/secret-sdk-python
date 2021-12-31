@@ -44,7 +44,7 @@ class AsyncStakingAPI(BaseAsyncAPI):
                 f"/staking/delegators/{delegator}/delegations/{validator}"
             )
             return [Delegation.from_data(res)]
-        elif delegator is not None  :
+        elif delegator is not None:
             res = await self._c._get(f"/staking/delegators/{delegator}/delegations")
             return [Delegation.from_data(d) for d in res]
         elif validator is not None:

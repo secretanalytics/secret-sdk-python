@@ -4,18 +4,18 @@ Treasury
 API
 ---
 
-.. autoclass:: terra_sdk.client.lcd.api.treasury.TreasuryAPI
+.. autoclass:: secret_sdk.client.lcd.api.treasury.TreasuryAPI
     :members: 
 
 Data
 ----
 
-.. automodule:: terra_sdk.core.treasury.data
+.. automodule:: secret_sdk.core.treasury.data
     :members:
 
 
 Proposals
 ---------
 
-.. automodule:: terra_sdk.core.treasury.proposals
+.. automodule:: secret_sdk.core.treasury.proposals
     :members:

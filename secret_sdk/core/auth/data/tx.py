@@ -283,6 +283,7 @@ class TxInfo(JSONSerializable):
             data.get("codespace"),
         )
 
+
 @attr.s
 class SearchTxsResponse(JSONSerializable):
     """Holds information of the result of a search tx query

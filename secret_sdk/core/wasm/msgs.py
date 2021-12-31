@@ -11,8 +11,6 @@ from secret_sdk.core.msg import Msg
 from secret_sdk.util.json import dict_to_data
 from secret_sdk.util.remove_none import remove_none
 
-
-
 __all__ = [
     "MsgStoreCode",
     "MsgMigrateCode",
@@ -27,6 +25,7 @@ __all__ = [
 @attr.s
 class MsgStoreCode(Msg):
     """Upload a new smart contract WASM binary to the blockchain.
+
     Args:
         sender: address of sender
         wasm_byte_code: base64-encoded string containing bytecode
@@ -48,6 +47,7 @@ class MsgStoreCode(Msg):
 class MsgMigrateCode(Msg):
     """Upload a new smart contract WASM binary to the blockchain, replacing an existing code ID.
     Can only be called once by creator of the contract, and is used for migrating from Col-4 to Col-5.
+
     Args:
         sender: address of sender
         code_id: reference to the code on the blockchain
@@ -77,9 +77,11 @@ class MsgMigrateCode(Msg):
             wasm_byte_code=data["wasm_byte_code"],
         )
 
+
 @attr.s
 class MsgInstantiateContract(Msg):
     """Creates a new instance of a smart contract from existing code on the blockchain.
+
     Args:
         sender: address of sender
         admin: address of contract admin
@@ -121,7 +123,7 @@ class MsgExecuteContract(Msg):
     Args:
         sender: address of sender
         contract: address of contract to execute function on
-        execute_msg: ExecuteMsg (aka. HandleMsg) to pass
+        execute_msg (dict): ExecuteMsg to pass
         coins: coins to be sent, if needed by contract to execute.
             Defaults to empty ``Coins()``
     """
@@ -131,12 +133,8 @@ class MsgExecuteContract(Msg):
 
     sender: AccAddress = attr.ib()
     contract: AccAddress = attr.ib()
-    msg: str = attr.ib()
-    sent_funds: Coins = attr.ib(converter=Coins, factory=Coins)
-
-    def to_data(self) -> dict:
-        d = copy.deepcopy(self.__dict__)
-        return {"type": self.type, "value": dict_to_data(d)}
+    execute_msg: dict = attr.ib()
+    coins: Coins = attr.ib(converter=Coins, factory=Coins)
 
     @classmethod
     def from_data(cls, data: dict) -> MsgExecuteContract:
@@ -144,13 +142,15 @@ class MsgExecuteContract(Msg):
         return cls(
             sender=data["sender"],
             contract=data["contract"],
-            msg=data["msg"],
-            sent_funds=Coins.from_data(data["sent_funds"]),
+            execute_msg=remove_none(data.get("execute_msg")),
+            coins=Coins.from_data(data["coins"]),
         )
+
 
 @attr.s
 class MsgMigrateContract(Msg):
     """Migrate the contract to a different code ID.
+
     Args:
         admin: address of contract admin
         contract: address of contract to migrate
@@ -184,6 +184,7 @@ class MsgMigrateContract(Msg):
 @attr.s
 class MsgUpdateContractAdmin(Msg):
     """Update a smart contract's admin.
+
     Args:
         owner: address of current admin (sender)
         new_owner: address of new admin
@@ -210,6 +211,7 @@ class MsgUpdateContractAdmin(Msg):
 @attr.s
 class MsgClearContractAdmin(Msg):
     """Clears the contract's admin field.
+
     Args:
         admin: address of current admin (sender)
         contract: address of contract to change

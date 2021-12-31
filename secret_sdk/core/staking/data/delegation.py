@@ -22,6 +22,7 @@ class DelegationInfo(JSONSerializable):
     validator_address: ValAddress = attr.ib()
     shares: Dec = attr.ib(converter=Dec)
 
+
 @attr.s
 class Delegation(JSONSerializable):
     """Contains information about a current delegation pair (``delegator_address``, ``validator_address``)"""
@@ -123,7 +124,6 @@ class RedelegationEntry(JSONSerializable):
                 "completion_time": self.redelegation_entry.completion_time,
             },
             "balance": str(self.balance),
-            "shares_dst": str(self.shares_dst),
         }
 
     @classmethod

@@ -13,7 +13,7 @@ Create a new LCDClient instance by specifying the URL and chain ID of the node t
 
 .. code-block:: python
 
-    >>> from terra_sdk.client.lcd import LCDClient
+    >>> from secret_sdk.client.lcd import LCDClient
     >>> terra = LCDClient(url="https://lcd.terra.dev", chain_id="columbus-4")
     >>> terra.tendermint.node_info()['node_info']['network']
     'columbus-4'
@@ -24,7 +24,7 @@ You can also specify gas estimation parameters for your chain for building trans
     :emphasize-lines: 8-9
 
     import requests
-    from terra_sdk.core import Coins
+    from secret_sdk.core import Coins
 
     res = requests.get("https://fcd.terra.dev/v1/txs/gas_prices")
     terra = LCDClient(
@@ -39,15 +39,15 @@ Using the module APIs
 ---------------------
 
 LCDClient includes functions for interacting with each of the core modules (see sidebar). These functions are divided and
-and organized by module name (eg. :class:`terra.wasm<terra_sdk.client.lcd.api.wasm.WasmAPI>`), and handle 
+and organized by module name (eg. :class:`terra.market<secret_sdk.client.lcd.api.market.MarketAPI>`), and handle 
 the tedium of building HTTP requests, parsing the results, and handling errors. 
 
 Each request fetches live data from the blockchain:
 
 .. code-block:: python
 
-    >>> terra.wasm.contract_query('...', {"pool": {}})
-    {'assets': [{'info': {'native_token': {'denom': 'uscrt'}}, 'amount': '...'}, {'info': {'token': {'contract_addr': '...', 'token_code_hash': '...', 'viewing_key': '...'}}, 'amount': '...'}], 'total_share': '...'}
+    >>> terra.market.parameters()
+    {'base_pool': '7000000000000.000000000000000000', 'pool_recovery_period': '200', 'min_spread': '0.005000000000000000'}
 
 The height of the last result (if applicable) is available:
 
@@ -65,7 +65,7 @@ are useful for easily creating and signing transactions.
 
 .. code-block:: python
 
-    >>> from terra_sdk.key.mnemonic import MnemonicKey
+    >>> from secret_sdk.key.mnemonic import MnemonicKey
     >>> mk = MnemonicKey()
     >>> wallet = terra.wallet(mk)
     >>> wallet.account_number()
@@ -75,5 +75,5 @@ are useful for easily creating and signing transactions.
 LCDClient Reference
 -------------------
 
-.. autoclass:: terra_sdk.client.lcd.LCDClient
+.. autoclass:: secret_sdk.client.lcd.LCDClient
     :members:

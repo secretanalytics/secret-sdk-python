@@ -106,5 +106,5 @@ ENV/
 
 .idea*
 
-# random
-secret_sdk/my_test/
+# MacOS
+.DS_Store

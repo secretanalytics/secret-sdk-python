@@ -28,7 +28,7 @@ async def async_main():
         addr = test1.key.acc_address
         execute_msg = await secret.wasm.contract_execute_msg(addr, 'secret1s7c6xp9wltthk5r6mmavql4xld5me3g37guhsx',
                                                       {'deposit': {}},
-                                                      Coins(uscrt = 1000000))
+                                                      Coins(uscrt=1000000))
 
         convert_scrt_sscrt = await test1.create_and_sign_tx([execute_msg], fee=fee)
         convert_scrt_sscrt_tx = await secret.tx.broadcast(convert_scrt_sscrt)

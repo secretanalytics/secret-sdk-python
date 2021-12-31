@@ -90,7 +90,7 @@ class AsyncTxAPI(BaseAsyncAPI):
         data = bytearray([])
 
         if txs_response.get('data'):
-            data_field = txs_response['data'] # await self.decode_tx_data(txs_response['data'])
+            data_field = txs_response['data']  # await self.decode_tx_data(txs_response['data'])
 
         logs = txs_response.get('logs')
         if logs:
@@ -138,8 +138,8 @@ class AsyncTxAPI(BaseAsyncAPI):
                 rgx_matches = error_message_rgx.findall(txs_response['raw_log'])
                 if rgx_matches and len(rgx_matches) == 2:
                     error_cipher_b64 = rgx_matches[1]
-                    error_cipher_bz = base64.b64decode(error_cipher_b64);
-                    error_plain_bz = await self._c.utils.decrypt(error_cipher_bz, nonce);
+                    error_cipher_bz = base64.b64decode(error_cipher_b64)
+                    error_plain_bz = await self._c.utils.decrypt(error_cipher_bz, nonce)
                     txs_response['raw_log'] = txs_response['raw_log'].replace(error_cipher_b64, error_plain_bz)
 
         txs_response = {k: v for k, v in txs_response.items()}
@@ -293,7 +293,7 @@ class AsyncTxAPI(BaseAsyncAPI):
         return await self._c._post("/txs", data, raw=True)
 
     async def broadcast_sync(
-            self, tx: StdTx, options: BroadcastOptions = None
+        self, tx: StdTx, options: BroadcastOptions = None
     ) -> SyncTxBroadcastResult:
         """Broadcasts a transaction using the ``sync`` broadcast mode.
 
@@ -312,7 +312,7 @@ class AsyncTxAPI(BaseAsyncAPI):
         )
 
     async def broadcast_async(
-            self, tx: StdTx, options: BroadcastOptions = None
+        self, tx: StdTx, options: BroadcastOptions = None
     ) -> AsyncTxBroadcastResult:
         """Broadcasts a transaction using the ``async`` broadcast mode.
 
@@ -328,7 +328,7 @@ class AsyncTxAPI(BaseAsyncAPI):
         )
 
     async def broadcast(
-            self, tx: StdTx, options: BroadcastOptions = None
+        self, tx: StdTx, options: BroadcastOptions = None
     ) -> BlockTxBroadcastResult:
         """Broadcasts a transaction using the ``block`` broadcast mode.
 
