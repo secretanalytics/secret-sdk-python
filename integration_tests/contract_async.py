@@ -16,7 +16,7 @@ async def async_main():
 
         # test net addresses
         send_msg = MsgSend("secret1ljtckgv3gsgrnhf7f3ygquyse5urwkamx7ln27", "secret16a7hp3wr4esccstuat4syavv6ylpzpd4kn0jp9",
-                           Coins(uscrt = 5000000))
+                           Coins(uscrt=5000000))
         tx = await test1.create_and_sign_tx([send_msg], fee=fee)
         send_scrt_tx = await secret.tx.broadcast(tx)
         print('send scrt:\n', send_scrt_tx)
