@@ -7,7 +7,17 @@ from secret_sdk.core.wasm.msgs import MsgExecuteContract, AccAddress
 __all__ = ["AsyncWasmAPI", "WasmAPI"]
 
 _contract_code_hash = {}
+
+
 class AsyncWasmAPI(BaseAsyncAPI):
+    async def list_code_info(self) -> list:
+        """Fetches information about uploaded codes.
+
+        Returns:
+            list: codes information
+        """
+        return await self._c._get(f"/wasm/code") or []
+
     async def code_info(self, code_id: int) -> dict:
         """Fetches information about an uploaded code.
 
@@ -17,7 +27,18 @@ class AsyncWasmAPI(BaseAsyncAPI):
         Returns:
             dict: code information
         """
-        return await self._c._get(f"/wasm/codes/{code_id}")
+        return await self._c._get(f"/wasm/code/{code_id}")
+
+    async def list_contracts_by_code_id(self, code_id: int) -> dict:
+        """Fetches information about an uploaded code.
+
+        Args:
+            code_id (int): code ID
+
+        Returns:
+            dict: code information
+        """
+        return await self._c._get(f"/wasm/code/{code_id}/contracts") or []
 
     async def contract_info(self, contract_address: str) -> dict:
         """Fetches information about an instantiated contract.
@@ -53,15 +74,10 @@ class AsyncWasmAPI(BaseAsyncAPI):
             dict: contract hash
         """
 
-        # if contract_address in _contract_code_hash: return _contract_code_hash.get(contract_address)
         if contract_address not in _contract_code_hash:
             contract_code_hash = await self._c._get(f"/wasm/contract/{contract_address}/code-hash")
             _contract_code_hash[contract_address] = contract_code_hash
-        contract_code_hash = _contract_code_hash[contract_address]
-        # _contract_code_hash[contract_address] = contract_code_hash
-        # if not contract_code_hash:
-        #     raise ValueError(f'contract hash not found for {contract_address}')
-        return contract_code_hash
+        return _contract_code_hash[contract_address]
 
     async def contract_query(self, contract_address: str, query: dict, height: Optional[int] = 0) -> Any:
         """Runs a QueryMsg on a contract.
@@ -75,7 +91,7 @@ class AsyncWasmAPI(BaseAsyncAPI):
         """
         query_str = json.dumps(query, separators=(",", ":"))
         contract_code_hash = await BaseAsyncAPI._try_await(self.contract_hash(contract_address))
-        encrypted = await BaseAsyncAPI._try_await( self._c.utils.encrypt(contract_code_hash, query_str))
+        encrypted = await BaseAsyncAPI._try_await(self._c.utils.encrypt(contract_code_hash, query_str))
         nonce = encrypted[0:32]
         encoded = base64.b64encode(bytes(encrypted)).hex()
         query_path = f'/wasm/contract/{contract_address}/query/{encoded}?encoding=hex&height={height}'
@@ -92,21 +108,25 @@ class AsyncWasmAPI(BaseAsyncAPI):
         encrypted_msg = base64.b64encode(bytes(encrypted_msg)).decode()
         return MsgExecuteContract(sender_address, contract_address, encrypted_msg, transfer_amount)
 
-    async def parameters(self) -> dict:
-        """Fetches the Wasm module parameters.
-
-        Returns:
-            dict: Wasm module parameters
-        """
-        return await self._c._get("/wasm/parameters")
-
 
 class WasmAPI(AsyncWasmAPI):
+    @sync_bind(AsyncWasmAPI.list_code_info)
+    def list_code_info(self) -> list:
+        pass
+
+    list_code_info.__doc__ = AsyncWasmAPI.list_code_info.__doc__
+
     @sync_bind(AsyncWasmAPI.code_info)
     def code_info(self, code_id: int) -> dict:
         pass
 
     code_info.__doc__ = AsyncWasmAPI.code_info.__doc__
+
+    @sync_bind(AsyncWasmAPI.list_contracts_by_code_id)
+    def list_contracts_by_code_id(self, code_id: int) -> list:
+        pass
+
+    list_contracts_by_code_id.__doc__ = AsyncWasmAPI.list_contracts_by_code_id.__doc__
 
     @sync_bind(AsyncWasmAPI.contract_info)
     def contract_info(self, contract_address: str) -> dict:
@@ -131,12 +151,6 @@ class WasmAPI(AsyncWasmAPI):
         pass
 
     contract_query.__doc__ = AsyncWasmAPI.contract_query.__doc__
-
-    @sync_bind(AsyncWasmAPI.parameters)
-    def parameters(self) -> dict:
-        pass
-
-    parameters.__doc__ = AsyncWasmAPI.parameters.__doc__
 
     @sync_bind(AsyncWasmAPI.contract_execute_msg)
     def contract_execute_msg(self, sender_address: AccAddress, contract_address: AccAddress, handle_msg: dict,
