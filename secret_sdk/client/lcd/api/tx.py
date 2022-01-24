@@ -87,7 +87,7 @@ class AsyncTxAPI(BaseAsyncAPI):
 
     async def decrypt_txs_response(self, txs_response):
         data_field = None
-        data = bytearray([])
+        data = []
 
         if txs_response.get('data'):
             data_field = txs_response['data']  # await self.decode_tx_data(txs_response['data'])
@@ -105,14 +105,14 @@ class AsyncTxAPI(BaseAsyncAPI):
             else:
                 continue
 
-            input_msg_pubkey = input_msg_encrypted.slice(32, 64)
+            input_msg_pubkey = input_msg_encrypted[32:64]
             pub_key = await self._c.utils.get_pub_key()
             if base64.b64encode(pub_key) == base64.b64encode(input_msg_pubkey):
                 # my pubkey, can decrypt
-                nonce = input_msg_pubkey.slice(0, 32)
+                nonce = input_msg_pubkey[0:32]
 
                 # decrypt input
-                input_msg = await self._c.utils.decrypt(input_msg_encrypted.slice(64), nonce)
+                input_msg = await self._c.utils.decrypt(input_msg_encrypted[:64], nonce)
 
                 if msg['type'] == "wasm/MsgExecuteContract":
                     # decrypt input
@@ -369,6 +369,12 @@ class TxAPI(AsyncTxAPI):
         pass
 
     tx_info.__doc__ = AsyncTxAPI.tx_info.__doc__
+
+    @sync_bind(AsyncTxAPI.tx_by_id)
+    def tx_by_id(self, tx_hash: str) -> TxInfo:
+        pass
+
+    tx_by_id.__doc__ = AsyncTxAPI.tx_by_id.__doc__
 
     @sync_bind(AsyncTxAPI.create)
     def create(

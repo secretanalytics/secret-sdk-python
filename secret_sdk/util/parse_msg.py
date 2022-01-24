@@ -5,13 +5,20 @@ from secret_sdk.core.distribution import (
     MsgWithdrawDelegationReward,
     MsgWithdrawValidatorCommission,
 )
-
+from secret_sdk.core.staking import (
+    MsgBeginRedelegate,
+    MsgCreateValidator,
+    MsgDelegate,
+    MsgEditValidator,
+    MsgUndelegate,
+)
 from secret_sdk.core.wasm import (
     MsgExecuteContract,
     MsgInstantiateContract,
     MsgMigrateContract,
     MsgStoreCode,
 )
+from secret_sdk.core.msg import MsgData
 
 from .base import create_demux
 
@@ -30,10 +37,19 @@ wasm_msgs = [
     MsgStoreCode,
 ]
 
+staking_msgs = [
+    MsgBeginRedelegate,
+    MsgCreateValidator,
+    MsgDelegate,
+    MsgEditValidator,
+    MsgUndelegate,
+]
+
 parse_msg = create_demux(
     [
         *bank_msgs,
-        *distribution_msgs,
-        *wasm_msgs,
-    ]
+        #*distribution_msgs,
+        #*staking_msgs,
+        #*wasm_msgs,
+    ], MsgData
 )

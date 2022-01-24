@@ -4,7 +4,6 @@ import wrapt
 
 
 class BaseAsyncAPI:
-    # c = AsyncLCDClient
     def __init__(self, c):
         self._c = c
 
