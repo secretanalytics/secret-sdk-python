@@ -1,0 +1,3 @@
+[submodule "secret.proto"]
+	path = secret.proto
+	url = https://github.com/stephanegg/secret.proto
