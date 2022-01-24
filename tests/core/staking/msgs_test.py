@@ -1,6 +1,7 @@
 from secret_sdk.core.staking import MsgBeginRedelegate, MsgDelegate, MsgUndelegate
 
 
+# /txs?message.module=staking&limit=1000
 def test_deserialize_msg_delegate_examples(load_msg_examples):
     examples = load_msg_examples(MsgDelegate.type, "./MsgDelegate.data.json")
     for example in examples:
