@@ -22,13 +22,13 @@ __all__ = [
 
 @attr.s
 class MsgBeginRedelegate(Msg):
-    """Redelegate staked Luna from ``validator_src_address`` to ``valdiator_dst_address``.
+    """Redelegate staked SCRT from ``validator_src_address`` to ``valdiator_dst_address``.
 
     Args:
         delegator_address: delegator
         validator_src_address: validator to remove delegation FROM
         validator_dst_address: validator to transfer delegate TO
-        amount (Union[str, dict, Coin]): coin (LUNA) to redelegate
+        amount (Union[str, dict, Coin]): coin (SCRT) to redelegate
     """
 
     type = "staking/MsgBeginRedelegate"
@@ -54,12 +54,12 @@ class MsgBeginRedelegate(Msg):
 
 @attr.s
 class MsgDelegate(Msg):
-    """Delegate Luna to validator at ``validator_address``.
+    """Delegate SCRT to validator at ``validator_address``.
 
     Args:
         delegator_address: delegator
         validator_address: validator to delegate to
-        amount (Union[str, dict, Coin]): coin (LUNA) to delegate
+        amount (Union[str, dict, Coin]): coin (SCRT) to delegate
     """
 
     type = "staking/MsgDelegate"
@@ -83,12 +83,12 @@ class MsgDelegate(Msg):
 
 @attr.s
 class MsgUndelegate(Msg):
-    """Undelegate Luna from staking position with ``validator_address``.
+    """Undelegate SCRT from staking position with ``validator_address``.
 
     Args:
         delegator_address: delegator
         validator_address: validator to undelegate from
-        amount (Union[str, dict, Coin]): coin (LUNA) to undelegate
+        amount (Union[str, dict, Coin]): coin (SCRT) to undelegate
     """
 
     type = "staking/MsgUndelegate"
@@ -155,7 +155,7 @@ class MsgCreateValidator(Msg):
         delegator_address: validator's account address
         validator_address: validator's operator address
         pubkey: validator consensus (Tendermint) public key
-        value (Coin.Input): initial amount of Luna toi self-delegate
+        value (Coin.Input): initial amount of SCRT toi self-delegate
     """
 
     type = "staking/MsgCreateValidator"

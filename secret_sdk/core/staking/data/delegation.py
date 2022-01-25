@@ -44,7 +44,7 @@ class Delegation(JSONSerializable):
 
 @attr.s
 class UnbondingEntry(JSONSerializable):
-    """Contains information about an active unbonding lot of Luna."""
+    """Contains information about an active unbonding lot of SCRT."""
 
     initial_balance: int = attr.ib(converter=int)
     """"""
@@ -108,7 +108,7 @@ class RedelegationEntryInfo(JSONSerializable):
 
 @attr.s
 class RedelegationEntry(JSONSerializable):
-    """Contains information about an active redelegated lot of Luna."""
+    """Contains information about an active redelegated lot of SCRT."""
 
     redelegation_entry: RedelegationEntryInfo = attr.ib()
     """"""

@@ -149,7 +149,7 @@ Once you have your Wallet, you can simply create a StdTx using `Wallet.create_an
         msgs=[MsgSend(
             wallet.key.acc_address,
             RECIPIENT,
-            "1000000uscrt"    # send 1 luna
+            "1000000uscrt"    # send 1 scrt
         )],
         memo="test transaction!",
         fee=StdFee(200000, "120000uscrt")
@@ -172,7 +172,7 @@ Community contribution, whether it's a new feature, correction, bug report, addi
 <br/>
 
 ## Reporting an Issue 
-First things first: **Do NOT report security vulnerabilities in public issues!** Please disclose responsibly by letting the Secret SDK team know upfront (discord, telegram). We will assess the issue as soon as possible on a best-effort basis and will give you an estimate for when we have a fix and release available for an eventual public disclosure. </br>
+First things first: **Do NOT report security vulnerabilities in public issues!** Please disclose responsibly by letting the Secret SDK team know upfront (discord , telegram). We will assess the issue as soon as possible on a best-effort basis and will give you an estimate for when we have a fix and release available for an eventual public disclosure. </br>
 If you encounter a different issue with the Python SDK, check first to see if there is an existing issue on the Issues page or a pull request on the Pull request page (both Open and Closed tabs) addressing the topic.
 
 If there isn't a discussion on the topic there, you can file an issue. The ideal report includes:
