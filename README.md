@@ -8,7 +8,7 @@ The Secret Software Development Kit (SDK) in Python is a simple library toolkit 
 
 - Written in Python offering extensive support libraries
 - Versatile support for key management solutions
-- Exposes the Terra API through LCDClient
+- Exposes the Secret Rest API through LCDClient
 
 <br/>
 
