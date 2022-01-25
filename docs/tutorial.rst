@@ -11,7 +11,7 @@ Quickstart
 Installation
 ------------
 
-Terra SDK can be installed (preferably in a :ref:`virtualenv <setup_environment>`)
+Secret SDK can be installed (preferably in a :ref:`virtualenv <setup_environment>`)
 using ``pip`` as follows:
 
 .. code-block:: shell
@@ -24,10 +24,10 @@ using ``pip`` as follows:
     clean environment <setup_environment>`.
 
 
-Using Terra SDK
+Using Secret SDK
 ---------------
 
-In order to interact with the Terra blockchain, you'll need a connection to a Terra node.
+In order to interact with the Secret blockchain, you'll need a connection to a Secret node or an api endpoint - we've used the community api as an example below.
 This can be done through setting up an LCDClient:
 
 
@@ -35,20 +35,21 @@ This can be done through setting up an LCDClient:
 
     from secret_sdk.client.lcd import LCDClient
 
-    terra = LCDClient(chain_id="columbus-4", url="https://lcd.terra.dev")
-    print(terra.tendermint.node_info())
+    client = LCDClient(chain_id="secret-4",
+            url="https://api.scrt.network/")
+    print(client.tendermint.node_info())
 
 
 Getting Blockchain Info
 -----------------------
 
-It's time to start using Terra SDK! Once properly configured, the ``LCDClient`` instance will allow you
-to interact with the Terra blockchain. Try getting the latest block height:
+It's time to start using Secret SDK! Once properly configured, the ``LCDClient`` instance will allow you
+to interact with the Secret blockchain. Try getting the latest block height:
 
 .. code-block:: python
 
-    >>> terra.tendermint.block_info()['block']['header']['height']
+    >>> client.tendermint.block_info()['block']['header']['height']
     '1687543'
 
-Terra SDK can help you read block data, sign and send transactions, deploy and interact with contracts,
+Secret SDK can help you read block data, sign and send transactions, deploy and interact with contracts,
 and a number of other features.

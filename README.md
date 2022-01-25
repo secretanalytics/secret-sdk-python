@@ -1,25 +1,11 @@
 <br/>
 <br/>
 
-<div  align="center"> <p > <img src="https://raw.githubusercontent.com/terra-money/terra-sdk-python/main/docs/img/logo.png" width=500 alt="py-sdk-logo"></p>
+#<div  align="center"> <p > Python SDK for Secret Network </p>
 
-The Python SDK for Terra
-<br/>
-<p><sub>(Unfamiliar with Terra?  <a href="https://docs.terra.money/">Check out Terra Docs</a>)</sub></p>
-
-  <p > <img alt="GitHub" src="https://img.shields.io/github/license/terra-money/terra-sdk-python">
-<img alt="Python" src="https://img.shields.io/pypi/pyversions/terra-sdk">
-  <img alt="pip" src="https://img.shields.io/pypi/v/terra-sdk"></p>
-<p>
-  <a href="https://terra-money.github.io/terra.py/index.html"><strong>Explore the Docs »</strong></a>
-<br/>
-  <a href="https://pypi.org/project/terra-sdk/">PyPI Package</a>
-  ·
-  <a href="https://github.com/terra-money/terra-sdk-python">GitHub Repository</a>
-</p></div>
-
-
-The Terra Software Development Kit (SDK) in Python is a simple library toolkit for building software that can interact with the Terra blockchain and provides simple abstractions over core data structures, serialization, key management, and API request generation.
+<br>
+<br>
+The Secret Software Development Kit (SDK) in Python is a simple library toolkit for building software that can interact with the Secret blockchain and provides simple abstractions over core data structures, serialization, key management, and API request generation. The SDK is based on a fork of  <a href="https://github.com/terra-money/terra.py">terra.py</a> on Terra 
 
 ## Features
 
@@ -54,29 +40,29 @@ The Terra Software Development Kit (SDK) in Python is a simple library toolkit f
 
 
 # API Reference
-An intricate reference to the APIs on the Terra SDK can be found <a href="https://terra-money.github.io/terra-sdk-python/index.html">here</a>.
+An intricate reference to the APIs on the Secret SDK can be found <a href="https://secretapi.io/#/">here</a>.
 
 <br/>
 
 # Getting Started
-A walk-through of the steps to get started with the Terra SDK alongside with a few use case examples are provided below. Alternatively, a tutorial video is also available <a href="https://www.youtube.com/watch?v=GfasBlJHKIg">here</a> as reference.
+A walk-through of the steps to get started with the Secret SDK alongside with a few use case examples are provided below. 
 
 ## Requirements
-Terra SDK requires <a href="https://www.python.org/downloads/">Python v3.7+</a>.
+Secret SDK requires <a href="https://www.python.org/downloads/">Python v3.7+</a>.
 
 ## Installation
 
 <sub>**NOTE:** *All code starting with a `$` is meant to run on your terminal (a bash prompt). All code starting with a `>>>` is meant to run in a python interpreter, like <a href="https://pypi.org/project/ipython/">ipython</a>.*</sub>
 
-Terra SDK can be installed (preferably in a `virtual environment` from PyPI using `pip`) as follows:
+Secret SDK can be installed (preferably in a `virtual environment` from PyPI using `pip`) as follows:
 
 ```
-$ pip install -U secret_sdk
+$ pip install -U secret-py
 ```
 <sub>*You might have `pip3` installed instead of `pip`; proceed according to your own setup.*<sub>
 
 ## Dependencies
-Terra SDK uses <a href="https://python-poetry.org/">Poetry</a> to manage dependencies. To get set up with all the required dependencies, run:
+Secret SDK uses <a href="https://python-poetry.org/">Poetry</a> to manage dependencies. To get set up with all the required dependencies, run:
 ```
 $ pip install poetry
 $ poetry install
@@ -84,37 +70,31 @@ $ poetry install
 
 
 ## Tests
-Terra SDK provides extensive tests for data classes and functions. To run them, after the steps in [Dependencies](#dependencies):
+Secret SDK provides extensive tests for data classes and functions. To run them, after the steps in [Dependencies](#dependencies):
 ```
 $ make test
-```
-
-## Code Quality
-Terra SDK uses <a href="https://black.readthedocs.io/en/stable/">Black</a>, <a href="https://isort.readthedocs.io/en/latest/">isort</a>, and <a href="https://mypy.readthedocs.io/en/stable/index.html">Mypy</a> for checking code quality and maintaining style. To reformat, after the steps in [Dependencies](#dependencies):
-```
-$ make qa && make format
 ```
 
 <br/>
 
 # Usage Examples
-Terra SDK can help you read block data, sign and send transactions, deploy and interact with contracts, and many more.
-Following examples are provided to help get building started; use cases and functionalities of the Terra SDK are not limited to the following examples and can be found in full <a href="https://terra-money.github.io/terra-sdk-python/index.html">here</a>.
+Secret SDK can help you read block data, query secret contracts, sign and send transactions, and many more.
+Following examples are provided to help get building started.
 
-In order to interact with the Terra blockchain, you'll need a connection to a Terra node. This can be done through setting up an LCDClient (The LCDClient is an object representing an HTTP connection to a Terra LCD node.):
+In order to interact with the Secret blockchain, you'll need a connection to a Secret node or an api. This can be done through setting up an LCDClient (The LCDClient is an object representing an HTTP connection to a Secret LCD node.):
 
 ```
 >>> from secret_sdk.client.lcd import LCDClient
->>> terra = LCDClient(chain_id="columbus-5", url="https://lcd.terra.dev")
+>>> client = LCDClient(chain_id="secret-4", url= node_rest_endpoint)
 ```
 
 ## Getting Blockchain Information
 
-Once properly configured, the `LCDClient` instance will allow you to interact with the Terra blockchain. Try getting the latest block height:
+Once properly configured, the `LCDClient` instance will allow you to interact with the Secret blockchain. Try getting the latest block height:
 
 
 ```
->>> terra.tendermint.block_info()['block']['header']['height']
+>>> client.tendermint.block_info()['block']['header']['height']
 ```
 
 `'1687543'`
@@ -129,18 +109,18 @@ If you want to make asynchronous, non-blocking LCD requests, you can use AsyncLC
 >>> from secret_sdk.client.lcd import AsyncLCDClient
 
 >>> async def main():
-      <strong>terra = AsyncLCDClient("https://lcd.terra.dev", "columbus-5")</strong>
-      total_supply = await terra.supply.total()
+      <strong>client = AsyncLCDClient(url = node_endpoint, chain_id = "secret-4")</strong>
+      total_supply = await client.supply.total()
       print(total_supply)
-      <strong>await terra.session.close # you must close the session</strong>
+      <strong>await client.session.close # you must close the session</strong>
 
 >>> asyncio.get_event_loop().run_until_complete(main())
 </code></pre>
 
 ## Building and Signing Transactions
 
-If you wish to perform a state-changing operation on the Terra blockchain such as sending tokens, swapping assets, withdrawing rewards, or even invoking functions on smart contracts, you must create a **transaction** and broadcast it to the network.
-Terra SDK provides functions that help create StdTx objects.
+If you wish to perform a state-changing operation on the Secret blockchain such as sending tokens, swapping assets, withdrawing rewards, or even invoking functions on smart contracts, you must create a **transaction** and broadcast it to the network.
+Secret SDK provides functions that help create StdTx objects.
 
 ### Example Using a Wallet (*recommended*)
 
@@ -154,8 +134,8 @@ Use `LCDClient.wallet()` to create a Wallet from any Key instance. The Key provi
 >>> from secret_sdk.key.mnemonic import MnemonicKey
 
 >>> mk = MnemonicKey(mnemonic=MNEMONIC) 
->>> terra = LCDClient("https://lcd.terra.dev", "columbus-5")
->>> wallet = terra.wallet(mk)
+>>> client = LCDClient(node_endpoint, "secret-4")
+>>> wallet = client.wallet(mk)
 ```
 
 Once you have your Wallet, you can simply create a StdTx using `Wallet.create_and_sign_tx`.
@@ -176,10 +156,10 @@ Once you have your Wallet, you can simply create a StdTx using `Wallet.create_an
     )
 ```
 
-You should now be able to broadcast your transaction to the network.
+You should now be able to broadcast your transaction to the network with your broadcast mode of choice (block, sync, async - see cosmos docs)
 
 ```
->>> result = terra.tx.broadcast(tx)
+>>> result = client.tx.broadcast(tx)
 >>> print(result)
 ```
 
@@ -192,8 +172,8 @@ Community contribution, whether it's a new feature, correction, bug report, addi
 <br/>
 
 ## Reporting an Issue 
-First things first: **Do NOT report security vulnerabilities in public issues!** Please disclose responsibly by letting the <a href="mailto:william@terra.money">Terra SDK team</a> know upfront. We will assess the issue as soon as possible on a best-effort basis and will give you an estimate for when we have a fix and release available for an eventual public disclosure. </br>
-If you encounter a different issue with the Python SDK, check first to see if there is an existing issue on the <a href="https://github.com/terra-money/terra-sdk-python/issues">Issues</a> page or a pull request on the <a href="https://github.com/terra-money/terra-sdk-python/pulls">Pull requests</a> page (both Open and Closed tabs) addressing the topic.
+First things first: **Do NOT report security vulnerabilities in public issues!** Please disclose responsibly by letting the Secret SDK team know upfront (discord, telegram). We will assess the issue as soon as possible on a best-effort basis and will give you an estimate for when we have a fix and release available for an eventual public disclosure. </br>
+If you encounter a different issue with the Python SDK, check first to see if there is an existing issue on the Issues page or a pull request on the Pull request page (both Open and Closed tabs) addressing the topic.
 
 If there isn't a discussion on the topic there, you can file an issue. The ideal report includes:
 
@@ -201,13 +181,13 @@ If there isn't a discussion on the topic there, you can file an issue. The ideal
 * How to recreate the bug.
 * If relevant, including the versions of your:
     * Python interpreter
-    * Terra SDK
+    * Secret SDK
     * Optionally of the other dependencies involved
 * If possible, create a pull request with a (failing) test case demonstrating what's wrong. This makes the process for fixing bugs quicker & gets issues resolved sooner.
 </br>
 
 ## Requesting a Feature
-If you wish to request the addition of a feature, please first checkout the <a href="https://github.com/terra-money/terra-sdk-python/issues">Issues</a> page and the <a href="https://github.com/terra-money/terra-sdk-python/pulls">Pull requests</a> page (both Open and Closed tabs). If you decide to continue with the request, think of the merits of the feature to convince the project's developers, and provide as much detail and context as possible in the form of filing an issue on the <a href="https://github.com/terra-money/terra-sdk-python/issues">Issues</a> page.
+If you wish to request the addition of a feature, please first checkout the Issues page and the Pull requests page (both Open and Closed tabs). If you decide to continue with the request, think of the merits of the feature to convince the project's developers, and provide as much detail and context as possible in the form of filing an issue on the Issues page.
 
 
 <br/>
@@ -222,7 +202,7 @@ If you wish to contribute to the repository in the form of patches, improvements
 2. Build the project using the [Dependencies](#dependencies) and [Tests](#tests) steps.
 3. Install a <a href="https://virtualenv.pypa.io/en/latest/index.html">virtualenv</a>.
 4. Develop your code and test the changes using the [Tests](#tests) and [Code Quality](#code-quality) steps.
-5. Commit your changes (ideally follow the <a href="https://github.com/angular/angular/blob/master/CONTRIBUTING.md#commit">Angular commit message guidelines</a>).
+5. Commit your changes
 6. Push your fork and submit a pull request to the repository's `main` branch to propose your code.
    
 
@@ -253,13 +233,4 @@ You can give this <a href="https://opensource.guide/how-to-contribute/#how-to-su
 
 This software is licensed under the MIT license. See [LICENSE](./LICENSE) for full disclosure.
 
-© 2021 Terraform Labs, PTE.
 
-<hr/>
-
-<p>&nbsp;</p>
-<p align="center">
-    <a href="https://terra.money/"><img src="https://terra.money/logos/terra_logo.svg" alt="Terra-logo" width=200/></a>
-<div align="center">
-  <sub><em>Powering the innovation of money.</em></sub>
-</div>
