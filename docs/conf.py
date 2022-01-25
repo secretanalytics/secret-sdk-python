@@ -19,9 +19,9 @@ import sphinx_rtd_theme
 
 # -- Project information -----------------------------------------------------
 
-project = "Terra SDK"
-copyright = "2021, Terraform Labs, PTE."
-author = "Terraform Labs, PTE."
+project = "Secret SDK"
+copyright = "2022, SCRT LabRador, Secret analytics"
+author = "SCRT LabRador, Secret analytics"
 
 # The full version, including alpha/beta/rc tags
 release = "1.0.0"

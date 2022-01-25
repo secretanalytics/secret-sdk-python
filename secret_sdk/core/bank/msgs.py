@@ -54,8 +54,8 @@ class MultiSendIO(JSONSerializable):
     .. code-block:: python
 
         {
-           "address": "terra1...",
-           "coins": "123456789uusd"
+           "address": "secret1...",
+           "coins": "123456789uscrt"
         }
     """
 

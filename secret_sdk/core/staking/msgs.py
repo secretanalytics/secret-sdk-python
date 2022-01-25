@@ -146,7 +146,7 @@ class MsgEditValidator(Msg):
 
 @attr.s
 class MsgCreateValidator(Msg):
-    """Register a new validator with the Terra protocol.
+    """Register a new validator with the Secret protocol.
 
     Args:
         description: validator description

@@ -13,8 +13,6 @@ SCRT_COIN_TYPE = 529
 class MnemonicKey(RawKey):
     """A MnemonicKey derives a private key using a BIP39 mnemonic seed phrase, and provides key-derivation options based on the BIP44 HD path standard.
 
-    .. note:: You can change ``coin_type`` to 118 to derive the key for a legacy Terra
-        wallet (shares ``coin_type`` with ATOM).
 
     Args:
         mnemonic (str, optional): space-separated mnemonic seed phrase. If not provided,

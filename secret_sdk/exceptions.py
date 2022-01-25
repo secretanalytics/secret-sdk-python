@@ -1,4 +1,4 @@
-"""Terra SDK-specific errors and exceptions."""
+"""Secret SDK-specific errors and exceptions."""
 
 
 class LCDResponseError(IOError):

@@ -63,7 +63,7 @@ class Description(JSONSerializable):
     """Validator description entry.
 
     Args:
-        moniker: validator name, aka: \"Terran One\"
+        moniker: validator name, aka: \"SCRT LabRador\"
         identity: keybase.io identifier (used for setting logo)
         website: validator website
         details: longer description of validator

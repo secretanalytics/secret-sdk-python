@@ -1,4 +1,4 @@
-"""The Python SDK for Terra."""
+"""The Python SDK for Secret."""
 
 # Set default logging to avoid NoHandler warnings
 import logging
