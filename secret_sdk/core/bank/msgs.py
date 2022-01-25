@@ -88,11 +88,11 @@ class MsgMultiSend(Msg):
     .. code-block:: python
 
         [{
-            "address": "terra1...",
+            "address": "secret1...",
             "coins": "123456789uusd"
         },
         {
-            "address": "terra12...",
+            "address": "secret12...",
             "coins": "2983298ukrw,21323uusd"
         }]
 

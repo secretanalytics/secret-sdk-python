@@ -1,6 +1,6 @@
-from secret_sdk.client.lcd import LCDClient
-from integration_tests.config import api_url
+from secret_sdk.client.localsecret import LocalSecret, main_net_chain_id
 
-api = LCDClient(chain_id="secret-4", url=api_url)
+
+api = LocalSecret(chain_id=main_net_chain_id)
 validators_with_voting_power = api.utils.validators_with_voting_power()
 print(validators_with_voting_power)

@@ -2,8 +2,7 @@ import asyncio
 
 import uvloop
 
-from secret_sdk.client.lcd import AsyncLCDClient
-from integration_tests.config import api_url
+from secret_sdk.client.localsecret import AsyncLocalSecret
 
 
 async def with_sem(aw, sem):
@@ -13,12 +12,12 @@ async def with_sem(aw, sem):
 
 
 async def main():
-    api = AsyncLCDClient(url=api_url, chain_id="secret-4")
-    validators = await api.staking.validators()
-    validator_addresses = [v.operator_address for v in validators]
+    async with AsyncLocalSecret(chain_id="pulsar-2") as api:
+        validators = await api.staking.validators()
+        validator_addresses = [v.operator_address for v in validators]
 
-    await api.session.close()
-    print(validator_addresses)
+        await api.session.close()
+        print(validator_addresses)
 
 
 uvloop.install()

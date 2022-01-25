@@ -1,10 +1,7 @@
-from secret_sdk.client.lcd import LCDClient
-from integration_tests.config import api_url
+from secret_sdk.client.localsecret import LocalSecret, main_net_chain_id
 
-secret = LCDClient(
-    chain_id="secret-4",
-    url=api_url,
-)
+
+secret = LocalSecret(chain_id=main_net_chain_id)
 
 binance_account = 'secret1p3ucd3ptpw902fluyjzhq3ffgq4ntdda6qy5vv'
 validator_address = 'secretvaloper18762353s6ulgla3efvf0hpe5rjjxp5ndfvl8z7'
