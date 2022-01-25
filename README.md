@@ -1,7 +1,4 @@
-<br/>
-<br/>
-
-#<div  align="center"> <p > Python SDK for Secret Network </p>
+# <div  align="center"> <p > Python SDK for Secret Network </p>
 
 <br>
 <br>
