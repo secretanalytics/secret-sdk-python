@@ -172,7 +172,7 @@ class Wallet:
 
     def execute_tx(self, handle_msg: Dict, contract_addr: str, transfer_amount: Coins = None, memo: str = "",
                          gas_price: float = 0.25, gas_cost: int = 150_000) -> StdTx:
-        #TODO figure out where we want to move this, generate fee in a smarter way, decrypt the final tx
+        # TODO figure out where we want to move this, generate fee in a smarter way, decrypt the final tx
         fee = StdFee(gas_cost, Coins.from_data([{"amount": int(gas_cost * gas_price), "denom": "uscrt"}]))
         execute_msg = self.lcd.wasm.contract_execute_msg(self.key.acc_address, contract_addr, handle_msg,
                                                                  transfer_amount)

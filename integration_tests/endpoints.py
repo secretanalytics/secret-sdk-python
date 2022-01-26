@@ -154,8 +154,11 @@ print(res)
 
 res = secret.wasm.contract_query(contract_address='secret1rgky3ns9ua09rt059049yl0zqf3xjqxne7ezhp', query={'pool': {}})
 print(res)
-res = secret.wasm.contract_query(contract_address='secret1rgky3ns9ua09rt059049yl0zqf3xjqxne7ezhp', query={"pool": {}}, height=last_block-10)
-print(res)
+
+isFullNode = False
+if isFullNode:
+    res = secret.wasm.contract_query(contract_address='secret1rgky3ns9ua09rt059049yl0zqf3xjqxne7ezhp', query={"pool": {}}, height=last_block-10)
+    print(res)
 # contract_execute_msg(sender_address: AccAddress, contract_address: AccAddress, handle_msg: dict, transfer_amount: Optional[Coins] = None)
 
 res = secret.wasm.list_code_info()

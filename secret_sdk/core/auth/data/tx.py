@@ -130,7 +130,7 @@ class StdTx(JSONSerializable):
     fee: StdFee = attr.ib()
     signatures: List[StdSignature] = attr.ib()
     memo: str = attr.ib()
-    timeout_height: Optional[int] = attr.ib(default=None)
+    # timeout_height: Optional[int] = attr.ib(default=None)
 
     def to_data(self) -> dict:
         return {
@@ -140,7 +140,7 @@ class StdTx(JSONSerializable):
                 "fee": self.fee.to_data(),
                 "signatures": [s.to_data() for s in self.signatures],
                 "memo": self.memo,
-                "timeout_height": self.timeout_height if self.timeout_height else 0,
+                # "timeout_height": self.timeout_height if self.timeout_height else 0,
             },
         }
 
@@ -152,7 +152,7 @@ class StdTx(JSONSerializable):
             StdFee.from_data(data["fee"]),
             [StdSignature.from_data(s) for s in data["signatures"]],
             data["memo"],
-            data["timeout_height"],
+            # data["timeout_height"],
         )
 
 
