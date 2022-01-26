@@ -6,7 +6,7 @@
 Introduction
 ============
 
-.. image:: img/logo.png
+.. image:: img/logo.svg
     :align: center
     
 
