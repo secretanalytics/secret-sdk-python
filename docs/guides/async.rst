@@ -16,10 +16,10 @@ You can replace your LCDClient instance with AsyncLCDClient inside a coroutine f
     from secret_sdk.client.lcd import AsyncLCDClient
 
     async def main():
-        terra = AsyncLCDClient("https://lcd.terra.dev", "columbus-4")
-        total_supply = await terra.supply.total()
+        secret = AsyncLCDClient("https://api.scrt.network", "secret-4")
+        total_supply = await secret.supply.total()
         print(total_supply)
-        await terra.session.close() # you must close the session
+        await secret.session.close() # you must close the session
 
     asyncio.get_event_loop().run_until_complete(main())
 
@@ -34,8 +34,8 @@ session. Here's the same code as above, this time using the ``async with`` const
     from secret_sdk.client.lcd import AsyncLCDClient
 
     async def main():
-        async with AsyncLCDClient("https://lcd.terra.dev", "columbus-4") as terra:
-            total_supply = await terra.supply.total()
+        async with AsyncLCDClient("https://api.scrt.network", "secret-4") as secret:
+            total_supply = await secret.supply.total()
             print(total_supply)
 
     asyncio.get_event_loop().run_until_complete(main())
@@ -58,8 +58,8 @@ are also asychronous and therefore must be awaited.
     recipient = "terra1..."
 
     async def main():
-        async with AsyncLCDClient("https://lcd.terra.dev", "columbus-4") as terra:
-            wallet = terra.wallet(mk)
+        async with AsyncLCDClient("https://api.scrt.network", "secret-4") as secret:
+            wallet = secret.wallet(mk)
             account_number = await wallet.account_number()
             tx = await wallet.create_and_sign_tx(
                 msgs=[MsgSend(wallet.key.acc_address, recipient, Coins(uscrt=10202))]
@@ -82,7 +82,7 @@ for more performance. For example:
     from secret_sdk.client.lcd import AsyncLCDClient
 
     async def main():
-        async with AsyncLCDClient("https://lcd.terra.dev", "columbus-4") as terra:
+        async with AsyncLCDClient("https://api.scrt.network", "secret-4") as secret:
             total_supply = await wallet.supply.total()
 
     uvloop.install() 

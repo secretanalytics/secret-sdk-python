@@ -1,7 +1,7 @@
 Building and Signing Transactions
 =================================
 
-If you want to perform a state-changing operation on the Terra blockchain such as
+If you want to perform a state-changing operation on the Secret blockchain such as
 sending tokens, swapping assets, withdrawing rewards, or even invoking functions on
 smart contracts, you must create a **transaction** and broadcast it to the network.
 
@@ -13,7 +13,7 @@ a transaction. It contains:
 - **signatures**: a list of signatures from required signers (depends on messages)
 - **memo**: a short string describing transaction (can be empty string)
 
-Terra SDK provides functions that help create StdTx objects.
+Secret SDK provides functions that help create StdTx objects.
 
 Using a Wallet (recommended)
 ----------------------------
@@ -34,8 +34,8 @@ correspond to the account you intend to sign the transaction with.
     from secret_sdk.key.mnemonic import MnemonicKey
 
     mk = MnemonicKey(mnemonic=MNEMONIC) 
-    terra = LCDClient("https://lcd.terra.dev", "columbus-4")
-    wallet = terra.wallet(mk)
+    secret = LCDClient("https://api.scrt.network", "secret-4")
+    wallet = secret.wallet(mk)
 
 
 Once you have your Wallet, you can simply create a StdTx using :meth:`Wallet.create_and_sign_tx`.
@@ -49,7 +49,7 @@ Once you have your Wallet, you can simply create a StdTx using :meth:`Wallet.cre
         msgs=[MsgSend(
             wallet.key.acc_address,
             RECIPIENT,
-            "1000000uscrt" # send 1 luna
+            "1000000uscrt" # send 1 scrt
         )],
         memo="test transaction!",
         fee=StdFee(200000, "120000uscrt")
@@ -59,7 +59,7 @@ And that's it! You should now be able to broadcast your transaction to the netwo
 
 .. code-block:: python
 
-    result = terra.tx.broadcast(tx)
+    result = secret.tx.broadcast(tx)
     print(result)
 
 Automatic fee estimation
@@ -89,10 +89,10 @@ this behavior **per transaction**:
         msgs=[MsgSend(
             wallet.key.acc_address,
             RECIPIENT,
-            "1000000uscrt" # send 1 luna
+            "1000000uscrt" # send 1 scrt
         )],
         memo="test transaction!",
-        gas_prices="0.015uscrt,0.11ukrw", # optional
+        gas_prices="0.25uscrt", # optional
         gas_adjustment="1.2", # optional
         denoms=["ukrw"] # optional
     )
@@ -120,19 +120,19 @@ A StdSignMsg contains the information required to build a StdTx:
     from secret_sdk.core.bank import MsgSend
     from secret_sdk.key.mnemonic import MnemonicKey
 
-    terra = LCDClient("https://lcd.terra.dev", "columbus-4")
+    secret = LCDClient("https://api.scrt.network", "secret-4")
     mk = MnemonicKey(mnemonic=MNEMONIC) 
 
     # create tx
     unsigned_tx = StdSignMsg(
-        chain_id="columbus-4",
+        chain_id="secret-4",
         account_number=23982,
         sequence=12,
         fee=StdFee(200000, "120000uscrt"),
         msgs=[MsgSend(
             mk.acc_address,
             RECIPIENT,
-            "1000000uscrt" # send 1 luna
+            "1000000uscrt" # send 1 scrt
         )],
         memo="test transaction!"
     )
@@ -147,7 +147,7 @@ A StdSignMsg contains the information required to build a StdTx:
     tx.signature = [sig]
 
     # broadcast tx
-    result = terra.tx.broadcast(tx)
+    result = secret.tx.broadcast(tx)
     print(result)
 
 
@@ -171,9 +171,9 @@ Each ``StdSignMsg`` should only differ by ``account`` and ``sequence``, which va
     from secret_sdk.core.bank import MsgMultiSend
     from secret_sdk.key.mnemonic import MnemonicKey
 
-    terra = LCDClient("https://lcd.terra.dev", "columbus-4")
-    wallet1 = terra.wallet(MnemonicKey(mnemonic=MNEMONIC_1))
-    wallet2 = terra.wallet(MnemonicKey(mnemonic=MNEMONIC_2))
+    secret = LCDClient("https://api.scrt.network", "secret-4")
+    wallet1 = secret.wallet(MnemonicKey(mnemonic=MNEMONIC_1))
+    wallet2 = secret.wallet(MnemonicKey(mnemonic=MNEMONIC_2))
 
     multisend = MsgMultiSend(
         inputs=[
@@ -215,7 +215,7 @@ Each ``StdSignMsg`` should only differ by ``account`` and ``sequence``, which va
     tx.signatures = [sig1, sig2]
 
     # broadcast tx
-    result = terra.tx.broadcast(tx)
+    result = secret.tx.broadcast(tx)
     print(result)
 
 

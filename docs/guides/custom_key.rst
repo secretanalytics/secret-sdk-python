@@ -3,7 +3,7 @@
 Implementing a Custom Key
 =========================
 
-If none of the Key solutions provided by Terra SDK or the community are able to meet your requirements, 
+If none of the Key solutions provided by Secret SDK or the community are able to meet your requirements,
 you might consider writing your own Key implementation. 
 
 Here are just a couple  that help guide
@@ -26,13 +26,13 @@ Usually, reasons for requiring a custom Key fall into one of 3 patterns:
 
 * External signing
 
-    **Scenario:** The transaction signing is to be performed outside the Python program running Terra SDK,
+    **Scenario:** The transaction signing is to be performed outside the Python program running Secret SDK,
     such as signing via hardware wallet (Ledger, Trezor), etc. 
 
 
 * Alternative signing algorithm
 
-    **Scenario:** Terra account you need to sign transactions for requires a signature algorithm other than
+    **Scenario:** Secret account you need to sign transactions for requires a signature algorithm other than
     ECDSA on Secp256k1, such as Threshold Multisig or Ed25519. 
 
 

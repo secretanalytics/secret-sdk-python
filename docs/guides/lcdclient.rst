@@ -1,7 +1,7 @@
 LCDClient
 =========
 
-The :class:`LCDClient` is an object representing a HTTP connection to a Terra LCD node.
+The :class:`LCDClient` is an object representing a HTTP connection to a Secret LCD node.
 
 Get connected
 -------------
@@ -9,14 +9,14 @@ Get connected
 Create a new LCDClient instance by specifying the URL and chain ID of the node to connect to.
 
 .. note::
-    It is common practice to name the active LCDClient instance ``terra``, but this is not required.
+    It is common practice to name the active LCDClient instance ``secret``, but this is not required.
 
 .. code-block:: python
 
     >>> from secret_sdk.client.lcd import LCDClient
-    >>> terra = LCDClient(url="https://lcd.terra.dev", chain_id="columbus-4")
-    >>> terra.tendermint.node_info()['node_info']['network']
-    'columbus-4'
+    >>> secret = LCDClient(url="https://api.scrt.network", chain_id="secret-4")
+    >>> secret.tendermint.node_info()['node_info']['network']
+    'secret-4'
 
 You can also specify gas estimation parameters for your chain for building transactions.
 
@@ -26,11 +26,10 @@ You can also specify gas estimation parameters for your chain for building trans
     import requests
     from secret_sdk.core import Coins
 
-    res = requests.get("https://fcd.terra.dev/v1/txs/gas_prices")
-    terra = LCDClient(
-        url="https://lcd.terra.dev",
-        chain_id="columbus-4",
-        gas_prices=Coins(res.json()),
+    secret = LCDClient(
+        url="https://api.scrt.network",
+        chain_id="secret-4",
+        gas_prices=Coins({"uscrt": 0.25}),
         gas_adjustment="1.4"
     )    
 
@@ -39,21 +38,21 @@ Using the module APIs
 ---------------------
 
 LCDClient includes functions for interacting with each of the core modules (see sidebar). These functions are divided and
-and organized by module name (eg. :class:`terra.market<secret_sdk.client.lcd.api.market.MarketAPI>`), and handle 
+and organized by module name (eg. :class:`secret.market<secret_sdk.client.lcd.api.market.MarketAPI>`), and handle
 the tedium of building HTTP requests, parsing the results, and handling errors. 
 
 Each request fetches live data from the blockchain:
 
 .. code-block:: python
 
-    >>> terra.market.parameters()
+    >>> secret.market.parameters()
     {'base_pool': '7000000000000.000000000000000000', 'pool_recovery_period': '200', 'min_spread': '0.005000000000000000'}
 
 The height of the last result (if applicable) is available:
 
 .. code-block:: python
 
-    >>> terra.last_request_height
+    >>> secret.last_request_height
     89292
 
 
@@ -67,7 +66,7 @@ are useful for easily creating and signing transactions.
 
     >>> from secret_sdk.key.mnemonic import MnemonicKey
     >>> mk = MnemonicKey()
-    >>> wallet = terra.wallet(mk)
+    >>> wallet = secret.wallet(mk)
     >>> wallet.account_number()
     27
 
