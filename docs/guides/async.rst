@@ -55,7 +55,7 @@ are also asychronous and therefore must be awaited.
     from secret_sdk.core import Coins
 
     mk = MnemonicKey()
-    recipient = "terra1..."
+    recipient = "secret1..."
 
     async def main():
         async with AsyncLCDClient("https://api.scrt.network", "secret-4") as secret:

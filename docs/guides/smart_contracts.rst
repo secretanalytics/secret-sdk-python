@@ -9,7 +9,7 @@ Contract Deployment Example
 .. code-block:: python
 
     import base64
-    from secret_sdk.client.localterra import LocalSecret
+    from secret_sdk.client.localsecret import LocalSecret
     from secret_sdk.core.wasm import MsgStoreCode, MsgInstantiateContract, MsgExecuteContract    
     from secret_sdk.core.auth.data.tx import StdFee
     

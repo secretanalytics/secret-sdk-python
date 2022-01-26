@@ -1,6 +1,6 @@
 [tool.poetry]
-name = "secret-sdk"
-authors = ["Terraform Labs, PTE. <engineering@terra.money>"]
+name = "secret-py"
+authors = ["SCRT LabRador, Secret analytics"]
 classifiers = [
     "Intended Audience :: Developers",
     "License :: OSI Approved :: MIT License",
@@ -10,14 +10,13 @@ classifiers = [
     "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
 ]
-description = "The Python SDK for Terra"
-documentation = "https://terra-money.github.io/terra-sdk-python/index.html"
-homepage = "https://github.com/terra-money/terra-sdk-python"
+description = "The Python SDK for Secret"
+homepage = "https://github.com/stephanegg/secret-sdk-python"
 keywords = ["jigu", "blockchain", "terra", "defi", "crypto"]
 license = "MIT"
 packages = [{ include = "secret_sdk" }]
 readme = "README.md"
-repository = "https://github.com/terra-money/terra-sdk-python"
+repository = "https://github.com/stephanegg/secret-sdk-python"
 version = "1.0.2"
 
 [tool.poetry.dependencies]
