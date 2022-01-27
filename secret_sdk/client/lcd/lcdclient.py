@@ -8,6 +8,7 @@ import nest_asyncio
 from aiohttp import ClientSession
 
 from secret_sdk.core import Coins, Dec, Numeric
+from secret_sdk.core.auth import StdFee
 from secret_sdk.exceptions import LCDResponseError
 from secret_sdk.key.key import Key
 from secret_sdk.util.json import dict_to_data
@@ -24,13 +25,26 @@ from .lcdutils import AsyncLCDUtils, LCDUtils
 from .wallet import AsyncWallet, Wallet
 
 
+# default gas_price is 0.25, amount = gas * gas_price
+default_fees = {
+    "upload": StdFee(gas=1_000_000, amount=Coins.from_data([{"amount": 250_000, "denom": "uscrt"}])),
+    "init": StdFee(gas=500_000, amount=Coins.from_data([{"amount": 125_000, "denom": "uscrt"}])),
+    "exec": StdFee(gas=200_000, amount=Coins.from_data([{"amount": 50_000, "denom": "uscrt"}])),
+    "send": StdFee(gas=80_000, amount=Coins.from_data([{"amount": 20_000, "denom": "uscrt"}])),
+    "default": StdFee(gas=200_000, amount=Coins.from_data([{"amount": 50_000, "denom": "uscrt"}]))
+}
+default_gas_prices = {"uscrt": 0.25}
+default_gas_adjustment = 1
+
+
 class AsyncLCDClient:
     def __init__(
         self,
         url: str,
         chain_id: Optional[str] = None,
-        gas_prices: Optional[Coins.Input] = None,
-        gas_adjustment: Optional[Numeric.Input] = None,
+        gas_prices: Optional[Coins.Input] = default_gas_prices,
+        gas_adjustment: Optional[Numeric.Input] = default_gas_prices,
+        custom_fees: Optional[dict] = default_fees,
         loop: Optional[AbstractEventLoop] = None,
         _create_session: bool = True,  # don't create a session (used for sync LCDClient)
     ):
@@ -46,6 +60,7 @@ class AsyncLCDClient:
         self.url = url
         self.gas_prices = Coins(gas_prices)
         self.gas_adjustment = gas_adjustment
+        self.custom_fees = custom_fees
         self.last_request_height = None
 
         self.auth = AsyncAuthAPI(self)
@@ -117,6 +132,9 @@ class LCDClient(AsyncLCDClient):
     gas_adjustment: Union[str, float, int, Dec]
     """Gas adjustment factor for automatic fee estimation."""
 
+    custom_fees: Optional[dict]
+    """Custom fees"""
+
     last_request_height: Optional[int]  # type: ignore
     """Height of response of last-made made LCD request."""
 
@@ -147,12 +165,14 @@ class LCDClient(AsyncLCDClient):
         chain_id: str = None,
         gas_prices: Optional[Coins.Input] = None,
         gas_adjustment: Optional[Numeric.Input] = None,
+        custom_fees: Optional[dict] = default_fees
     ):
         super().__init__(
             url,
             chain_id,
             gas_prices,
             gas_adjustment,
+            custom_fees,
             _create_session=False,
             loop=nest_asyncio.apply(get_event_loop()),
         )

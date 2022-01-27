@@ -4,6 +4,7 @@ from typing import List, Optional, Dict
 
 from secret_sdk.core import Coins, Numeric
 from secret_sdk.core.auth import StdFee, StdSignMsg, StdTx
+from secret_sdk.core.bank import MsgSend
 from secret_sdk.core.msg import Msg
 from secret_sdk.key.key import Key
 
@@ -27,37 +28,98 @@ class AsyncWallet:
         res = await self.lcd.auth.account_info(self.key.acc_address)
         return {"account_number": res.account_number, "sequence": res.sequence}
 
-    async def create_tx(self, *args, **kwargs) -> StdSignMsg:
-        return await self.lcd.tx.create(self.key.acc_address, *args, **kwargs)
+    async def create_tx(
+        self,
+        msgs: List[Msg],
+        fee: Optional[StdFee] = None,
+        memo: str = "",
+        gas: Optional[int] = None,
+        gas_prices: Optional[Coins.Input] = None,
+        gas_adjustment: Optional[Numeric.Input] = None,
+        fee_denoms: Optional[List[str]] = None,
+        account_number: Optional[int] = None,
+        sequence: Optional[int] = None,
+    ) -> StdSignMsg:
+        return await self.lcd.tx.create(
+            sender=self.key.acc_address,
+            msgs=msgs,
+            fee=fee,
+            memo=memo,
+            gas=gas,
+            gas_prices=gas_prices,
+            gas_adjustment=gas_adjustment,
+            fee_denoms=fee_denoms,
+            account_number=account_number,
+            sequence=sequence,
+        )
 
-    async def create_and_sign_tx(self, *args, **kwargs) -> StdTx:
-        tx = await self.create_tx(*args, **kwargs)
+    async def create_and_sign_tx(
+        self,
+        msgs: List[Msg],
+        fee: Optional[StdFee] = None,
+        memo: str = "",
+        gas: Optional[int] = None,
+        gas_prices: Optional[Coins.Input] = None,
+        gas_adjustment: Optional[Numeric.Input] = None,
+        fee_denoms: Optional[List[str]] = None,
+        account_number: Optional[int] = None,
+        sequence: Optional[int] = None,
+    ) -> StdTx:
+        tx = await self.create_tx(
+            msgs,
+            fee,
+            memo,
+            gas,
+            gas_prices,
+            gas_adjustment,
+            fee_denoms,
+            account_number,
+            sequence,
+        )
         return self.key.sign_tx(tx)
 
-    async def execute_tx(self, handle_msg: Dict, contract_addr: str, transfer_amount: Coins = None, memo: str = "",
-                         gas_price: float = 0.25, gas_cost: int = 500_000) -> StdTx:
-        #TODO figure out where we want to move this, generate fee in a smarter way, decrypt the final tx
-        fee = StdFee(gas_cost, Coins.from_data([{"amount": int(gas_cost * gas_price), "denom": "uscrt"}]))
+    async def execute_tx(
+        self,
+        contract_addr: str,
+        handle_msg: Dict,
+        memo: str = "",
+        transfer_amount: Coins = None,
+        gas: Optional[int] = None,
+        gas_prices: Optional[Coins.Input] = None,
+        gas_adjustment: Optional[Numeric.Input] = None,
+        fee_denoms: Optional[List[str]] = None
+    ) -> StdTx:
+        if gas is None or gas_prices is None:
+            fee = self.lcd.custom_fees["exec"]
+        else:
+            fee = await self.lcd.tx.estimate_fee(gas, gas_prices, gas_adjustment, fee_denoms)
+
         execute_msg = await self.lcd.wasm.contract_execute_msg(self.key.acc_address, contract_addr, handle_msg,
-                                                                 transfer_amount)
-        signed_tx = await self.create_and_sign_tx([execute_msg], fee=fee, memo = memo)
+                                                               transfer_amount)
+        signed_tx = await self.create_and_sign_tx([execute_msg], fee=fee, memo=memo)
         tx = await self.lcd.tx.broadcast(signed_tx)
         return tx
 
-    async def multi_execute_tx(self, input_msgs: List[Dict], memo: str = "", gas_price: float = 0.25, gas_cost: int = 500_000):
-        fee = StdFee(gas_cost, Coins.from_data([{"amount": int(gas_cost * gas_price), "denom": "uscrt"}]))
-        msgs = []
-        for input_msg in input_msgs:
-            # input_msg should be a Dict with contract_addr and handle_msg keys
-            contract_addr = input_msg['contract_addr']
-            handle_msg = input_msg['handle_msg']
-            transfer_amount = input_msg.get('transfer_amount', Coins())
-            execute_msg = await self.lcd.wasm.contract_execute_msg(self.key.acc_address, contract_addr, handle_msg,
-                                                                   transfer_amount)
-            msgs.append(execute_msg)
-        signed_tx = await self.create_and_sign_tx(msgs, fee=fee, memo=memo)
+    async def send_tokens(
+            self,
+            recipient_addr: str,
+            memo: str = "",
+            transfer_amount: Coins = None,
+            gas: Optional[int] = None,
+            gas_prices: Optional[Coins.Input] = None,
+            gas_adjustment: Optional[Numeric.Input] = None,
+            fee_denoms: Optional[List[str]] = None
+    ) -> StdTx:
+        if gas is None or gas_prices is None:
+            fee = self.lcd.custom_fees["send"]
+        else:
+            fee = await self.lcd.tx.estimate_fee(gas, gas_prices, gas_adjustment, fee_denoms)
+
+        send_msg = MsgSend(self.key.acc_address, recipient_addr, transfer_amount)
+        signed_tx = await self.create_and_sign_tx([send_msg], fee=fee, memo=memo)
         tx = await self.lcd.tx.broadcast(signed_tx)
         return tx
+
 
 class Wallet:
     """Wraps around a :class:`Key` implementation and provides transaction building and
@@ -88,6 +150,7 @@ class Wallet:
         msgs: List[Msg],
         fee: Optional[StdFee] = None,
         memo: str = "",
+        gas: Optional[int] = None,
         gas_prices: Optional[Coins.Input] = None,
         gas_adjustment: Optional[Numeric.Input] = None,
         fee_denoms: Optional[List[str]] = None,
@@ -104,6 +167,7 @@ class Wallet:
             fee (Optional[StdFee], optional): transaction fee. If ``None``, will be estimated.
                 See more on `fee estimation`_.
             memo (str, optional): optional short string to include with transaction.
+            gas (Optional[int]) gas
             gas_prices (Optional[Coins.Input], optional): gas prices for fee estimation.
             gas_adjustment (Optional[Numeric.Input], optional): gas adjustment for fee estimation.
             fee_denoms (Optional[List[str]], optional): list of denoms to use for fee after estimation.
@@ -119,7 +183,7 @@ class Wallet:
             msgs=msgs,
             fee=fee,
             memo=memo,
-            gas=None,
+            gas=gas,
             gas_prices=gas_prices,
             gas_adjustment=gas_adjustment,
             fee_denoms=fee_denoms,
@@ -132,6 +196,7 @@ class Wallet:
         msgs: List[Msg],
         fee: Optional[StdFee] = None,
         memo: str = "",
+        gas: Optional[int] = None,
         gas_prices: Optional[Coins.Input] = None,
         gas_adjustment: Optional[Numeric.Input] = None,
         fee_denoms: Optional[List[str]] = None,
@@ -147,6 +212,7 @@ class Wallet:
             fee (Optional[StdFee], optional): transaction fee. If ``None``, will be estimated.
                 See more on `fee estimation`_.
             memo (str, optional): optional short string to include with transaction.
+            gas (Optional[int]) gas
             gas_prices (Optional[Coins.Input], optional): gas prices for fee estimation.
             gas_adjustment (Optional[Numeric.Input], optional): gas adjustment for fee estimation.
             fee_denoms (Optional[List[str]], optional): list of denoms to use for fee after estimation.
@@ -162,6 +228,7 @@ class Wallet:
                 msgs,
                 fee,
                 memo,
+                gas,
                 gas_prices,
                 gas_adjustment,
                 fee_denoms,
@@ -170,27 +237,44 @@ class Wallet:
             )
         )
 
-    def execute_tx(self, handle_msg: Dict, contract_addr: str, transfer_amount: Coins = None, memo: str = "",
-                         gas_price: float = 0.25, gas_cost: int = 150_000) -> StdTx:
-        # TODO figure out where we want to move this, generate fee in a smarter way, decrypt the final tx
-        fee = StdFee(gas_cost, Coins.from_data([{"amount": int(gas_cost * gas_price), "denom": "uscrt"}]))
+    def execute_tx(
+        self,
+        contract_addr: str,
+        handle_msg: Dict,
+        memo: str = "",
+        transfer_amount: Coins = None,
+        gas: Optional[int] = None,
+        gas_prices: Optional[Coins.Input] = None,
+        gas_adjustment: Optional[Numeric.Input] = None,
+        fee_denoms: Optional[List[str]] = None
+    ) -> StdTx:
+        if gas is None or gas_prices is None:
+            fee = self.lcd.custom_fees["exec"]
+        else:
+            fee = self.lcd.tx.estimate_fee(gas, gas_prices, gas_adjustment, fee_denoms)
+
         execute_msg = self.lcd.wasm.contract_execute_msg(self.key.acc_address, contract_addr, handle_msg,
-                                                                 transfer_amount)
-        signed_tx = self.create_and_sign_tx([execute_msg], fee=fee, memo = memo)
+                                                         transfer_amount)
+        signed_tx = self.create_and_sign_tx([execute_msg], fee=fee, memo=memo)
         tx = self.lcd.tx.broadcast(signed_tx)
         return tx
 
-    def multi_execute_tx(self, input_msgs: List[Dict], memo: str = "", gas_price: float = 0.25, gas_cost: int = 150_000):
-        fee = StdFee(gas_cost, Coins.from_data([{"amount": int(gas_cost * gas_price), "denom": "uscrt"}]))
-        msgs = []
-        for input_msg in input_msgs:
-            # input_msg should be a Dict with contract_addr and handle_msg keys
-            contract_addr = input_msg['contract_addr']
-            handle_msg = input_msg['handle_msg']
-            transfer_amount = input_msg.get('transfer_amount', Coins())
-            execute_msg = self.lcd.wasm.contract_execute_msg(self.key.acc_address, contract_addr, handle_msg,
-                                                                   transfer_amount)
-            msgs.append(execute_msg)
-        signed_tx = self.create_and_sign_tx(msgs, fee=fee, memo=memo)
+    def send_tokens(
+            self,
+            recipient_addr: str,
+            memo: str = "",
+            transfer_amount: Coins = None,
+            gas: Optional[int] = None,
+            gas_prices: Optional[Coins.Input] = None,
+            gas_adjustment: Optional[Numeric.Input] = None,
+            fee_denoms: Optional[List[str]] = None
+    ) -> StdTx:
+        if gas is None or gas_prices is None:
+            fee = self.lcd.custom_fees["send"]
+        else:
+            fee = self.lcd.tx.estimate_fee(gas, gas_prices, gas_adjustment, fee_denoms)
+
+        send_msg = MsgSend(self.key.acc_address, recipient_addr, transfer_amount)
+        signed_tx = self.create_and_sign_tx([send_msg], fee=fee, memo=memo)
         tx = self.lcd.tx.broadcast(signed_tx)
         return tx

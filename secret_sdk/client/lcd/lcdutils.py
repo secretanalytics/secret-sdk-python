@@ -1,5 +1,4 @@
 import base64
-import requests
 import secrets
 
 from miscreant.aes.siv import SIV
@@ -8,13 +7,10 @@ from cryptography.hazmat.primitives.asymmetric.x25519 import X25519PrivateKey, X
 from cryptography.hazmat.primitives.kdf.hkdf import HKDF
 
 from functools import reduce
-from math import ceil
-from typing import Any, Dict, Union, List
+from typing import Any, Dict, List
 
-from secret_sdk.core import Coin
 
 from .api._base import BaseAsyncAPI, sync_bind
-
 
 
 hkdf_salt = bytes([

@@ -1,6 +1,6 @@
 import re
 import base64
-from typing import List, Optional, Union
+from typing import List, Optional
 import attr
 
 from secret_sdk.core import AccAddress, Coins, Numeric
@@ -11,6 +11,7 @@ from secret_sdk.core.broadcast import (
     SyncTxBroadcastResult,
 )
 from secret_sdk.core.msg import Msg
+from secret_sdk.core.bank import MsgSend
 from secret_sdk.util.hash import hash_amino
 
 from ._base import BaseAsyncAPI, sync_bind
@@ -169,6 +170,7 @@ class AsyncTxAPI(BaseAsyncAPI):
             msgs (List[Msg]): list of messages to include
             fee (Optional[StdFee], optional): fee to use (estimates if empty).
             memo (str, optional): memo to use. Defaults to "".
+            gas (Optional[int]): gas
             gas_prices (Optional[Coins.Input], optional): gas prices for fee estimation.
             gas_adjustment (Optional[Numeric.Input], optional): gas adjustment for fee estimation.
             fee_denoms (Optional[List[str]], optional): list of denoms to use for gas fee when estimating.
@@ -183,7 +185,7 @@ class AsyncTxAPI(BaseAsyncAPI):
         if fee is None:
             fee = await BaseAsyncAPI._try_await(
                 self.estimate_fee(
-                    sender, msgs, memo, gas_prices, gas_adjustment, fee_denoms
+                    gas, gas_prices, gas_adjustment, fee_denoms
                 )
             )
 
@@ -200,9 +202,6 @@ class AsyncTxAPI(BaseAsyncAPI):
 
     async def estimate_fee(
         self,
-        sender: AccAddress,
-        msgs: List[Msg],
-        memo: str = "",
         gas: Optional[int] = None,
         gas_prices: Optional[Coins.Input] = None,
         gas_adjustment: Optional[Numeric.Input] = None,
@@ -211,9 +210,7 @@ class AsyncTxAPI(BaseAsyncAPI):
         """Estimates the proper fee to apply by simulating it within the node.
 
         Args:
-            sender (AccAddress): transaction sender's account address
-            msgs (List[Msg]): list of messages to include
-            memo (str, optional): memo to use. Defaults to "".
+            gas (Optional[int]): gas
             gas_prices (Optional[Coins.Input], optional): gas prices to use.
             gas_adjustment (Optional[Numeric.Input], optional): gas adjustment to use.
             fee_denoms (Optional[List[str]], optional): list of denoms to use to pay for gas.
@@ -221,6 +218,9 @@ class AsyncTxAPI(BaseAsyncAPI):
         Returns:
             StdFee: estimated fee
         """
+        if gas is None or gas_prices is None:
+            return self._c.custom_fees["default"]
+
         gas_prices = gas_prices or self._c.gas_prices
         gas_adjustment = gas_adjustment or self._c.gas_adjustment
 
@@ -232,23 +232,8 @@ class AsyncTxAPI(BaseAsyncAPI):
                 gas_prices_coins = gas_prices_coins.filter(
                     lambda c: c.denom in _fee_denoms
                 )
-
-        data = {
-            "base_req": {
-                "chain_id": self._c.chain_id,
-                "from": sender,
-                "gas": (gas and str(gas)) or "auto",
-                "memo": memo,
-                "gas_prices": gas_prices_coins and gas_prices_coins.to_data(),
-                "gas_adjustment": gas_adjustment and str(gas_adjustment),
-            },
-            "msgs": [m.to_data() for m in msgs],
-        }
-
-        res = await self._c._post("/txs/estimate_fee", data)
-        fee_amount = Coins.from_data(res["fee"]["amount"])
-
-        return StdFee(int(res["fee"]["gas"]), fee_amount)
+        fee_amount = gas * gas_prices_coins * gas_adjustment
+        return StdFee(gas, fee_amount)
 
     async def encode(self, tx: StdTx, options: BroadcastOptions = None) -> str:
         """Fetches a transaction's amino encoding.
@@ -396,7 +381,7 @@ class TxAPI(AsyncTxAPI):
     @sync_bind(AsyncTxAPI.estimate_fee)
     def estimate_fee(
         self,
-        tx: Union[StdSignMsg, StdTx],
+        gas: Optional[int] = None,
         gas_prices: Optional[Coins.Input] = None,
         gas_adjustment: Optional[Numeric.Input] = None,
         fee_denoms: Optional[List[str]] = None,

@@ -156,7 +156,7 @@ class Coins(JSONSerializable):
         return self.sub(subtrahend)
 
     def mul(self, multiplier: Numeric.Input) -> Coins:
-        """Performs multiplicaiton, which multiplies all the Coin objects in the set by a
+        """Performs multiplication, which multiplies all the Coin objects in the set by a
         multiplier.
 
         Args:
