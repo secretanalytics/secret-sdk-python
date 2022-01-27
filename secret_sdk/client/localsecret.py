@@ -58,13 +58,13 @@ LOCAL_DEFAULTS = {
         "url": test_net_api,
         "chain_id": test_net_chain_id,
         "gas_prices": {"uscrt": 0.25},
-        "gas_adjustment": 1.4,
+        "gas_adjustment": 1.0,
     },
     main_net_chain_id: {
         "url": main_net_api,
         "chain_id": main_net_chain_id,
         "gas_prices": {"uscrt": 0.25},
-        "gas_adjustment": 1.4,
+        "gas_adjustment": 1.0,
     },
 }
 

@@ -248,7 +248,7 @@ class AsyncTxAPI(BaseAsyncAPI):
                 gas_prices_coins = gas_prices_coins.filter(
                     lambda c: c.denom in _fee_denoms
                 )
-        fee_amount = gas * gas_prices_coins * gas_adjustment
+        fee_amount = gas_prices_coins.mul(gas * gas_adjustment)
         return StdFee(gas, fee_amount)
 
     async def encode(self, tx: StdTx, options: BroadcastOptions = None) -> str:

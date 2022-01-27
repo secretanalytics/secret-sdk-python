@@ -42,7 +42,7 @@ default_fees = {
         gas=200_000, amount=Coins.from_data([{"amount": 50_000, "denom": "uscrt"}])
     ),
 }
-default_gas_prices = Coins.from_data([{"uscrt": 0.25}])
+default_gas_prices = Coins.from_data([{"amount": 0.25, "denom": "uscrt"}])
 default_gas_adjustment = 1
 
 
