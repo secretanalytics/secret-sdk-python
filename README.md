@@ -135,7 +135,7 @@ Use `LCDClient.wallet()` to create a Wallet from any Key instance. The Key provi
 >>> wallet = client.wallet(mk)
 ```
 
-Once you have your Wallet, you can simply create a StdTx using `Wallet.create_and_sign_tx`.
+Once you have your Wallet, you can either create a StdTx using `Wallet.create_and_sign_tx` or use the abstraction `wallet.execute_tx` & `wallet.multi_execute_tx`.
 
 
 ```
@@ -150,6 +150,13 @@ Once you have your Wallet, you can simply create a StdTx using `Wallet.create_an
         )],
         memo="test transaction!",
         fee=StdFee(200000, "120000uscrt")
+    )
+>>> tx = wallet.execute_tx(
+        handle_msg = {'deposit': {}},
+        contract_addr = 'secret18vd8fpwxzck93qlwghaj6arh4p7c5n8978vsyg',
+        transfer_amount = Coins.from_str('1000000uscrt')
+        memo = "My first test net sscrt minting",
+        gas_cost = 150_000
     )
 ```
 
