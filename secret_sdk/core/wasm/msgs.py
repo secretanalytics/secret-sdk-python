@@ -11,6 +11,8 @@ from secret_sdk.core.msg import Msg
 from secret_sdk.util.json import dict_to_data
 from secret_sdk.util.remove_none import remove_none
 
+
+
 __all__ = [
     "MsgStoreCode",
     "MsgMigrateCode",
@@ -36,11 +38,18 @@ class MsgStoreCode(Msg):
 
     sender: AccAddress = attr.ib()
     wasm_byte_code: str = attr.ib(converter=str)
+    source: str = attr.ib(converter=str)
+    builder: str = attr.ib(converter=str)
 
     @classmethod
     def from_data(cls, data: dict) -> MsgStoreCode:
         data = data["value"]
-        return cls(sender=data["sender"], wasm_byte_code=data["wasm_byte_code"])
+        return cls(
+            sender=data["sender"],
+            wasm_byte_code=data["wasm_byte_code"],
+            source=data.get("source"),
+            builder=data.get("builder")
+        )
 
 
 @attr.s
@@ -86,8 +95,9 @@ class MsgInstantiateContract(Msg):
         sender: address of sender
         admin: address of contract admin
         code_id (int): code ID to use for instantiation
+        label (str): human-readable label for this contract
         init_msg (dict): InitMsg to initialize contract
-        init_coins (Coins): initial amount of coins to be sent to contract
+        init_funds (Coins): initial amount of coins to be sent to contract
     """
 
     type = "wasm/MsgInstantiateContract"
@@ -96,8 +106,9 @@ class MsgInstantiateContract(Msg):
     sender: AccAddress = attr.ib()
     admin: AccAddress = attr.ib()
     code_id: int = attr.ib(converter=int)
+    label: str = attr.ib(converter=str)
     init_msg: dict = attr.ib()
-    init_coins: Coins = attr.ib(converter=Coins, factory=Coins)
+    init_funds: Coins = attr.ib(converter=Coins, factory=Coins)
 
     def to_data(self) -> dict:
         d = copy.deepcopy(self.__dict__)
@@ -111,8 +122,9 @@ class MsgInstantiateContract(Msg):
             sender=data.get("sender"),
             admin=data.get("admin"),
             code_id=data["code_id"],
+            label=data.get("label"),
             init_msg=remove_none(data["init_msg"]),
-            init_coins=Coins.from_data(data["init_coins"]),
+            init_funds=Coins.from_data(data["init_funds"]),
         )
 
 
@@ -123,7 +135,7 @@ class MsgExecuteContract(Msg):
     Args:
         sender: address of sender
         contract: address of contract to execute function on
-        execute_msg (dict): ExecuteMsg to pass
+        execute_msg: ExecuteMsg (aka. HandleMsg) to pass
         coins: coins to be sent, if needed by contract to execute.
             Defaults to empty ``Coins()``
     """
@@ -133,8 +145,12 @@ class MsgExecuteContract(Msg):
 
     sender: AccAddress = attr.ib()
     contract: AccAddress = attr.ib()
-    execute_msg: dict = attr.ib()
-    coins: Coins = attr.ib(converter=Coins, factory=Coins)
+    msg: str = attr.ib()
+    sent_funds: Coins = attr.ib(converter=Coins, factory=Coins)
+
+    def to_data(self) -> dict:
+        d = copy.deepcopy(self.__dict__)
+        return {"type": self.type, "value": dict_to_data(d)}
 
     @classmethod
     def from_data(cls, data: dict) -> MsgExecuteContract:
@@ -142,8 +158,8 @@ class MsgExecuteContract(Msg):
         return cls(
             sender=data["sender"],
             contract=data["contract"],
-            execute_msg=remove_none(data.get("execute_msg")),
-            coins=Coins.from_data(data["coins"]),
+            msg=data["msg"],
+            sent_funds=Coins.from_data(data["sent_funds"]),
         )
 
 

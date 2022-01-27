@@ -11,7 +11,6 @@ from secret_sdk.core.broadcast import (
     SyncTxBroadcastResult,
 )
 from secret_sdk.core.msg import Msg
-from secret_sdk.core.bank import MsgSend
 from secret_sdk.util.hash import hash_amino
 
 from ._base import BaseAsyncAPI, sync_bind
