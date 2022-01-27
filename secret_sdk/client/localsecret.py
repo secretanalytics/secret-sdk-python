@@ -10,7 +10,7 @@ test_net_chain_id = "pulsar-2"
 main_net_chain_id = "secret-4"
 
 test_net_api = "http://testnet.securesecrets.org:1317"
-main_net_api = "https://secret-4--lcd--full.datahub.figment.io/apikey/84384bf7b85a23450133e0f3c2c1b727" # ""https://api.scrt.network"
+main_net_api = "https://api.scrt.network"
 
 LOCAL_MNEMONICS = {
     "holodeck-2": {

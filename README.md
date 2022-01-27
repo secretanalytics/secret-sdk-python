@@ -82,7 +82,7 @@ In order to interact with the Secret blockchain, you'll need a connection to a S
 
 ```
 >>> from secret_sdk.client.lcd import LCDClient
->>> client = LCDClient(chain_id="secret-4", url= node_rest_endpoint)
+>>> secret = LCDClient(chain_id="secret-4", url=node_rest_endpoint)
 ```
 
 ## Getting Blockchain Information
@@ -91,7 +91,7 @@ Once properly configured, the `LCDClient` instance will allow you to interact wi
 
 
 ```
->>> client.tendermint.block_info()['block']['header']['height']
+>>> secret.tendermint.block_info()['block']['header']['height']
 ```
 
 `'1687543'`
@@ -101,15 +101,16 @@ Once properly configured, the `LCDClient` instance will allow you to interact wi
 
 If you want to make asynchronous, non-blocking LCD requests, you can use AsyncLCDClient. The interface is similar to LCDClient, except the module and wallet API functions must be awaited.
 
+
 <pre><code>
 >>> import asyncio 
 >>> from secret_sdk.client.lcd import AsyncLCDClient
 
 >>> async def main():
-      <strong>client = AsyncLCDClient(url = node_endpoint, chain_id = "secret-4")</strong>
-      total_supply = await client.supply.total()
-      print(total_supply)
-      <strong>await client.session.close # you must close the session</strong>
+        <strong>async with AsyncLCDClient(url=node_rest_endpoint, chain_id="secret-4") as secret:</strong>
+            community_pool = await secret.distribution.community_pool()
+            print(community_pool)
+            <strong>await secret.session.close()  # you must close the session</strong>
 
 >>> asyncio.get_event_loop().run_until_complete(main())
 </code></pre>
@@ -131,40 +132,34 @@ Use `LCDClient.wallet()` to create a Wallet from any Key instance. The Key provi
 >>> from secret_sdk.key.mnemonic import MnemonicKey
 
 >>> mk = MnemonicKey(mnemonic=MNEMONIC) 
->>> client = LCDClient(node_endpoint, "secret-4")
->>> wallet = client.wallet(mk)
+>>> secret = LCDClient(node_rest_endpoint, "secret-4")
+>>> wallet = secret.wallet(mk)
 ```
 
-Once you have your Wallet, you can either create a StdTx using `Wallet.create_and_sign_tx` or use the abstraction `wallet.execute_tx` & `wallet.multi_execute_tx`.
-
+Once you have your Wallet, you can create a StdTx using `Wallet.create_and_sign_tx` then broadcast it to the network with `secret.tx.broadcast` with your broadcast mode of choice (block, sync, async - see cosmos docs).
 
 ```
 >>> from secret_sdk.core.auth import StdFee
 >>> from secret_sdk.core.bank import MsgSend
 
->>> tx = wallet.create_and_sign_tx(
-        msgs=[MsgSend(
+>>> send_msg = MsgSend(
             wallet.key.acc_address,
             RECIPIENT,
             "1000000uscrt"    # send 1 scrt
-        )],
-        memo="test transaction!",
+        )
+>>> tx = wallet.create_and_sign_tx(
+        msgs=[send_msg],
+        memo="My first transaction!",
         fee=StdFee(200000, "120000uscrt")
     )
->>> tx = wallet.execute_tx(
-        handle_msg = {'deposit': {}},
-        contract_addr = 'secret18vd8fpwxzck93qlwghaj6arh4p7c5n8978vsyg',
-        transfer_amount = Coins.from_str('1000000uscrt')
-        memo = "My first test net sscrt minting",
-        gas_cost = 150_000
-    )
-```
-
-You should now be able to broadcast your transaction to the network with your broadcast mode of choice (block, sync, async - see cosmos docs)
-
-```
->>> result = client.tx.broadcast(tx)
+>>> result = secret.tx.broadcast(tx)
 >>> print(result)
+```
+
+Or use the abstraction `wallet.send_tokens` (see `wallet.execute_tx` to execute a smart contract with `handle_msg`).
+
+```
+>>> tx = wallet.send_tokens(wallet.key.acc_address, RECIPIENT, "1000000uscrt")
 ```
 
 <br/>
@@ -227,8 +222,6 @@ When contributing documentation, please do your best to follow the style of the 
 
 ### Need more information on how to contribute?
 You can give this <a href="https://opensource.guide/how-to-contribute/#how-to-submit-a-contribution">guide</a> read for more insight.
-
-
 
 
 <br/>
