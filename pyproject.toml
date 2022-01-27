@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "secret-py"
+name = "secret-sdk"
 authors = ["SCRT LabRador, Secret analytics"]
 classifiers = [
     "Intended Audience :: Developers",
