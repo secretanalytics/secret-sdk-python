@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from typing import Optional
+
 import attr
 
 from secret_sdk.core import AccAddress

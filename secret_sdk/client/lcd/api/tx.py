@@ -1,10 +1,11 @@
-import re
 import base64
+import re
 from typing import List, Optional
+
 import attr
 
 from secret_sdk.core import AccAddress, Coins, Numeric
-from secret_sdk.core.auth import StdFee, StdSignMsg, StdTx, TxInfo, SearchTxsResponse
+from secret_sdk.core.auth import SearchTxsResponse, StdFee, StdSignMsg, StdTx, TxInfo
 from secret_sdk.core.broadcast import (
     AsyncTxBroadcastResult,
     BlockTxBroadcastResult,
@@ -46,8 +47,8 @@ class AsyncTxAPI(BaseAsyncAPI):
             TxInfo: transaction info
         """
         response_data = await self._c._get(f"/txs/{id}", raw=True)
-        if 'tx' not in response_data:
-            raise Exception('Unexpected response data format')
+        if "tx" not in response_data:
+            raise Exception("Unexpected response data format")
         # TODO: update TxInfo interface
         return await self.decrypt_txs_response(response_data)
 
@@ -57,25 +58,31 @@ class AsyncTxAPI(BaseAsyncAPI):
         error = None
         for nonce in nonces:
             try:
-                return base64.b64decode(await self._c.utils.decrypt(wasm_output_data_cipher_bz, nonce))
+                return base64.b64decode(
+                    await self._c.utils.decrypt(wasm_output_data_cipher_bz, nonce)
+                )
             except Exception as e:
                 error = e
         raise error
 
     async def decrypt_logs(self, logs, nonces):
         for log in logs:
-            for e in log['events']:
-                if e['type'] == "wasm":
+            for e in log["events"]:
+                if e["type"] == "wasm":
                     for nonce in nonces:
                         nonce_ok = False
-                        for a in e['attributes']:
+                        for a in e["attributes"]:
                             try:
-                                a['key'] = await self._c.utils.decrypt(base64.b64decode(a['key']), nonce)
+                                a["key"] = await self._c.utils.decrypt(
+                                    base64.b64decode(a["key"]), nonce
+                                )
                                 nonce_ok = True
                             except Exception:
                                 pass
                             try:
-                                a['value'] = await self._c.utils.decrypt(base64.b64decode(a['value'], nonce))
+                                a["value"] = await self._c.utils.decrypt(
+                                    base64.b64decode(a["value"], nonce)
+                                )
                                 nonce_ok = True
                             except Exception:
                                 pass
@@ -89,19 +96,21 @@ class AsyncTxAPI(BaseAsyncAPI):
         data_field = None
         data = []
 
-        if txs_response.get('data'):
-            data_field = txs_response['data']  # await self.decode_tx_data(txs_response['data'])
+        if txs_response.get("data"):
+            data_field = txs_response[
+                "data"
+            ]  # await self.decode_tx_data(txs_response['data'])
 
-        logs = txs_response.get('logs')
+        logs = txs_response.get("logs")
         if logs:
-            logs[0]['msg_index'] = 0
+            logs[0]["msg_index"] = 0
 
-        for i, msg in enumerate(txs_response['tx']['value'].get('msg')):
+        for i, msg in enumerate(txs_response["tx"]["value"].get("msg")):
 
-            if msg['type'] == "wasm/MsgExecuteContract":
-                input_msg_encrypted = base64.b64decode(msg['value']['msg'])
-            elif msg['type'] == "wasm/MsgInstantiateContract":
-                input_msg_encrypted = base64.b64decode(msg['value']['init_msg'])
+            if msg["type"] == "wasm/MsgExecuteContract":
+                input_msg_encrypted = base64.b64decode(msg["value"]["msg"])
+            elif msg["type"] == "wasm/MsgInstantiateContract":
+                input_msg_encrypted = base64.b64decode(msg["value"]["init_msg"])
             else:
                 continue
 
@@ -114,37 +123,48 @@ class AsyncTxAPI(BaseAsyncAPI):
                 # decrypt input
                 input_msg = await self._c.utils.decrypt(input_msg_encrypted[:64], nonce)
 
-                if msg['type'] == "wasm/MsgExecuteContract":
+                if msg["type"] == "wasm/MsgExecuteContract":
                     # decrypt input
-                    txs_response['tx']['value']['msg'][i]['value']['msg'] = input_msg
+                    txs_response["tx"]["value"]["msg"][i]["value"]["msg"] = input_msg
 
                     # decrypt output data
                     # hack since only 1st message data is returned
-                    if data_field and i == 0 and data_field[0]['data']:
-                        data = await self.decrypt_data_field(bytearray.fromhex(base64.b64decode(data_field[0]['data'])), [nonce])
+                    if data_field and i == 0 and data_field[0]["data"]:
+                        data = await self.decrypt_data_field(
+                            bytearray.fromhex(base64.b64decode(data_field[0]["data"])),
+                            [nonce],
+                        )
                 elif msg.type == "wasm/MsgInstantiateContract":
                     # decrypt input
-                    txs_response['tx']['value']['msg'][0]['value']['init_msg'] = input_msg
+                    txs_response["tx"]["value"]["msg"][0]["value"][
+                        "init_msg"
+                    ] = input_msg
 
                 # decrypt output logs
-                if txs_response.get('logs') and logs:
-                    if 'log' not in txs_response['logs'][i]:
-                        logs[i]['log'] = ''
-                    logs[i] = await self.decrypt_logs([txs_response['logs'][i]], [nonce])[0]
+                if txs_response.get("logs") and logs:
+                    if "log" not in txs_response["logs"][i]:
+                        logs[i]["log"] = ""
+                    logs[i] = await self.decrypt_logs(
+                        [txs_response["logs"][i]], [nonce]
+                    )[0]
 
                 # failed to execute message; message index: 0: encrypted: (.+?): (?:instantiate | execute | query) contract failed
                 # decrypt error const
-                error_message_rgx = re.compile(rf'failed to execute message; message index: {i}: encrypted: (.+?): (?:instantiate|execute|query) contract failed')
-                rgx_matches = error_message_rgx.findall(txs_response['raw_log'])
+                error_message_rgx = re.compile(
+                    rf"failed to execute message; message index: {i}: encrypted: (.+?): (?:instantiate|execute|query) contract failed"
+                )
+                rgx_matches = error_message_rgx.findall(txs_response["raw_log"])
                 if rgx_matches and len(rgx_matches) == 2:
                     error_cipher_b64 = rgx_matches[1]
                     error_cipher_bz = base64.b64decode(error_cipher_b64)
                     error_plain_bz = await self._c.utils.decrypt(error_cipher_bz, nonce)
-                    txs_response['raw_log'] = txs_response['raw_log'].replace(error_cipher_b64, error_plain_bz)
+                    txs_response["raw_log"] = txs_response["raw_log"].replace(
+                        error_cipher_b64, error_plain_bz
+                    )
 
         txs_response = {k: v for k, v in txs_response.items()}
-        txs_response['logs'] = logs
-        txs_response['data'] = data
+        txs_response["logs"] = logs
+        txs_response["data"] = data
 
         return txs_response
 
@@ -183,9 +203,7 @@ class AsyncTxAPI(BaseAsyncAPI):
         # create the fake fee
         if fee is None:
             fee = await BaseAsyncAPI._try_await(
-                self.estimate_fee(
-                    gas, gas_prices, gas_adjustment, fee_denoms
-                )
+                self.estimate_fee(gas, gas_prices, gas_adjustment, fee_denoms)
             )
 
         if account_number is None or sequence is None:
@@ -403,7 +421,7 @@ class TxAPI(AsyncTxAPI):
 
     @sync_bind(AsyncTxAPI.broadcast_sync)
     def broadcast_sync(
-            self, tx: StdTx, options: BroadcastOptions = None
+        self, tx: StdTx, options: BroadcastOptions = None
     ) -> SyncTxBroadcastResult:
         pass
 
@@ -411,7 +429,7 @@ class TxAPI(AsyncTxAPI):
 
     @sync_bind(AsyncTxAPI.broadcast_async)
     def broadcast_async(
-            self, tx: StdTx, options: BroadcastOptions = None
+        self, tx: StdTx, options: BroadcastOptions = None
     ) -> AsyncTxBroadcastResult:
         pass
 
@@ -419,7 +437,7 @@ class TxAPI(AsyncTxAPI):
 
     @sync_bind(AsyncTxAPI.broadcast)
     def broadcast(
-            self, tx: StdTx, options: BroadcastOptions = None
+        self, tx: StdTx, options: BroadcastOptions = None
     ) -> BlockTxBroadcastResult:
         pass
 

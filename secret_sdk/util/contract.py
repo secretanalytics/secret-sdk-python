@@ -20,7 +20,9 @@ __all__ = [
 
 def msg_dict_as_b64(msg_dict: Dict) -> str:
     str_dict = dict_to_data(msg_dict)
-    msg_str = base64.b64encode(bytes(json.dumps(str_dict, separators=(",", ":")).encode('utf-8'))).decode('utf-8')
+    msg_str = base64.b64encode(
+        bytes(json.dumps(str_dict, separators=(",", ":")).encode("utf-8"))
+    ).decode("utf-8")
     return msg_str
 
 

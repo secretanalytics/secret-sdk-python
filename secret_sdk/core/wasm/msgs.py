@@ -11,7 +11,6 @@ from secret_sdk.core.msg import Msg
 from secret_sdk.util.json import dict_to_data
 from secret_sdk.util.remove_none import remove_none
 
-
 __all__ = [
     "MsgStoreCode",
     "MsgMigrateCode",
@@ -47,7 +46,7 @@ class MsgStoreCode(Msg):
             sender=data["sender"],
             wasm_byte_code=data["wasm_byte_code"],
             source=data.get("source"),
-            builder=data.get("builder")
+            builder=data.get("builder"),
         )
 
 

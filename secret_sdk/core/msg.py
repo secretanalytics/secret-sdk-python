@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 import attr
 
 from secret_sdk.util.base import BaseSecretData

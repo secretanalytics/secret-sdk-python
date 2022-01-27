@@ -24,14 +24,23 @@ from .api.wasm import AsyncWasmAPI, WasmAPI
 from .lcdutils import AsyncLCDUtils, LCDUtils
 from .wallet import AsyncWallet, Wallet
 
-
 # default gas_price is 0.25, amount = gas * gas_price
 default_fees = {
-    "upload": StdFee(gas=1_000_000, amount=Coins.from_data([{"amount": 250_000, "denom": "uscrt"}])),
-    "init": StdFee(gas=500_000, amount=Coins.from_data([{"amount": 125_000, "denom": "uscrt"}])),
-    "exec": StdFee(gas=200_000, amount=Coins.from_data([{"amount": 50_000, "denom": "uscrt"}])),
-    "send": StdFee(gas=80_000, amount=Coins.from_data([{"amount": 20_000, "denom": "uscrt"}])),
-    "default": StdFee(gas=200_000, amount=Coins.from_data([{"amount": 50_000, "denom": "uscrt"}]))
+    "upload": StdFee(
+        gas=1_000_000, amount=Coins.from_data([{"amount": 250_000, "denom": "uscrt"}])
+    ),
+    "init": StdFee(
+        gas=500_000, amount=Coins.from_data([{"amount": 125_000, "denom": "uscrt"}])
+    ),
+    "exec": StdFee(
+        gas=200_000, amount=Coins.from_data([{"amount": 50_000, "denom": "uscrt"}])
+    ),
+    "send": StdFee(
+        gas=80_000, amount=Coins.from_data([{"amount": 20_000, "denom": "uscrt"}])
+    ),
+    "default": StdFee(
+        gas=200_000, amount=Coins.from_data([{"amount": 50_000, "denom": "uscrt"}])
+    ),
 }
 default_gas_prices = {"uscrt": 0.25}
 default_gas_adjustment = 1
@@ -165,7 +174,7 @@ class LCDClient(AsyncLCDClient):
         chain_id: str = None,
         gas_prices: Optional[Coins.Input] = None,
         gas_adjustment: Optional[Numeric.Input] = None,
-        custom_fees: Optional[dict] = default_fees
+        custom_fees: Optional[dict] = default_fees,
     ):
         super().__init__(
             url,

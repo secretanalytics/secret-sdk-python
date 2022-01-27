@@ -167,7 +167,7 @@ class Redelegation(JSONSerializable):
                 delegator_address=data["redelegation"]["delegator_address"],
                 validator_src_address=data["redelegation"]["validator_src_address"],
                 validator_dst_address=data["redelegation"]["validator_dst_address"],
-                entries=data["redelegation"]["entries"]
+                entries=data["redelegation"]["entries"],
             ),
             entries=entries,
         )

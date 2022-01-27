@@ -7,9 +7,7 @@ __all__ = ["AsyncAuthAPI", "AuthAPI"]
 
 
 class AsyncAuthAPI(BaseAsyncAPI):
-    async def account_info(
-        self, address: AccAddress
-    ) -> Account:
+    async def account_info(self, address: AccAddress) -> Account:
         """Fetches the account information.
 
         Args:
@@ -27,9 +25,7 @@ class AsyncAuthAPI(BaseAsyncAPI):
 
 class AuthAPI(AsyncAuthAPI):
     @sync_bind(AsyncAuthAPI.account_info)
-    def account_info(
-        self, address: AccAddress
-    ) -> Account:
+    def account_info(self, address: AccAddress) -> Account:
         pass
 
     account_info.__doc__ = AsyncAuthAPI.account_info.__doc__

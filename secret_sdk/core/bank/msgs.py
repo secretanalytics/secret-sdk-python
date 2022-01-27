@@ -1,8 +1,8 @@
 """Bank module message types."""
 
 from __future__ import annotations
-import copy
 
+import copy
 from typing import List
 
 from secret_sdk.core import AccAddress, Coins
@@ -42,7 +42,7 @@ class MsgSend(Msg):
         return cls(
             from_address=data["from_address"],
             to_address=data["to_address"],
-            amount=Coins.from_data(data["amount"])
+            amount=Coins.from_data(data["amount"]),
         )
 
 

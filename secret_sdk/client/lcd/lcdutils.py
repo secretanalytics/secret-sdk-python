@@ -1,24 +1,54 @@
 import base64
 import secrets
-
-from miscreant.aes.siv import SIV
-from cryptography.hazmat.primitives import hashes, serialization
-from cryptography.hazmat.primitives.asymmetric.x25519 import X25519PrivateKey, X25519PublicKey
-from cryptography.hazmat.primitives.kdf.hkdf import HKDF
-
 from functools import reduce
 from typing import Any, Dict, List
 
+from cryptography.hazmat.primitives import hashes, serialization
+from cryptography.hazmat.primitives.asymmetric.x25519 import (
+    X25519PrivateKey,
+    X25519PublicKey,
+)
+from cryptography.hazmat.primitives.kdf.hkdf import HKDF
+from miscreant.aes.siv import SIV
 
 from .api._base import BaseAsyncAPI, sync_bind
 
-
-hkdf_salt = bytes([
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-    0x00, 0x02, 0x4b, 0xea, 0xd8, 0xdf, 0x69, 0x99,
-    0x08, 0x52, 0xc2, 0x02, 0xdb, 0x0e, 0x00, 0x97,
-    0xc1, 0xa1, 0x2e, 0xa6, 0x37, 0xd7, 0xe9, 0x6d,
-])
+hkdf_salt = bytes(
+    [
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x02,
+        0x4B,
+        0xEA,
+        0xD8,
+        0xDF,
+        0x69,
+        0x99,
+        0x08,
+        0x52,
+        0xC2,
+        0x02,
+        0xDB,
+        0x0E,
+        0x00,
+        0x97,
+        0xC1,
+        0xA1,
+        0x2E,
+        0xA6,
+        0x37,
+        0xD7,
+        0xE9,
+        0x6D,
+    ]
+)
 
 
 def index_by_pub_key(m: Dict[str, Any], o: Any):
@@ -27,7 +57,6 @@ def index_by_pub_key(m: Dict[str, Any], o: Any):
 
 
 class AsyncLCDUtils(BaseAsyncAPI):
-
     def __init__(self, c):
         super().__init__(c)
         self.seed = self.generate_new_seed()
@@ -75,40 +104,41 @@ class AsyncLCDUtils(BaseAsyncAPI):
 
     async def get_consensus_io_pubkey(self):
         io_exch_pubkey = await BaseAsyncAPI._try_await(self._c._get("/reg/tx-key"))
-        io_exch_pubkey = io_exch_pubkey['TxKey']
+        io_exch_pubkey = io_exch_pubkey["TxKey"]
         consensus_io_pubkey = base64.b64decode(io_exch_pubkey)
         return bytes([x for x in consensus_io_pubkey])
 
     async def get_tx_encryption_key(self, nonce):
-        if not hasattr(self, 'consensus_io_pubkey'):
-            self.consensus_io_pubkey = await BaseAsyncAPI._try_await(self.get_consensus_io_pubkey())
-        consensus_io_pubkey = X25519PublicKey.from_public_bytes(self.consensus_io_pubkey)
+        if not hasattr(self, "consensus_io_pubkey"):
+            self.consensus_io_pubkey = await BaseAsyncAPI._try_await(
+                self.get_consensus_io_pubkey()
+            )
+        consensus_io_pubkey = X25519PublicKey.from_public_bytes(
+            self.consensus_io_pubkey
+        )
         tx_encryption_ikm = self.privkey.exchange(consensus_io_pubkey)
 
         master_secret = bytes([x for x in tx_encryption_ikm] + nonce)
 
         tx_encryption_key = HKDF(
-            algorithm=hashes.SHA256(),
-            length=32,
-            salt=hkdf_salt,
-            info=b'',
-            backend=None
+            algorithm=hashes.SHA256(), length=32, salt=hkdf_salt, info=b"", backend=None
         ).derive(master_secret)
 
         return tx_encryption_key
 
     async def encrypt(self, contract_code_hash: str, msg: Any):
         nonce = self.generate_new_seed()
-        tx_encryption_key = await BaseAsyncAPI._try_await(self.get_tx_encryption_key(nonce))
+        tx_encryption_key = await BaseAsyncAPI._try_await(
+            self.get_tx_encryption_key(nonce)
+        )
 
         siv = SIV(tx_encryption_key)
 
-        plaintext = bytes(contract_code_hash, 'utf-8') + bytes(msg, 'utf-8')
+        plaintext = bytes(contract_code_hash, "utf-8") + bytes(msg, "utf-8")
         ciphertext = siv.seal(plaintext, [bytes()])
 
         key_dump = self.pubkey.public_bytes(
-            encoding=serialization.Encoding.Raw,
-            format=serialization.PublicFormat.Raw
+            encoding=serialization.Encoding.Raw, format=serialization.PublicFormat.Raw
         )
 
         return nonce + [x for x in key_dump] + [x for x in ciphertext]
@@ -117,15 +147,17 @@ class AsyncLCDUtils(BaseAsyncAPI):
         if not ciphertext:
             return bytes([])
 
-        tx_encryption_key = await BaseAsyncAPI._try_await(self.get_tx_encryption_key(nonce))
+        tx_encryption_key = await BaseAsyncAPI._try_await(
+            self.get_tx_encryption_key(nonce)
+        )
         siv = SIV(tx_encryption_key)
         plaintext = siv.open(ciphertext, [bytes()])
         return plaintext
 
     async def get_pub_key(self):
         return self.pubkey.public_bytes(
-            encoding=serialization.Encoding.Raw,
-            format=serialization.PublicFormat.Raw)
+            encoding=serialization.Encoding.Raw, format=serialization.PublicFormat.Raw
+        )
 
     async def decrypt_data_field(self, data_field, nonces):
         # nonces are a list of nonce in the case of multi execute
@@ -147,7 +179,9 @@ class LCDUtils(AsyncLCDUtils):
     async def validators_with_voting_power(self) -> Dict[str, dict]:
         pass
 
-    validators_with_voting_power.__doc__ = AsyncLCDUtils.validators_with_voting_power.__doc__
+    validators_with_voting_power.__doc__ = (
+        AsyncLCDUtils.validators_with_voting_power.__doc__
+    )
 
     @sync_bind(AsyncLCDUtils.get_consensus_io_pubkey)
     async def get_consensus_io_pubkey(self):

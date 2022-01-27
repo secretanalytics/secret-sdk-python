@@ -20,7 +20,7 @@ __all__ = [
     "TxLog",
     "TxInfo",
     "parse_tx_logs",
-    "SearchTxsResponse"
+    "SearchTxsResponse",
 ]
 
 
@@ -322,7 +322,7 @@ class SearchTxsResponse(JSONSerializable):
             "page_number": str(self.page_number),
             "page_total": str(self.page_total),
             "limit": str(self.limit),
-            "txs": [tx.to_data() for tx in self.txs] if self.txs else None
+            "txs": [tx.to_data() for tx in self.txs] if self.txs else None,
         }
         return data
 

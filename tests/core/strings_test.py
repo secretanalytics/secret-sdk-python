@@ -83,4 +83,6 @@ def test_validates_valcons_pubkey():
     assert not is_valcons_pubkey(
         "secretvaloperpub1addwnpepqvfgz2syfyed50sp5yj4ltd503wkqrlxd2x5du0ukry4fkk3xv8svhuzz0n"
     )
-    assert is_valcons_pubkey("secretvalconspub1zcjduepqsth37qgh8365d3m0t99fkuze9ldhnt2gjngg0ahfhlff7vsd0c5qjwwtcr")
+    assert is_valcons_pubkey(
+        "secretvalconspub1zcjduepqsth37qgh8365d3m0t99fkuze9ldhnt2gjngg0ahfhlff7vsd0c5qjwwtcr"
+    )

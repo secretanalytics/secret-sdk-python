@@ -1,6 +1,7 @@
 from .data import (
     Account,
     PublicKey,
+    SearchTxsResponse,
     StdFee,
     StdSignature,
     StdSignMsg,
@@ -8,7 +9,6 @@ from .data import (
     TxInfo,
     TxLog,
     parse_tx_logs,
-    SearchTxsResponse
 )
 
 __all__ = [
@@ -21,5 +21,5 @@ __all__ = [
     "TxInfo",
     "PublicKey",
     "parse_tx_logs",
-    "SearchTxsResponse"
+    "SearchTxsResponse",
 ]

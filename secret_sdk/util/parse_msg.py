@@ -5,6 +5,7 @@ from secret_sdk.core.distribution import (
     MsgWithdrawDelegationReward,
     MsgWithdrawValidatorCommission,
 )
+from secret_sdk.core.msg import MsgData
 from secret_sdk.core.staking import (
     MsgBeginRedelegate,
     MsgCreateValidator,
@@ -18,7 +19,6 @@ from secret_sdk.core.wasm import (
     MsgMigrateContract,
     MsgStoreCode,
 )
-from secret_sdk.core.msg import MsgData
 
 from .base import create_demux
 
@@ -51,5 +51,6 @@ parse_msg = create_demux(
         # *distribution_msgs,
         # *staking_msgs,
         # *wasm_msgs,
-    ], MsgData
+    ],
+    MsgData,
 )

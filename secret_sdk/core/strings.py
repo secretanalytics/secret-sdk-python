@@ -33,7 +33,9 @@ AccAddress = NewType("AccAddress", str)
 AccAddress.__doc__ = """Secret Bech32 Account Address -- type alias of str."""
 
 ValAddress = NewType("ValAddress", str)
-ValAddress.__doc__ = """Secret Bech32 Validator Operator Address -- type alias of str."""
+ValAddress.__doc__ = (
+    """Secret Bech32 Validator Operator Address -- type alias of str."""
+)
 
 AccPubKey = NewType("AccPubKey", str)
 AccPubKey.__doc__ = """Secret Bech32 Account Address -- type alias of str."""

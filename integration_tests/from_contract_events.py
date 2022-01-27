@@ -1,6 +1,6 @@
+from integration_tests.config import api_url
 from secret_sdk.client.lcd import LCDClient
 from secret_sdk.util.contract import get_contract_events
-from integration_tests.config import api_url
 
 api = LCDClient(url=api_url, chain_id="secret-4")
 tx_info = api.tx.tx_info(

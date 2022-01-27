@@ -9,6 +9,8 @@ def test_deserializes_stdtx(load_json_examples):
         parsed = StdTx.from_data(example["tx"]).to_data()
 
         # TOOD: remove when adding timeout_height attr
-        example["tx"]["value"] = {k: v for k, v in example["tx"]["value"].items() if k != 'timeout_height'}
+        example["tx"]["value"] = {
+            k: v for k, v in example["tx"]["value"].items() if k != "timeout_height"
+        }
         for key in parsed.keys():
             assert parsed[key] == example["tx"][key]
