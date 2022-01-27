@@ -97,7 +97,7 @@ class AsyncLCDUtils(BaseAsyncAPI):
 
         return tx_encryption_key
 
-    async def encrypt(self, contract_code_hash:str, msg:Any):
+    async def encrypt(self, contract_code_hash: str, msg: Any):
         nonce = self.generate_new_seed()
         tx_encryption_key = await BaseAsyncAPI._try_await(self.get_tx_encryption_key(nonce))
 

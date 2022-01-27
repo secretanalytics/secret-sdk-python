@@ -16,7 +16,7 @@ class AsyncWasmAPI(BaseAsyncAPI):
         Returns:
             list: codes information
         """
-        return await self._c._get(f"/wasm/code") or []
+        return await self._c._get("/wasm/code") or []
 
     async def code_info(self, code_id: int) -> dict:
         """Fetches information about an uploaded code.
@@ -103,7 +103,7 @@ class AsyncWasmAPI(BaseAsyncAPI):
         return json.loads(base64.b64decode(decrypted))
 
     async def contract_execute_msg(self, sender_address: AccAddress, contract_address: AccAddress, handle_msg: dict,
-                                   transfer_amount: Optional[Coins] = None) -> MsgExecuteContract :
+                                   transfer_amount: Optional[Coins] = None) -> MsgExecuteContract:
         msg_str = json.dumps(handle_msg, separators=(",", ":"))
         contract_code_hash = await BaseAsyncAPI._try_await(self.contract_hash(contract_address))
 

@@ -48,8 +48,8 @@ staking_msgs = [
 parse_msg = create_demux(
     [
         *bank_msgs,
-        #*distribution_msgs,
-        #*staking_msgs,
-        #*wasm_msgs,
+        # *distribution_msgs,
+        # *staking_msgs,
+        # *wasm_msgs,
     ], MsgData
 )

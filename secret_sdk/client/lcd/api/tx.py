@@ -63,8 +63,8 @@ class AsyncTxAPI(BaseAsyncAPI):
         raise error
 
     async def decrypt_logs(self, logs, nonces):
-        for l in logs:
-            for e in l['events']:
+        for log in logs:
+            for e in log['events']:
                 if e['type'] == "wasm":
                     for nonce in nonces:
                         nonce_ok = False
@@ -72,12 +72,12 @@ class AsyncTxAPI(BaseAsyncAPI):
                             try:
                                 a['key'] = await self._c.utils.decrypt(base64.b64decode(a['key']), nonce)
                                 nonce_ok = True
-                            except:
+                            except Exception:
                                 pass
                             try:
                                 a['value'] = await self._c.utils.decrypt(base64.b64decode(a['value'], nonce))
                                 nonce_ok = True
-                            except:
+                            except Exception:
                                 pass
 
                         if nonce_ok:

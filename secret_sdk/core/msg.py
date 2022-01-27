@@ -2,7 +2,6 @@ from __future__ import annotations
 import attr
 
 from secret_sdk.util.base import BaseSecretData
-from secret_sdk.util.json import JSONSerializable
 
 
 class Msg(BaseSecretData):
@@ -11,7 +10,6 @@ class Msg(BaseSecretData):
         from secret_sdk.util.parse_msg import parse_msg
 
         return parse_msg(data)
-
 
 
 @attr.s

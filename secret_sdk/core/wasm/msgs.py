@@ -12,7 +12,6 @@ from secret_sdk.util.json import dict_to_data
 from secret_sdk.util.remove_none import remove_none
 
 
-
 __all__ = [
     "MsgStoreCode",
     "MsgMigrateCode",
