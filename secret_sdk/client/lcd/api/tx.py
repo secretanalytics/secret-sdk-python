@@ -55,7 +55,6 @@ class AsyncTxAPI(BaseAsyncAPI):
     async def decrypt_data_field(self, data_field: str, nonces):
         wasm_output_data_cipher_bz = bytearray.fromhex(data_field)
 
-        error = None
         for nonce in nonces:
             try:
                 return base64.b64decode(
@@ -307,7 +306,7 @@ class AsyncTxAPI(BaseAsyncAPI):
         """
         res = await self._broadcast(tx, "sync", options)
         return SyncTxBroadcastResult(
-            txhash=res.get("txhash"),
+            txhash=res["txhash"],
             raw_log=res.get("raw_log"),
             code=res.get("code"),
             codespace=res.get("codespace"),
@@ -326,7 +325,7 @@ class AsyncTxAPI(BaseAsyncAPI):
         """
         res = await self._broadcast(tx, "async", options)
         return AsyncTxBroadcastResult(
-            txhash=res.get("txhash"),
+            txhash=res["txhash"],
         )
 
     async def broadcast(
@@ -343,7 +342,7 @@ class AsyncTxAPI(BaseAsyncAPI):
         res = await self._broadcast(tx, "block", options)
         return BlockTxBroadcastResult(
             height=res.get("height") or 0,
-            txhash=res.get("txhash"),
+            txhash=res["txhash"],
             raw_log=res.get("raw_log"),
             gas_wanted=res.get("gas_wanted") or 0,
             gas_used=res.get("gas_used") or 0,

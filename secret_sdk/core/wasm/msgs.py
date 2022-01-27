@@ -5,6 +5,7 @@ from __future__ import annotations
 import copy
 
 import attr
+from typing import Dict, Any
 
 from secret_sdk.core import AccAddress, Coins
 from secret_sdk.core.msg import Msg
@@ -114,11 +115,11 @@ class MsgInstantiateContract(Msg):
         return {"type": self.type, "value": dict_to_data(d)}
 
     @classmethod
-    def from_data(cls, data: dict) -> MsgInstantiateContract:
+    def from_data(cls, data: Dict[str, Any]) -> MsgInstantiateContract:
         data = data["value"]
         return cls(
-            sender=data.get("sender"),
-            admin=data.get("admin"),
+            sender=data["sender"],
+            admin=data["admin"],
             code_id=data["code_id"],
             label=data.get("label"),
             init_msg=remove_none(data["init_msg"]),

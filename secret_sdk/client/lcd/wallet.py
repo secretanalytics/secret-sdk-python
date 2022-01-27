@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Dict, List, Optional
 
-from secret_sdk.core import Coins, Numeric
+from secret_sdk.core import AccAddress, Coins, Numeric
 from secret_sdk.core.auth import StdFee, StdSignMsg, StdTx
 from secret_sdk.core.bank import MsgSend
 from secret_sdk.core.msg import Msg
@@ -105,7 +105,7 @@ class AsyncWallet:
 
     async def send_tokens(
         self,
-        recipient_addr: str,
+        recipient_addr: AccAddress,
         memo: str = "",
         transfer_amount: Coins = None,
         gas: Optional[int] = None,
@@ -267,7 +267,7 @@ class Wallet:
 
     def send_tokens(
         self,
-        recipient_addr: str,
+        recipient_addr: AccAddress,
         memo: str = "",
         transfer_amount: Coins = None,
         gas: Optional[int] = None,

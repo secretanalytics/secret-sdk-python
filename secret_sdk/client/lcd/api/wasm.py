@@ -31,7 +31,7 @@ class AsyncWasmAPI(BaseAsyncAPI):
         """
         return await self._c._get(f"/wasm/code/{code_id}")
 
-    async def list_contracts_by_code_id(self, code_id: int) -> dict:
+    async def list_contracts_by_code_id(self, code_id: int) -> list:
         """Fetches information about an uploaded code.
 
         Args:

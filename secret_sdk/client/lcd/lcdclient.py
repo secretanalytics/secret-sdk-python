@@ -42,7 +42,7 @@ default_fees = {
         gas=200_000, amount=Coins.from_data([{"amount": 50_000, "denom": "uscrt"}])
     ),
 }
-default_gas_prices = {"uscrt": 0.25}
+default_gas_prices = Coins.from_data([{"uscrt": 0.25}])
 default_gas_adjustment = 1
 
 
@@ -52,7 +52,7 @@ class AsyncLCDClient:
         url: str,
         chain_id: Optional[str] = None,
         gas_prices: Optional[Coins.Input] = default_gas_prices,
-        gas_adjustment: Optional[Numeric.Input] = default_gas_prices,
+        gas_adjustment: Optional[Numeric.Input] = default_gas_adjustment,
         custom_fees: Optional[dict] = default_fees,
         loop: Optional[AbstractEventLoop] = None,
         _create_session: bool = True,  # don't create a session (used for sync LCDClient)
