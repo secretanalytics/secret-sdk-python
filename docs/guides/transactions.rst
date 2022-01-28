@@ -1,11 +1,11 @@
 Building and Signing Transactions
 =================================
 
-If you want to perform a state-changing operation on the Terra blockchain such as
+If you want to perform a state-changing operation on the Secret blockchain such as
 sending tokens, swapping assets, withdrawing rewards, or even invoking functions on
 smart contracts, you must create a **transaction** and broadcast it to the network.
 
-An :class:`StdTx<terra_sdk.core.auth.data.tx.StdTx>` is a data object that represents
+An :class:`StdTx<secret_sdk.core.auth.data.tx.StdTx>` is a data object that represents
 a transaction. It contains:
 
 - **msgs**: a list of state-altering messages
@@ -13,7 +13,7 @@ a transaction. It contains:
 - **signatures**: a list of signatures from required signers (depends on messages)
 - **memo**: a short string describing transaction (can be empty string)
 
-Terra SDK provides functions that help create StdTx objects.
+Secret SDK provides functions that help create StdTx objects.
 
 Using a Wallet (recommended)
 ----------------------------
@@ -22,50 +22,50 @@ Using a Wallet (recommended)
     This method requires an LCDClient instance with a proper node connection. If you
     can't use Wallet, see `Signing transactions manually`_.
 
-A :class:`Wallet<terra_sdk.client.lcd.wallet.Wallet>` allows you to create and sign a transaction in a single step by automatically
+A :class:`Wallet<secret_sdk.client.lcd.wallet.Wallet>` allows you to create and sign a transaction in a single step by automatically
 fetching the latest information from the blockchain (chain ID, account number, sequence).
 
-Use :meth:`LCDClient.wallet()<terra_sdk.client.lcd.LCDClient.wallet>` to create a Wallet from any Key instance. The Key provided should
+Use :meth:`LCDClient.wallet()<secret_sdk.client.lcd.LCDClient.wallet>` to create a Wallet from any Key instance. The Key provided should
 correspond to the account you intend to sign the transaction with.
 
 .. code-block:: python
 
-    from terra_sdk.client.lcd import LCDClient
-    from terra_sdk.key.mnemonic import MnemonicKey
+    from secret_sdk.client.lcd import LCDClient
+    from secret_sdk.key.mnemonic import MnemonicKey
 
     mk = MnemonicKey(mnemonic=MNEMONIC) 
-    terra = LCDClient("https://lcd.terra.dev", "columbus-4")
-    wallet = terra.wallet(mk)
+    secret = LCDClient("https://api.scrt.network", "secret-4")
+    wallet = secret.wallet(mk)
 
 
 Once you have your Wallet, you can simply create a StdTx using :meth:`Wallet.create_and_sign_tx`.
 
 .. code-block:: python
 
-    from terra_sdk.core.auth import StdFee
-    from terra_sdk.core.bank import MsgSend
+    from secret_sdk.core.auth import StdFee
+    from secret_sdk.core.bank import MsgSend
 
     tx = wallet.create_and_sign_tx(
         msgs=[MsgSend(
             wallet.key.acc_address,
             RECIPIENT,
-            "1000000uluna" # send 1 luna
+            "1000000uscrt" # send 1 scrt
         )],
         memo="test transaction!",
-        fee=StdFee(200000, "120000uluna")
+        fee=StdFee(200000, "120000uscrt")
     )
 
 And that's it! You should now be able to broadcast your transaction to the network.
 
 .. code-block:: python
 
-    result = terra.tx.broadcast(tx)
+    result = secret.tx.broadcast(tx)
     print(result)
 
 Automatic fee estimation
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
-If no ``fee`` parameter is provided for :meth:`Wallet.create_and_sign_tx()<terra_sdk.client.lcd.wallet.Wallet.create_and_sign_tx>`,
+If no ``fee`` parameter is provided for :meth:`Wallet.create_and_sign_tx()<secret_sdk.client.lcd.wallet.Wallet.create_and_sign_tx>`,
 the transaction fee will be simulated against the node and populated for you. By default, ``Wallet``
 will use the fee estimation parameters of the ``LCDClient`` used to create it. You can override
 this behavior **per transaction**:
@@ -76,8 +76,8 @@ this behavior **per transaction**:
 
 .. note::
     By default, the estimated fee returned consists of a fee paid in every denom for which the
-    signing account hold a balance. For instance, if the signer has a balance of ``uusd`` and ``uluna``,
-    the fee reported will be both ``uusd`` and ``uluna``. 
+    signing account hold a balance. For instance, if the signer has a balance of ``uusd`` and ``uscrt``,
+    the fee reported will be both ``uusd`` and ``uscrt``. 
     
     Use the ``denoms`` argument to restrict the estimated fee to specific denoms.
 
@@ -89,10 +89,10 @@ this behavior **per transaction**:
         msgs=[MsgSend(
             wallet.key.acc_address,
             RECIPIENT,
-            "1000000uluna" # send 1 luna
+            "1000000uscrt" # send 1 scrt
         )],
         memo="test transaction!",
-        gas_prices="0.015uluna,0.11ukrw", # optional
+        gas_prices="0.25uscrt", # optional
         gas_adjustment="1.2", # optional
         denoms=["ukrw"] # optional
     )
@@ -101,7 +101,7 @@ Signing transactions manually
 -----------------------------
 
 Below is the full process of signing a transaction manually that does not use ``Wallet``.
-You will need to build a :class:`StdSignMsg<terra_sdk.core.auth.data.tx.StdSignMsg>`, 
+You will need to build a :class:`StdSignMsg<secret_sdk.core.auth.data.tx.StdSignMsg>`, 
 sign it, and add the signatures to an ``StdTx``.
 
 A StdSignMsg contains the information required to build a StdTx:
@@ -115,24 +115,24 @@ A StdSignMsg contains the information required to build a StdTx:
 
 .. code-block:: python
 
-    from terra_sdk.client.lcd import LCDClient
-    from terra_sdk.core.auth import StdSignMsg
-    from terra_sdk.core.bank import MsgSend
-    from terra_sdk.key.mnemonic import MnemonicKey
+    from secret_sdk.client.lcd import LCDClient
+    from secret_sdk.core.auth import StdSignMsg
+    from secret_sdk.core.bank import MsgSend
+    from secret_sdk.key.mnemonic import MnemonicKey
 
-    terra = LCDClient("https://lcd.terra.dev", "columbus-4")
+    secret = LCDClient("https://api.scrt.network", "secret-4")
     mk = MnemonicKey(mnemonic=MNEMONIC) 
 
     # create tx
     unsigned_tx = StdSignMsg(
-        chain_id="columbus-4",
+        chain_id="secret-4",
         account_number=23982,
         sequence=12,
-        fee=StdFee(200000, "120000uluna"),
+        fee=StdFee(200000, "120000uscrt"),
         msgs=[MsgSend(
             mk.acc_address,
             RECIPIENT,
-            "1000000uluna" # send 1 luna
+            "1000000uscrt" # send 1 scrt
         )],
         memo="test transaction!"
     )
@@ -147,7 +147,7 @@ A StdSignMsg contains the information required to build a StdTx:
     tx.signature = [sig]
 
     # broadcast tx
-    result = terra.tx.broadcast(tx)
+    result = secret.tx.broadcast(tx)
     print(result)
 
 
@@ -157,7 +157,7 @@ Applying multiple signatures
 
 Some messages, such as ``MsgMultiSend``, require the transaction to be signed with multiple signatures.
 You must prepare a separate ``StdSignMsg`` for each signer to sign individually, and then
-combine them in the ``signatures`` field of the final :class:`StdTx<terra_sdk.core.auth.data.tx.StdTx>` object. 
+combine them in the ``signatures`` field of the final :class:`StdTx<secret_sdk.core.auth.data.tx.StdTx>` object. 
 Each ``StdSignMsg`` should only differ by ``account`` and ``sequence``, which vary according to the signing key.
 
 .. note::
@@ -166,28 +166,28 @@ Each ``StdSignMsg`` should only differ by ``account`` and ``sequence``, which va
 
 .. code-block:: python
 
-    from terra_sdk.client.lcd import LCDClient
-    from terra_sdk.core.auth import StdFee
-    from terra_sdk.core.bank import MsgMultiSend
-    from terra_sdk.key.mnemonic import MnemonicKey
+    from secret_sdk.client.lcd import LCDClient
+    from secret_sdk.core.auth import StdFee
+    from secret_sdk.core.bank import MsgMultiSend
+    from secret_sdk.key.mnemonic import MnemonicKey
 
-    terra = LCDClient("https://lcd.terra.dev", "columbus-4")
-    wallet1 = terra.wallet(MnemonicKey(mnemonic=MNEMONIC_1))
-    wallet2 = terra.wallet(MnemonicKey(mnemonic=MNEMONIC_2))
+    secret = LCDClient("https://api.scrt.network", "secret-4")
+    wallet1 = secret.wallet(MnemonicKey(mnemonic=MNEMONIC_1))
+    wallet2 = secret.wallet(MnemonicKey(mnemonic=MNEMONIC_2))
 
     multisend = MsgMultiSend(
         inputs=[
-            {"address": wallet1.key.acc_address, "coins": "12000uusd,11000uluna"},
-            {"address": wallet2.key.acc_address, "coins": "11000ukrw,10000uluna"}
+            {"address": wallet1.key.acc_address, "coins": "12000uusd,11000uscrt"},
+            {"address": wallet2.key.acc_address, "coins": "11000ukrw,10000uscrt"}
         ],
         outputs=[
-            {"address": wallet1.key.acc_address, "coins": "11000ukrw,10000uluna"},
-            {"address": wallet2.key.acc_address, "coins": "12000uusd,11000uluna"}
+            {"address": wallet1.key.acc_address, "coins": "11000ukrw,10000uscrt"},
+            {"address": wallet2.key.acc_address, "coins": "12000uusd,11000uscrt"}
         ]    
     )
 
     msgs = [multisend]
-    fee = StdFee(200000, "12000uluna")
+    fee = StdFee(200000, "12000uscrt")
     memo = "multisend example"
 
     # create unsigned_tx #1
@@ -215,7 +215,7 @@ Each ``StdSignMsg`` should only differ by ``account`` and ``sequence``, which va
     tx.signatures = [sig1, sig2]
 
     # broadcast tx
-    result = terra.tx.broadcast(tx)
+    result = secret.tx.broadcast(tx)
     print(result)
 
 

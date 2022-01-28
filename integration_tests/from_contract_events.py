@@ -1,8 +1,9 @@
-from terra_sdk.client.lcd import LCDClient
-from terra_sdk.util.contract import get_contract_events
+from integration_tests.config import api_url
+from secret_sdk.client.lcd import LCDClient
+from secret_sdk.util.contract import get_contract_events
 
-tequila = LCDClient(url="https://tequila-lcd.terra.dev", chain_id="tequila-0004")
-tx_info = tequila.tx.tx_info(
-    "B652DF530D50E470070F3F211519495078082D01B49ED36B762B4E9446CE484E"
+api = LCDClient(url=api_url, chain_id="secret-4")
+tx_info = api.tx.tx_info(
+    "9F90D988CE4569CAB07AC0331E188AD873FCAAA21B9701FB8705AE6053620C72"
 )
 print(get_contract_events(tx_info))

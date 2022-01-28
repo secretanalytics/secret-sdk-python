@@ -27,7 +27,7 @@ help:
 	@python -c "$$PRINT_HELP_PYSCRIPT" < $(MAKEFILE_LIST)
 
 coverage: ## check code coverage
-	poetry run coverage run --source terra_sdk -m pytest
+	poetry run coverage run --source secret_sdk -m pytest
 	poetry run coverage report -m
 	poetry run coverage html
 	# $(BROWSER) htmlcov/index.html
@@ -57,8 +57,8 @@ test: ## runs tests
 	poetry run pytest
 
 qa: ## runs static analysis with mypy and flake8
-	poetry run flake8 terra_sdk
-	poetry run mypy -p terra_sdk
+	poetry run flake8 secret_sdk
+	poetry run mypy -p secret_sdk
 
 format: ## runs code style and formatter
 	poetry run isort .

@@ -3,36 +3,36 @@
 Implementing a Custom Key
 =========================
 
-If none of the Key solutions provided by Terra SDK or the community are able to meet your requirements, 
+If none of the Key solutions provided by Secret SDK or the community are able to meet your requirements,
 you might consider writing your own Key implementation. 
 
 Here are just a couple  that help guide
 your design pathways:
 
 Is the private key accessible by developer?
-    * YES: Subclass :class:`terra_sdk.key.raw.RawKey`
-    * NO: Subclass :class:`terra_sdk.key.key.Key`
+    * YES: Subclass :class:`secret_sdk.key.raw.RawKey`
+    * NO: Subclass :class:`secret_sdk.key.key.Key`
 
 Can the signing agent sign arbitrary data payloads AND use ECDSA on Secp256k1?
-    * YES: Override :meth:`Key.sign()<terra_sdk.key.key.Key.sign>`
-    * NO: Override :meth:`Key.create_signature()<terra_sdk.key.key.Key.create_signature>`
+    * YES: Override :meth:`Key.sign()<secret_sdk.key.key.Key.sign>`
+    * NO: Override :meth:`Key.create_signature()<secret_sdk.key.key.Key.create_signature>`
 
 Can you determine the public key in advance, and is it static?
     * YES: Call ``super()`` in constructor with public key to generate addresses & pubkeys
-    * NO: Override :meth:`acc_address<terra_sdk.key.key.Key.acc_address>`, :meth:`val_address<terra_sdk.key.key.Key.val_address>`, :meth:`acc_pubkey<terra_sdk.key.key.Key.acc_pubkey>`, :meth:`val_pubkey<terra_sdk.key.key.Key.val_pubkey>` properties.
+    * NO: Override :meth:`acc_address<secret_sdk.key.key.Key.acc_address>`, :meth:`val_address<secret_sdk.key.key.Key.val_address>`, :meth:`acc_pubkey<secret_sdk.key.key.Key.acc_pubkey>`, :meth:`val_pubkey<secret_sdk.key.key.Key.val_pubkey>` properties.
 
 
 Usually, reasons for requiring a custom Key fall into one of 3 patterns:
 
 * External signing
 
-    **Scenario:** The transaction signing is to be performed outside the Python program running Terra SDK,
+    **Scenario:** The transaction signing is to be performed outside the Python program running Secret SDK,
     such as signing via hardware wallet (Ledger, Trezor), etc. 
 
 
 * Alternative signing algorithm
 
-    **Scenario:** Terra account you need to sign transactions for requires a signature algorithm other than
+    **Scenario:** Secret account you need to sign transactions for requires a signature algorithm other than
     ECDSA on Secp256k1, such as Threshold Multisig or Ed25519. 
 
 
@@ -45,7 +45,7 @@ The source for MnemonicKey is provided as an example:
 
 .. code-block:: python
 
-    from terra_sdk.key.raw import RawKey
+    from secret_sdk.key.raw import RawKey
     from bip32utils import BIP32_HARDEN, BIP32Key
     from mnemonic import Mnemonic
 

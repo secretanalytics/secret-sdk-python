@@ -1,10 +1,11 @@
-from terra_sdk.core.distribution import (
+from secret_sdk.core.distribution import (
     MsgModifyWithdrawAddress,
     MsgWithdrawDelegationReward,
     MsgWithdrawValidatorCommission,
 )
 
 
+# /txs?message.module=distribution&limit=1000
 def test_deserializes_msg_modify_withdraw_address_examples(load_msg_examples):
     examples = load_msg_examples(
         MsgModifyWithdrawAddress.type, "./MsgModifyWithdrawAddress.data.json"

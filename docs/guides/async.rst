@@ -13,13 +13,13 @@ You can replace your LCDClient instance with AsyncLCDClient inside a coroutine f
     :emphasize-lines: 5,8
 
     import asyncio 
-    from terra_sdk.client.lcd import AsyncLCDClient
+    from secret_sdk.client.lcd import AsyncLCDClient
 
     async def main():
-        terra = AsyncLCDClient("https://lcd.terra.dev", "columbus-4")
-        total_supply = await terra.supply.total()
+        secret = AsyncLCDClient("https://api.scrt.network", "secret-4")
+        total_supply = await secret.supply.total()
         print(total_supply)
-        await terra.session.close() # you must close the session
+        await secret.session.close() # you must close the session
 
     asyncio.get_event_loop().run_until_complete(main())
 
@@ -31,11 +31,11 @@ session. Here's the same code as above, this time using the ``async with`` const
     :emphasize-lines: 5
 
     import asyncio 
-    from terra_sdk.client.lcd import AsyncLCDClient
+    from secret_sdk.client.lcd import AsyncLCDClient
 
     async def main():
-        async with AsyncLCDClient("https://lcd.terra.dev", "columbus-4") as terra:
-            total_supply = await terra.supply.total()
+        async with AsyncLCDClient("https://api.scrt.network", "secret-4") as secret:
+            total_supply = await secret.supply.total()
             print(total_supply)
 
     asyncio.get_event_loop().run_until_complete(main())
@@ -50,19 +50,19 @@ are also asychronous and therefore must be awaited.
     :emphasize-lines: 12-13
 
     import asyncio 
-    from terra_sdk.client.lcd import AsyncLCDClient
-    from terra_sdk.key.mnemonic import MnemonicKey
-    from terra_sdk.core import Coins
+    from secret_sdk.client.lcd import AsyncLCDClient
+    from secret_sdk.key.mnemonic import MnemonicKey
+    from secret_sdk.core import Coins
 
     mk = MnemonicKey()
-    recipient = "terra1..."
+    recipient = "secret1..."
 
     async def main():
-        async with AsyncLCDClient("https://lcd.terra.dev", "columbus-4") as terra:
-            wallet = terra.wallet(mk)
+        async with AsyncLCDClient("https://api.scrt.network", "secret-4") as secret:
+            wallet = secret.wallet(mk)
             account_number = await wallet.account_number()
             tx = await wallet.create_and_sign_tx(
-                msgs=[MsgSend(wallet.key.acc_address, recipient, Coins(uluna=10202))]
+                msgs=[MsgSend(wallet.key.acc_address, recipient, Coins(uscrt=10202))]
             )
     
     asyncio.get_event_loop().run_until_complete(main())
@@ -79,10 +79,10 @@ for more performance. For example:
     import asyncio
     import uvloop
 
-    from terra_sdk.client.lcd import AsyncLCDClient
+    from secret_sdk.client.lcd import AsyncLCDClient
 
     async def main():
-        async with AsyncLCDClient("https://lcd.terra.dev", "columbus-4") as terra:
+        async with AsyncLCDClient("https://api.scrt.network", "secret-4") as secret:
             total_supply = await wallet.supply.total()
 
     uvloop.install() 

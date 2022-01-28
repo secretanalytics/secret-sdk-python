@@ -1,7 +1,5 @@
-from terra_sdk.client.lcd import LCDClient
+from secret_sdk.client.localsecret import LocalSecret, main_net_chain_id
 
-terra = LCDClient(chain_id="columbus-4", url="https://lcd.terra.dev")
-validators_with_voting_power = terra.utils.validators_with_voting_power()
+api = LocalSecret(chain_id=main_net_chain_id)
+validators_with_voting_power = api.utils.validators_with_voting_power()
 print(validators_with_voting_power)
-tax = terra.utils.calculate_tax("100000000uusd")
-print(tax)
