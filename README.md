@@ -54,7 +54,7 @@ Secret SDK requires <a href="https://www.python.org/downloads/">Python v3.7+</a>
 Secret SDK can be installed (preferably in a `virtual environment` from PyPI using `pip`) as follows:
 
 ```
-$ pip install -U secret-py
+$ pip install -U secret-sdk
 ```
 <sub>*You might have `pip3` installed instead of `pip`; proceed according to your own setup.*<sub>
 
