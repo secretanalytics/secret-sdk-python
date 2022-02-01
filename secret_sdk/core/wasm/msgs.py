@@ -92,7 +92,6 @@ class MsgInstantiateContract(Msg):
 
     Args:
         sender: address of sender
-        admin: address of contract admin
         code_id (int): code ID to use for instantiation
         label (str): human-readable label for this contract
         init_msg (dict): InitMsg to initialize contract
@@ -103,7 +102,6 @@ class MsgInstantiateContract(Msg):
     """"""
 
     sender: AccAddress = attr.ib()
-    admin: AccAddress = attr.ib()
     code_id: int = attr.ib(converter=int)
     label: str = attr.ib(converter=str)
     init_msg: dict = attr.ib()
@@ -119,7 +117,6 @@ class MsgInstantiateContract(Msg):
         data = data["value"]
         return cls(
             sender=data["sender"],
-            admin=data["admin"],
             code_id=data["code_id"],
             label=data.get("label"),
             init_msg=remove_none(data["init_msg"]),
