@@ -53,7 +53,7 @@ def get_code_id(
         str: extracted code id
     """
     if tx_result.logs:
-        code_id = tx_result.logs[msg_index].events_by_type["store_code"]["code_id"][0]
+        code_id = tx_result.logs[msg_index].events_by_type["message"]["code_id"][0]
         return code_id
     else:
         raise ValueError("could not parse code id -- tx logs are empty.")
