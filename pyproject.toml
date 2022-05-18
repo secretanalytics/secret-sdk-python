@@ -36,6 +36,9 @@ miscreant = "^0.3.0"
 black = { version = "^20.8b1", optional = true}
 mypy = { version = "^0.900", optional = true}
 Sphinx = { version = "^3.4.3", optional = true}
+grpcio-tools = "^1.45.0"
+grpclib = "^0.4.2"
+betterproto = "2.0.0b4"
 
 
 [tool.poetry.dev-dependencies]
