@@ -1,8 +1,3 @@
-from audioop import add
-import base64
-
-import bech32
-
 from secret_sdk.client.grpc.grpcclient import AsyncGRPCClient
 import asyncio
 from secret_sdk.client.grpc.encryption import EncryptionUtils
@@ -16,7 +11,7 @@ async def run():
     print((await client.query.auth.params()).to_dict())
     address = "secret1k0jntykt7e4g3y88ltc60czgjuqdy4c9e8fzek"
     # address = "secret1wkcgkmnnz3jhp7vf76jfypqrvqq2jjfnsde3df"
-    query = '{"pool": {}}'
+    query = '{"token_info":{}}'
     # print((await client.tx.get_block_with_txs(height=3480189)).to_json())
     # b = ComputeQuerier.address_to_bytes(address)
     # b = addressUtils.address_to_bytes(address)

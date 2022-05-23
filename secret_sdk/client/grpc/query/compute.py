@@ -115,7 +115,6 @@ class ComputeQuerier:
         response = await self.client.contract_info(
             address=address_utils.address_to_bytes(address)
         )
-        print(response)
 
         return QueryContractInfoResponse(
             address=address_utils.bytes_to_address(response.address),
@@ -150,13 +149,18 @@ class ComputeQuerier:
 
         encrypted_query = await self.encryption.encrypt(code_hash, query)
         nonce = encrypted_query[0:32]
+        print(f"{nonce=}")
 
-        encrypted_result = await self.client.smart_contract_state(
-            address=address_utils.address_to_bytes(contract_address),
-            query_data=encrypted_query,
-        )
+        encrypted_result = (
+            await self.client.smart_contract_state(
+                address=address_utils.address_to_bytes(contract_address),
+                query_data=bytes(encrypted_query),
+            )
+        ).data
+        print(encrypted_result)
         decrypted_b64_result = await self.encryption.decrypt(encrypted_result, nonce)
 
+        print(decrypted_b64_result)
         return json.loads(base64.b64decode(decrypted_b64_result))
 
     async def code(self, code_id: int) -> QueryCodeResponse:
