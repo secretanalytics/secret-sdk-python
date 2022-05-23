@@ -5,13 +5,13 @@ import re
 from dataclasses import dataclass
 from typing import List
 
-import bech32
 from grpclib.client import Channel
 
 from ..encryption import EncryptionUtils
 from ..protobuf.secret.compute.v1beta1 import CodeInfoResponse as baseCodeInfoResponse
 from ..protobuf.secret.compute.v1beta1 import ContractInfo as baseContractInfo
 from ..protobuf.secret.compute.v1beta1 import QueryStub as computeQueryStub
+from . import address as address_utils
 
 """
 most of the code below is copied from secret.js impl: https://github.com/scrtlabs/secret.js/blob/master/src/query/compute.ts
@@ -51,7 +51,7 @@ class QueryContractInfoResponse:
 
     # address is the address of the contract
     address: str
-    ContractInfo: ContractInfo
+    contract_info: ContractInfo
 
 
 @dataclass(eq=False, repr=False)
@@ -68,7 +68,7 @@ class ContractInfoWithAddress:
     """ContractInfoWithAddress adds the address (key) to the ContractInfo representation"""
 
     address: str
-    ContractInfo: ContractInfo
+    contract_info: ContractInfo
 
 
 @dataclass(eq=False, repr=False)
@@ -79,7 +79,7 @@ class QueryContractsByCodeResponse:
 @dataclass(eq=False, repr=False)
 class QueryCodeResponse:
     code_info: CodeInfoResponse
-    daa: bytes
+    data: bytes
 
 
 class ComputeQuerier:
@@ -92,7 +92,7 @@ class ComputeQuerier:
         """Get codeHash of a Secret Contract"""
         code_hash = self.code_hash_cache.get(address)
         if not code_hash:
-            contract_info = await self.contract_info(address)
+            contract_info = (await self.contract_info(address)).contract_info
             code_hash = (
                 (await self.code_hash(contract_info.code_id)).replace("0x", "").lower()
             )
@@ -105,40 +105,38 @@ class ComputeQuerier:
         code_hash = self.code_hash_cache.get(code_id)
 
         if not code_hash:
-            code_info = await self.code(code_id)
+            code_info = (await self.code(code_id)).code_info
+            code_hash = code_info.code_hash
+            code_hash = self.code_hash_cache[code_id] = code_hash
+
+        return code_hash
 
     async def contract_info(self, address: str) -> QueryContractInfoResponse:
         response = await self.client.contract_info(
-            address=ComputeQuerier.address_to_bytes(address)
+            address=address_utils.address_to_bytes(address)
         )
         print(response)
 
         return QueryContractInfoResponse(
-            address=ComputeQuerier.bytes_to_address(response.address),
-            ContractInfo=ComputeQuerier.contract_info_from_protobuf(
-                response.ContractInfo
+            address=address_utils.bytes_to_address(response.address),
+            contract_info=ComputeQuerier.contract_info_from_protobuf(
+                response.contract_info
             ),
         )
 
     async def contracts_by_code(self, code_id: int = 1) -> QueryContractsByCodeResponse:
         response = await self.client.contracts_by_code(code_id=code_id)
-        print(response)
-        print("\n")
-        address_bytes = list(response.contract_infos[0].address)
-        print(address_bytes)
-        print(ComputeQuerier.bytes_to_address(address_bytes))
 
         return QueryContractsByCodeResponse(
             contract_infos=[
-                print(list(contract.address))
-                # ContractInfo(
-                #     address=ComputeQuerier.bytes_to_address(contract.address),
-                #     ContractInfo=ComputeQuerier.contract_info_from_protobuf(
-                #         contract.ContractInfo
-                #     )
-                #     if contract.ContractInfo
-                #     else None,
-                # )
+                ContractInfo(
+                    address=ComputeQuerier.bytes_to_address(contract.address),
+                    ContractInfo=ComputeQuerier.contract_info_from_protobuf(
+                        contract.contract_info
+                    )
+                    if contract.contract_info
+                    else None,
+                )
                 for contract in response.contract_infos
             ]
         )
@@ -154,7 +152,7 @@ class ComputeQuerier:
         nonce = encrypted_query[0:32]
 
         encrypted_result = await self.client.smart_contract_state(
-            address=ComputeQuerier.address_to_bytes(contract_address),
+            address=address_utils.address_to_bytes(contract_address),
             query_data=encrypted_query,
         )
         decrypted_b64_result = await self.encryption.decrypt(encrypted_result, nonce)
@@ -165,7 +163,8 @@ class ComputeQuerier:
         response = await self.client.code(code_id=code_id)
         code_info = ComputeQuerier.code_info_response_from_protobuf(response.code_info)
 
-        self.code_hash_cache[code_id] = code_info.replace("0x", "").lower()
+        # might want to turn this level of caching back but was causing problems
+        # self.code_hash_cache[code_id] = code_info.code_hash.replace("0x", "").lower()
 
         return QueryCodeResponse(code_info=code_info, data=response.data)
 
@@ -176,35 +175,27 @@ class ComputeQuerier:
             for codeInfo in response.code_infos
         ]
 
-    def address_to_bytes(address: str) -> bytes:
-        hrp, bytes = bech32.bech32_decode(address)
-        return bytes
-
-    def bytes_to_address(bytes: bytes, prefix: str = "secret") -> str:
-        res = bech32.bech32_encode(prefix, bytes)
-        return res
-
     ## following functions convert from base protobuf responses to this levels formats
     def contract_info_from_protobuf(contractInfo: baseContractInfo) -> ContractInfo:
         return ContractInfo(
             code_id=contractInfo.code_id,
-            creator=ComputeQuerier.bytes_to_address(contractInfo.creator),
+            creator=address_utils.bytes_to_address(contractInfo.creator),
             label=contractInfo.label,
             created=contractInfo.created,
         )
 
     def code_info_response_from_protobuf(
-        codeInfo: baseCodeInfoResponse,
+        code_info: baseCodeInfoResponse,
     ) -> baseCodeInfoResponse:
         # this should never be empty strings
         return CodeInfoResponse(
-            code_id=codeInfo.code_id if codeInfo.code_id else "",
-            creator=ComputeQuerier.bytes_to_address(codeInfo.creator)
-            if codeInfo.creator
+            code_id=code_info.code_id if code_info.code_id else "",
+            creator=address_utils.bytes_to_address(code_info.creator)
+            if code_info.creator
             else "",
-            code_hash=codeInfo.data_hash.decode().replace("0x", "").lower()
-            if codeInfo.dash_hash
+            code_hash=code_info.data_hash.hex().replace("0x", "").lower()
+            if code_info.data_hash
             else "",
-            source=codeInfo.source if codeInfo.source else "",
-            builder=codeInfo.builder if codeInfo.builder else "",
+            source=code_info.source if code_info.source else "",
+            builder=code_info.builder if code_info.builder else "",
         )
