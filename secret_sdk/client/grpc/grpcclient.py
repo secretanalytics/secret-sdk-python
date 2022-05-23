@@ -71,7 +71,6 @@ from grpclib.client import Channel
 import asyncio
 
 from .query.compute import ComputeQuerier
-from .protobuf.secret.compute.v1beta1 import QueryStub as computeQueryStub
 
 
 class AsyncGRPCClient:
@@ -129,8 +128,7 @@ class AsyncGRPCClient:
 
         class Secret:
             def __init__(self, channel) -> None:
-                self.custom_compute = ComputeQuerier(channel)
-                self.original_compute = computeQueryStub(channel)
+                self.compute = ComputeQuerier(channel)
 
     # class Msg:
     #     def __init__(self, channel) -> None:

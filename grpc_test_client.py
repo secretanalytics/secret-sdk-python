@@ -21,7 +21,7 @@ async def run():
     # result = (await client.query.auth.accounts()).to_dict()
     print(
         (
-            await client.query.secret.custom_compute.query_contract(
+            await client.query.secret.compute.query_contract(
                 contract_address=address, query=query
             )
         )
