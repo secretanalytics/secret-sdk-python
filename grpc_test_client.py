@@ -8,21 +8,21 @@ async def run():
     port = "9090"
     eu = EncryptionUtils(host=host, port=port)
     client = AsyncGRPCClient(host=host, port=port)
-    print((await client.query.auth.params()).to_dict())
     address = "secret1k0jntykt7e4g3y88ltc60czgjuqdy4c9e8fzek"
     # address = "secret1wkcgkmnnz3jhp7vf76jfypqrvqq2jjfnsde3df"
     query = '{"token_info":{}}'
-    # print((await client.tx.get_block_with_txs(height=3480189)).to_json())
-    # b = ComputeQuerier.address_to_bytes(address)
-    # b = addressUtils.address_to_bytes(address)
-    # res_address = addressUtils.bytes_to_address(b)
-    # print(f"{address} -> {b} -> {res_address}")
+    # print(
+    #     (
+    #         await client.query.secret.compute.query_contract(
+    #             contract_address=address, query=query
+    #         )
+    #     )
+    # )
 
-    # result = (await client.query.auth.accounts()).to_dict()
     print(
         (
-            await client.query.secret.compute.query_contract(
-                contract_address=address, query=query
+            await client.txService.get_tx(
+                hash="2681602DF1D4942005BA6517934D6AA467ED9DE63CF36E77E7C8439D4A78E45F"
             )
         )
     )

@@ -1,4 +1,8 @@
+from collections import namedtuple
+from dataclasses import dataclass
+from typing import Dict
 from secret_sdk.client.grpc.encryption import EncryptionUtils
+from secret_sdk.client.grpc.protobuf.cosmos.base.abci.v1beta1 import TxResponse
 from .protobuf.cosmos.auth.v1beta1 import QueryStub as authQueryStub
 from .protobuf.cosmos.authz.v1beta1 import (
     QueryStub as authzQueryStub,
@@ -37,7 +41,7 @@ from .protobuf.cosmos.staking.v1beta1 import (
 )
 from .protobuf.cosmos.upgrade.v1beta1 import QueryStub as upgradeQueryStub
 
-from .protobuf.cosmos.tx.v1beta1 import ServiceStub as txServiceStub
+from .protobuf.cosmos.tx.v1beta1 import ServiceStub as txServiceStub, Tx
 
 from .protobuf.ibc.core.channel.v1 import (
     QueryStub as channelQueryStub,
@@ -74,7 +78,7 @@ from .query.compute import ComputeQuerier
 
 
 class AsyncGRPCClient:
-    def __init__(self, *, host, port) -> None:
+    def __init__(self, *, host: str, port: str) -> None:
         self.channel = Channel(host=host, port=port)
         # apis
 
@@ -89,7 +93,7 @@ class AsyncGRPCClient:
         # self.msg = self.Msg(self.channel)
 
         # txs
-        self.tx = txServiceStub(self.channel)
+        self.txService = txServiceStub(self.channel)
 
     def __del__(self) -> None:
         self.channel.close()
@@ -157,3 +161,20 @@ class AsyncGRPCClient:
     #         class Applications:
     #             def __init__(self, channel) -> None:
     #                 self.transfer = transferMsgStub(channel)
+
+    async def get_tx(self, hash: str, nonces: Dict = {}) -> Tx:
+        query = f"tx.hash='{hash}'"
+        print(query)
+        results = await self.txService.txs_query(query=query)
+        print(results)
+        if results:
+            return results
+        else:
+            return None
+
+    async def txs_query(self, query: str, nonces: Dict = {}):
+        events = [q.strip() for q in query.split(" AND ")]
+        print(events)
+        result = await self.txService.get_txs_event(events=events)
+        tx_responses = result.tx_responses
+        print(tx_responses)
