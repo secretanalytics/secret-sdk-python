@@ -396,6 +396,7 @@ class AsyncGRPCClient:
         events = [q.strip() for q in query.split(" AND ")]
         result = await self.txService.get_txs_event(events=events)
         tx_responses = result.tx_responses
+        print(f"\n{result=}\n")
         # str_response = json.dumps(result.tx_responses, indent=4)
         # print(str_response)
         print(json.dumps(tx_responses[0].to_dict(), indent=4))

@@ -1,6 +1,5 @@
 from secret_sdk.client.grpc.grpcclient import AsyncGRPCClient
 import asyncio
-from secret_sdk.client.grpc.encryption import EncryptionUtils
 
 import os
 
@@ -20,14 +19,12 @@ async def run():
         )
     )
 
-    print(
-        "\n",
-        (
-            await client.get_tx(
-                hash="452D6E6DC19A4BFABE643B4729334469DB30A7CCE4E628BAB5DE6BA555B6DEF5"
-            )
-        ),
+    tx = await client.get_tx(
+        hash="81818C55B5FBE9C36C2F92D5E2395B3EBD0853C7632D2C1A24740C30FE88CD81"
     )
+
+    print(f"\nafter_{tx}\n")
+
     # print(await client.query.secret.original_compute.contract_info(address=b))
     # query_hash = await eu.encrypt(address_hash, '{"pool": {}}')
     # print(query_hash)
