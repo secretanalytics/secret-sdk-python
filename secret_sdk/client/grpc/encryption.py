@@ -97,9 +97,8 @@ mainnet_chain_ids = {"secret-2", "secret-3", "secret-4"}
 
 
 class EncryptionUtils:
-    def __init__(self, host, port, seed: str = None, chain_id: str = None) -> None:
-        self.channel = Channel(host=host, port=port)
-        self.registrationQuerier = registrationQueryStub(self.channel)
+    def __init__(self, channel: Channel, seed: str = None, chain_id: str = None) -> None:
+        self.registrationQuerier = registrationQueryStub(channel)
 
         if not seed:
             self.seed = EncryptionUtils.generate_new_seed()
@@ -113,9 +112,6 @@ class EncryptionUtils:
             # Major speedup
             # TODO: not sure if this is the best approach for detecting mainnet
             self.consensus_io_pubkey = mainnet_consensus_io_pubkey
-
-    def __del__(self) -> None:
-        self.channel.close()
 
     def generate_new_key_pair() -> Tuple[List[int], List[int]]:
         """Returns: (privkey, pubkey)"""

@@ -83,9 +83,12 @@ class QueryCodeResponse:
 
 
 class ComputeQuerier:
-    def __init__(self, channel: Channel):
+    def __init__(
+        self,
+        channel: Channel,
+    ):
         self.client = computeQueryStub(channel)
-        self.encryption = EncryptionUtils(channel._host, channel._port)
+        self.encryption = EncryptionUtils(channel)
         self.code_hash_cache = {}
 
     async def contract_code_hash(self, address: str) -> str:
