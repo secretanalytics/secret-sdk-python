@@ -40,6 +40,7 @@ grpcio-tools = "^1.45.0"
 grpclib = "^0.4.2"
 betterproto = "2.0.0b4"
 cryptography = "^37.0.2"
+pyhumps = "^3.7.1"
 
 
 [tool.poetry.dev-dependencies]
