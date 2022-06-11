@@ -1,0 +1,3 @@
+[submodule "bip32utils"]
+	path = bip32utils
+	url = https://github.com/ethanleifer/bip32utils.git

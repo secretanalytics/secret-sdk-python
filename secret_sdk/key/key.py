@@ -8,6 +8,8 @@ from bech32 import bech32_encode, convertbits
 from secret_sdk.core import AccAddress, AccPubKey, ValAddress, ValPubKey
 from secret_sdk.core.auth import StdSignature, StdSignMsg, StdTx
 
+from bip32utils.ripemd160 import ripemd160
+
 BECH32_PUBKEY_DATA_PREFIX = "eb5ae98721"
 
 __all__ = ["Key"]
@@ -22,10 +24,8 @@ def get_bech(prefix: str, payload: str) -> str:
 
 def address_from_public_key(public_key: bytes) -> bytes:
     sha = hashlib.sha256()
-    rip = hashlib.new("ripemd160")
     sha.update(public_key)
-    rip.update(sha.digest())
-    return rip.digest()
+    return ripemd160(sha.digest())
 
 
 def pubkey_from_public_key(public_key: bytes) -> bytes:
