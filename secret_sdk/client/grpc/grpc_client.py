@@ -1,11 +1,12 @@
-from atexit import register
 import base64
-from curses import noecho
-from dataclasses import dataclass
+from dataclasses import dataclass, asdict
+import datetime
 from enum import Enum
 import json
+import math
 import re
-from typing import Any, Dict, List, TypedDict
+from time import sleep, time
+from typing import Any, Dict, List, Optional, Tuple, TypedDict
 
 from bech32 import decode
 from betterproto import Casing
@@ -14,6 +15,9 @@ from secret_sdk.client.grpc.encryption import EncryptionUtils
 from secret_sdk.client.grpc.protobuf.cosmos.base.abci.v1beta1 import (
     TxMsgData,
     TxResponse,
+)
+from secret_sdk.client.grpc.protobuf.cosmos.tx.signing.v1beta1 import (
+    SignatureDescriptorData,
 )
 from .protobuf.cosmos.auth.v1beta1 import QueryStub as authQueryStub
 from .protobuf.cosmos.authz.v1beta1 import (
@@ -54,11 +58,14 @@ from .protobuf.cosmos.staking.v1beta1 import (
 from .protobuf.cosmos.upgrade.v1beta1 import QueryStub as upgradeQueryStub
 
 from secret_sdk.client.grpc.protobuf.cosmos.tx.v1beta1 import (
-    BroadcastMode,
+    BroadcastMode as orgBroadcastMode,
     ServiceStub as txServiceStub,
     AuthInfo,
+    SignerInfo,
+    SimulateResponse,
     TxBody as orgTxBody,
     Tx as orgTx,
+    TxRaw as orgTxRaw,
 )
 
 from .protobuf.ibc.core.channel.v1 import (
@@ -236,6 +243,7 @@ class ArrayLogElem:
 class Attribute(TypedDict):
     key: str
     value: str
+    index: bool
 
 
 class Event(TypedDict):
@@ -277,14 +285,14 @@ class Tx:
 
     height: int
     transaction_hash: str
-    tx_result_code: TxResultCode
+    code: TxResultCode
     raw_log: str
     json_log: List[JsonLogElem]  # should be from json.loads
     array_log: List[ArrayLogElem]
     events: List[abciEvent]
     data: List[int]
     tx: TxContent
-    tx_bytes: List[int]
+    # tx_bytes: List[int] disabled because this is parsed out elsewhere, but I don't know if we need it for sending txs?
     gas_used: int
     gas_wanted: int
 
@@ -396,10 +404,10 @@ class AsyncGRPCClient:
         events = [q.strip() for q in query.split(" AND ")]
         result = await self.txService.get_txs_event(events=events)
         tx_responses = result.tx_responses
-        print(f"\n{result=}\n")
+        # print(f"\n{result=}\n")
         # str_response = json.dumps(result.tx_responses, indent=4)
         # print(str_response)
-        print(json.dumps(tx_responses[0].to_dict(), indent=4))
+        # print(json.dumps(tx_responses[0].to_dict(), indent=4))
 
         # this logic is copied from https://github.com/scrtlabs/secret.js/blob/0b2010110b0d172e92db69f1861bf1de10351582/src/secret_network_client.ts#L879
         async def parse_tx(tx: TxResponse) -> Tx:
@@ -409,7 +417,7 @@ class AsyncGRPCClient:
 
             if tx.code == 0 and raw_log != "":
                 json_log = [JsonLogElem(**i) for i in json.loads(raw_log)]
-                print(f"{json_log=}")
+                # print(f"{json_log=}")
                 array_log = []
                 for msg_index in range(len(json_log)):
                     if "msg_index" not in json_log[msg_index]:
@@ -417,7 +425,7 @@ class AsyncGRPCClient:
 
                     log = json_log[msg_index]
                     for event in log["events"]:
-                        print(f"\n {event=}")
+                        # print(f"\n {event=}")
                         for attr in event["attributes"]:
                             if event["type"] == "wasm":
                                 try:
@@ -452,21 +460,24 @@ class AsyncGRPCClient:
                                         )
                                     except:
                                         pass
-                                array_log.append(
-                                    ArrayLogElem(
-                                        msg=msg_index,
-                                        type=event.type,
-                                        key=attr["key"],
-                                        value=attr["value"],
-                                    )
+                                # print(event)
+
+                            array_log.append(
+                                ArrayLogElem(
+                                    msg=msg_index,
+                                    type=event["type"],
+                                    key=attr["key"],
+                                    value=attr["value"],
                                 )
+                            )
+
             elif tx.code != 0 and raw_log != "":
                 try:
                     err_message_re = re.compile(
                         "/; message index: (\d+): encrypted: (.+?): (?:instantiate|execute|query) contract failed/g;"
                     )
                     rgx_matches = err_message_re.match(raw_log)
-                    print(f"{rgx_matches}")
+                    # print(f"{rgx_matches}")
                     if len(rgx_matches) == 3:
                         encrypted_err = base64.b64decode(rgx_matches[3])
                         msg_index = int(rgx_matches[1])
@@ -490,12 +501,13 @@ class AsyncGRPCClient:
                     # Not encrypted or can't decrypt because not original sender
                     pass
 
-            print("")
-            print(f"final_{json_log=}")
+            # print("")
+            # print(f"final_{json_log=}")
+            # print(f"final_{array_log=}")
 
             tx_msg_data = TxMsgData()
             tx_msg_data = tx_msg_data.FromString(data=bytes.fromhex(tx.data))
-            print(f"og_{tx_msg_data=}")
+            # print(f"og_{tx_msg_data=}")
             data = []
 
             for msg_index in range(len(tx_msg_data.data)):
@@ -517,28 +529,26 @@ class AsyncGRPCClient:
                         )
                     except:
                         # Not encrypted or can't decrypt because not original sender
-
                         data.append(tx_msg_data.data[msg_index].data)
 
-            print(f"final_{data=}", "\n")
+            # print(f"final_{data=}", "\n")
 
-            # still have to do decoded tx
             decoded_tx = orgTx
             decoded_tx = decoded_tx.FromString(tx.tx.value)
             decoded_tx = TxContent(**decoded_tx.to_dict(casing=Casing.SNAKE))
-            print("\n", f"og_{decoded_tx=}")
+
             for i in range(len(decoded_tx.body["messages"])):
                 msg_type, msg_bytes = decoded_tx.body["messages"][i].values()
 
                 msg_decoder = self.msg_decoder_mapper[msg_type]
                 if not msg_decoder:
                     continue
-                print(f"\n{msg_bytes=}")
                 msg: Message = Message(
-                    type_url=msg_type, value=msg_decoder(bytes(msg_bytes, "utf-8"))
+                    type_url=msg_type,
+                    value=msg_decoder.FromString(base64.b64decode(msg_bytes)),
                 )
 
-                print(f"{msg=}")
+                # print(f"{msg=}")
 
                 # check if it needs decryption
                 contract_input_msg_field_name = ""
@@ -574,21 +584,47 @@ class AsyncGRPCClient:
 
                 decoded_tx.body["messages"].append(msg)
 
-            print("\n", f"final_{decoded_tx=}")
+            # print("\n", f"final_{decoded_tx=}")
+            parsed_events = []
+            for event in tx.events:
+                parsed_attributes = []
+                for attribute in event.attributes:
+                    try:
+                        key = attribute.key.decode()
+                    except:
+                        key = str(attribute.key)
+
+                    try:
+                        value = attribute.value.decode()
+                    except:
+                        value = attribute.value
+                    parsed_attributes.append(
+                        Attribute(key=key, value=value, index=attribute.index)
+                    )
+
+                event = Event(type=event.type, attributes=parsed_attributes)
+                parsed_events.append(event)
+            # print(f"final_{parsed_events=}")
 
             return Tx(
                 height=tx.height,
                 transaction_hash=tx.txhash,
-                tx_result_code=tx.code,
+                code=tx.code,
                 tx=decoded_tx,
-                tx_bytes=tx.tx.value if tx.tx.value else None,
+                # tx_bytes=tx.tx.value if tx.tx.value else None,
                 raw_log=raw_log,
                 json_log=json_log,
                 array_log=array_log,
-                events=tx.events,
+                events=parsed_events,
                 data=data,
                 gas_used=tx.gas_used,
                 gas_wanted=tx.gas_wanted,
             )
 
-        return [await parse_tx(tx) for tx in tx_responses]
+        txs = [await parse_tx(tx) for tx in tx_responses]
+        # print(f"\n{txs=}\n")
+        return txs
+
+
+def gas_to_fee(gas_limit: int, gas_price: int) -> int:
+    return math.ceil(gas_limit * gas_price)
