@@ -97,7 +97,9 @@ mainnet_chain_ids = {"secret-2", "secret-3", "secret-4"}
 
 
 class EncryptionUtils:
-    def __init__(self, channel: Channel, seed: str = None, chain_id: str = None) -> None:
+    def __init__(
+        self, channel: Channel, seed: str = None, chain_id: str = None
+    ) -> None:
         self.registrationQuerier = registrationQueryStub(channel)
 
         if not seed:
@@ -105,7 +107,9 @@ class EncryptionUtils:
         else:
             self.seed = seed
 
-        self.privkey, self.pubkey = EncryptionUtils.generate_new_key_pair_from_seed(self.seed)
+        self.privkey, self.pubkey = EncryptionUtils.generate_new_key_pair_from_seed(
+            self.seed
+        )
 
         if chain_id and chain_id in mainnet_chain_ids:
             # comments copied from secretjs impl
@@ -144,11 +148,11 @@ class EncryptionUtils:
 
     async def get_tx_encryption_key(self, nonce: List[int]) -> List[int]:
         self.consensus_io_pubkey = await self.get_consensus_io_pubkey()
-        
+
         consensus_io_pubkey = X25519PublicKey.from_public_bytes(
             self.consensus_io_pubkey
         )
-        
+
         tx_encryption_ikm = self.privkey.exchange(consensus_io_pubkey)
 
         master_secret = bytes([x for x in tx_encryption_ikm] + nonce)
@@ -208,7 +212,7 @@ class EncryptionUtils:
         try:
             # Try SW mode
             pubkey = base64.b64decode(payload.decode())
-            
+
             if len(pubkey) == 32:
                 return pubkey
 
@@ -218,7 +222,11 @@ class EncryptionUtils:
 
         try:
             # try HW mode
-            quoteHex = base64.b64decode(json.loads(base64.b64decode(json.loads(payload.decode())['report']).decode())['isvEnclaveQuoteBody'])            
+            quoteHex = base64.b64decode(
+                json.loads(
+                    base64.b64decode(json.loads(payload.decode())["report"]).decode()
+                )["isvEnclaveQuoteBody"]
+            )
             reportData = quoteHex[368:400]
             return reportData
         except:
@@ -228,32 +236,31 @@ class EncryptionUtils:
 
     def extract_asn1_value(cert: List[int], oid: List[int]) -> List[int]:
         offset = (cert.hex()).index(bytes(oid).hex()) / 2
-        
+
         def check_and_convert_to_int(num: float):
             q, r = divmod(num, 1)
             if not r:
                 return int(q)
-            return num # returns float if can't be converted evenly
-        
+            return num  # returns float if can't be converted evenly
+
         offset = check_and_convert_to_int(offset)
         if not isinstance(offset, int):
             raise ValueError("Error parsing certificate - malformed certificate")
-        
+
         offset += 12
-        
+
         if offset + 2 >= len(cert):
             raise ValueError("Error parsing certificate - malformed certificate")
 
         length = cert[offset]
         if length > 0x80:
             length = cert[offset + 1] * 0x100 + cert[offset + 2]
-            offset +=2
+            offset += 2
 
         if offset + length + 1 >= len(cert):
             raise ValueError("Error parsing certificate - malformed certificate")
-        
-        offset +=1
-        payload = cert[offset:offset + length]
-        
+
+        offset += 1
+        payload = cert[offset : offset + length]
+
         return payload
-    
