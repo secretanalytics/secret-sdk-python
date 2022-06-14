@@ -11,12 +11,12 @@ from typing import Any, Dict, List, Optional, Tuple, TypedDict
 from bech32 import decode
 from betterproto import Casing
 
-from secret_sdk.client.grpc.encryption import EncryptionUtils
-from secret_sdk.client.grpc.protobuf.cosmos.base.abci.v1beta1 import (
+from .encryption import EncryptionUtils
+from .protobuf.cosmos.base.abci.v1beta1 import (
     TxMsgData,
     TxResponse,
 )
-from secret_sdk.client.grpc.protobuf.cosmos.tx.signing.v1beta1 import (
+from .protobuf.cosmos.tx.signing.v1beta1 import (
     SignatureDescriptorData,
 )
 from .protobuf.cosmos.auth.v1beta1 import QueryStub as authQueryStub
@@ -57,7 +57,7 @@ from .protobuf.cosmos.staking.v1beta1 import (
 )
 from .protobuf.cosmos.upgrade.v1beta1 import QueryStub as upgradeQueryStub
 
-from secret_sdk.client.grpc.protobuf.cosmos.tx.v1beta1 import (
+from .protobuf.cosmos.tx.v1beta1 import (
     BroadcastMode as orgBroadcastMode,
     ServiceStub as txServiceStub,
     AuthInfo,
