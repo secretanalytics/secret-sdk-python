@@ -467,7 +467,7 @@ class AsyncGRPCClient:
                                     msg=msg_index,
                                     type=event["type"],
                                     key=attr["key"],
-                                    value=attr["value"],
+                                    value=attr["value"] if "value" in attr else "",
                                 )
                             )
 
