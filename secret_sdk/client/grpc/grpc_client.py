@@ -100,6 +100,7 @@ from grpclib.client import Channel
 import asyncio
 
 from .query.compute import ComputeQuerier
+# from .query.tendermint import TendermintQuerier
 
 from .tx import msg_decoder_mapper
 
@@ -315,6 +316,7 @@ class AsyncGRPCClient:
 
         # serviceStub
         self.tendermint = tendermintServiceStub(self.channel)
+        # self.new_tendermint = TendermintQuerier(self.channel)
         self.reflection = reflectionServiceStub(self.channel)
 
         # msg
@@ -400,7 +402,7 @@ class AsyncGRPCClient:
         else:
             return None
 
-    async def txs_query(self, query: str, nonces: Dict = {}) -> List[Tx]:
+    async def txs_query(self, query: str, nonces: Dict = {}, parse=True) -> List[Tx]:
         events = [q.strip() for q in query.split(" AND ")]
         result = await self.txService.get_txs_event(events=events)
         tx_responses = result.tx_responses
@@ -621,7 +623,8 @@ class AsyncGRPCClient:
                 gas_wanted=tx.gas_wanted,
             )
 
-        txs = [await parse_tx(tx) for tx in tx_responses]
+        if parse:
+            txs = [await parse_tx(tx) for tx in tx_responses]
         # print(f"\n{txs=}\n")
         return txs
 
