@@ -186,8 +186,6 @@ class AsyncGRPCClient:
 
         return [await parse_tx(tx, self.encryption, nonces) for tx in tx_responses]
 
-        # print(f"\n{txs=}\n")
-
 
 def gas_to_fee(gas_limit: int, gas_price: int) -> int:
     return math.ceil(gas_limit * gas_price)
