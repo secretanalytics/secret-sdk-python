@@ -6,22 +6,20 @@ import re
 from typing import Any, Dict, List, TypedDict
 
 from betterproto import Casing
-from secret_sdk.client.grpc.encryption import EncryptionUtils
-from secret_sdk.client.grpc.protobuf.cosmos.base.abci.v1beta1 import (
+from .encryption import EncryptionUtils
+from .protobuf.cosmos.base.abci.v1beta1 import (
     TxMsgData,
     TxResponse,
 )
 
-from secret_sdk.client.grpc.protobuf.cosmos.tx.v1beta1 import AuthInfo
-from secret_sdk.client.grpc.protobuf.tendermint.abci import Event as abciEvent
+from .protobuf.cosmos.tx.v1beta1 import AuthInfo
+from .protobuf.tendermint.abci import Event as abciEvent
 
 from .tx import get_msg
 
-from secret_sdk.client.grpc.protobuf.cosmos.tx.v1beta1 import (
+from .protobuf.cosmos.tx.v1beta1 import (
     AuthInfo,
-    TxBody as orgTxBody,
     Tx as orgTx,
-    TxRaw as orgTxRaw,
 )
 
 
