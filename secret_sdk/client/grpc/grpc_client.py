@@ -2,7 +2,7 @@ import math
 
 from typing import Dict, List
 
-from secret_sdk.client.grpc.parsing import Tx, parse_tx
+from .parsing import Tx, parse_tx
 
 from .encryption import EncryptionUtils
 
