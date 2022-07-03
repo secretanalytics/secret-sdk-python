@@ -2,8 +2,8 @@ import base64
 from dataclasses import dataclass
 from typing import Any, List, Optional, TypedDict
 
-from secret_sdk.client.grpc.protobuf.cosmos.base.v1beta1 import Coin
-from secret_sdk.client.grpc.query.address import *
+from .protobuf.cosmos.base.v1beta1 import Coin
+from .query.address import *
 from .protobuf.cosmos.authz.v1beta1 import MsgGrant, MsgExec, MsgRevoke
 
 from .protobuf.cosmos.bank.v1beta1 import MsgSend, MsgMultiSend
