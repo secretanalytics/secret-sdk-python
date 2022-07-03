@@ -107,15 +107,19 @@ def get_msg(type_url, msg_bytes):
         return
 
     proto_msg = msg_decoder.FromString(base64.b64decode(msg_bytes))
+    # get decoded msg will return the original proto_msg if no decoder is found
     msg: Message = Message(type_url=type_url, value=get_decoded_protobuf_msg(proto_msg))
 
     return msg
 
 
 def get_decoded_protobuf_msg(proto_msg):
-    proto_decoder = msg_protobuf_decoder_mapper[type(proto_msg)]
-    if not proto_decoder:
-        return
+    try:
+        proto_decoder = msg_protobuf_decoder_mapper[type(proto_msg)]
+        if not proto_decoder:
+            return proto_msg
+    except:
+        return proto_msg
     decoded = proto_decoder(proto_msg)
     return decoded
 

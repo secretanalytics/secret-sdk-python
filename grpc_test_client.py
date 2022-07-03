@@ -1,4 +1,4 @@
-from secret_sdk.client.grpc.grpcclient import AsyncGRPCClient
+from secret_sdk.client.grpc.grpc_client import AsyncGRPCClient
 import asyncio
 
 import os
