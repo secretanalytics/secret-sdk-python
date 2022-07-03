@@ -1,3 +1,9 @@
+import base64
+from dataclasses import dataclass
+from typing import Any, List, Optional, TypedDict
+
+from secret_sdk.client.grpc.protobuf.cosmos.base.v1beta1 import Coin
+from secret_sdk.client.grpc.query.address import *
 from .protobuf.cosmos.authz.v1beta1 import MsgGrant, MsgExec, MsgRevoke
 
 from .protobuf.cosmos.bank.v1beta1 import MsgSend, MsgMultiSend
@@ -68,6 +74,52 @@ from .protobuf.secret.compute.v1beta1 import (
 
 from .protobuf.secret.registration.v1beta1 import RaAuthenticate
 
+
+@dataclass
+class DecodedMsgExecuteContract:
+    sender: str
+    contract: str
+    msg: str  # hex string of bytes
+    sent_funds: List[Coin]
+    callback_code_hash: str
+    callback_sig: bytes  # hex string of bytes
+
+
+def decode_msg_execute_contract(msg: MsgExecuteContract) -> DecodedMsgExecuteContract:
+    return DecodedMsgExecuteContract(
+        sender=bytes_to_address(msg.sender),
+        contract=bytes_to_address(msg.contract),
+        msg=msg.msg.hex(),
+        callback_code_hash=msg.callback_code_hash,
+        sent_funds=msg.sent_funds,
+        callback_sig=msg.callback_sig.hex(),
+    )
+
+
+class Message(TypedDict):
+    type_url: str
+    value: Any
+
+
+def get_msg(type_url, msg_bytes):
+    msg_decoder = msg_decoder_mapper[type_url]
+    if not msg_decoder:
+        return
+
+    proto_msg = msg_decoder.FromString(base64.b64decode(msg_bytes))
+    msg: Message = Message(type_url=type_url, value=get_decoded_protobuf_msg(proto_msg))
+
+    return msg
+
+
+def get_decoded_protobuf_msg(proto_msg):
+    proto_decoder = msg_protobuf_decoder_mapper[type(proto_msg)]
+    if not proto_decoder:
+        return
+    decoded = proto_decoder(proto_msg)
+    return decoded
+
+
 msg_decoder_mapper = {
     "/cosmos.authz.v1beta1.MsgGrant": MsgGrant,
     "/cosmos.authz.v1beta1.MsgExec": MsgExec,
@@ -116,3 +168,5 @@ msg_decoder_mapper = {
     "/secret.compute.v1beta1.MsgExecuteContract": MsgExecuteContract,
     "/secret.registration.v1beta1.RaAuthenticate": RaAuthenticate,
 }
+
+msg_protobuf_decoder_mapper = {MsgExecuteContract: decode_msg_execute_contract}
