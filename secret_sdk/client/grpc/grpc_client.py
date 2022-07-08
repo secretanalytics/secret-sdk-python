@@ -1,6 +1,8 @@
 import math
 
-from typing import Dict, List
+from typing import Dict, List, Union
+
+from secret_sdk.client.grpc.protobuf.cosmos.base.abci.v1beta1 import TxResponse
 
 from .parsing import Tx, parse_tx
 
@@ -172,7 +174,7 @@ class AsyncGRPCClient:
         else:
             return None
 
-    async def txs_query(self, query: str, nonces: Dict = {}, parse=True) -> List[Tx]:
+    async def txs_query(self, query: str, nonces: Dict = {}, parse=True) -> Union[List[Tx], List[TxResponse]]:
         events = [q.strip() for q in query.split(" AND ")]
         result = await self.txService.get_txs_event(events=events)
         tx_responses = result.tx_responses
