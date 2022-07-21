@@ -159,7 +159,7 @@ Once you have your Wallet, you can create a StdTx using `Wallet.create_and_sign_
 Or use the abstraction `wallet.send_tokens` (see `wallet.execute_tx` to execute a smart contract with `handle_msg`).
 
 ```
->>> tx = wallet.send_tokens(wallet.key.acc_address, RECIPIENT, "1000000uscrt")
+>>> tx = wallet.send_tokens(recipient_addr=RECIPIENT, transfer_amount="1000000uscrt")
 ```
 
 <br/>
