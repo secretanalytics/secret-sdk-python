@@ -197,6 +197,31 @@ Or use the abstraction `wallet.send_tokens` (see `wallet.execute_tx` to execute 
 >>> tx = wallet.send_tokens(recipient_addr=RECIPIENT, transfer_amount="1000000uscrt")
 ```
 
+### Batch Transactions
+You can combine muliple state-changing transactions for the same contract into a single transaction. The contract used here is from the [Counter contract example](https://docs.scrt.network/secret-network-documentation/development/intro-to-secret-contracts)
+
+```
+msg = {
+  'increment': {}
+}
+
+execute_msg = secret.wasm.contract_execute_msg(
+  wallet.key.acc_address,
+  CONTRACT_ADDRESS,
+  msg
+)
+
+msg_list = [execute_msg for _ in range(10)]
+
+signed_tx = wallet.create_and_sign_tx(
+  msg_list,
+  fee=StdFee(200000, "120000uscrt"),
+  memo="My first batch transaction!"
+)
+
+tx = secret.tx.broadcast(signed_tx)
+```
+
 <br/>
 
 # Contributing
