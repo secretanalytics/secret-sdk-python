@@ -81,7 +81,7 @@ class AsyncWallet:
     async def execute_tx(
         self,
         contract_addr: str,
-        handle_msg: Dict,
+        handle_msg: List[Dict],
         memo: str = "",
         transfer_amount: Coins = None,
         gas: Optional[int] = None,
@@ -96,10 +96,14 @@ class AsyncWallet:
                 gas, gas_prices, gas_adjustment, fee_denoms
             )
 
-        execute_msg = await self.lcd.wasm.contract_execute_msg(
-            self.key.acc_address, contract_addr, handle_msg, transfer_amount
-        )
-        signed_tx = await self.create_and_sign_tx([execute_msg], fee=fee, memo=memo)
+        msg_list = []
+        for msg in handle_msg:
+            execute_msg = await self.lcd.wasm.contract_execute_msg(
+                self.key.acc_address, contract_addr, msg, transfer_amount
+            )
+            msg_list.append(execute_msg)
+
+        signed_tx = await self.create_and_sign_tx(msg_list, fee=fee, memo=memo)
         tx = await self.lcd.tx.broadcast(signed_tx)
         return tx
 
@@ -245,7 +249,7 @@ class Wallet:
     def execute_tx(
         self,
         contract_addr: str,
-        handle_msg: Dict,
+        handle_msg: List[Dict],
         memo: str = "",
         transfer_amount: Coins = None,
         gas: Optional[int] = None,
@@ -258,10 +262,14 @@ class Wallet:
         else:
             fee = self.lcd.tx.estimate_fee(gas, gas_prices, gas_adjustment, fee_denoms)
 
-        execute_msg = self.lcd.wasm.contract_execute_msg(
-            self.key.acc_address, contract_addr, handle_msg, transfer_amount
-        )
-        signed_tx = self.create_and_sign_tx([execute_msg], fee=fee, memo=memo)
+        msg_list = []
+        for msg in handle_msg:
+            execute_msg = self.lcd.wasm.contract_execute_msg(
+                self.key.acc_address, contract_addr, msg, transfer_amount
+            )
+            msg_list.append(execute_msg)
+
+        signed_tx = self.create_and_sign_tx(msg_list, fee=fee, memo=memo)
         tx = self.lcd.tx.broadcast(signed_tx)
         return tx
 

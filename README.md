@@ -205,21 +205,13 @@ msg = {
   'increment': {}
 }
 
-execute_msg = secret.wasm.contract_execute_msg(
-  wallet.key.acc_address,
-  CONTRACT_ADDRESS,
-  msg
-)
+msg_list = [msg for _ in range(10)]
 
-msg_list = [execute_msg for _ in range(10)]
-
-signed_tx = wallet.create_and_sign_tx(
+tx = wallet.execute_tx(
+  CONTRACT_ADDR,
   msg_list,
-  fee=StdFee(200000, "120000uscrt"),
-  memo="My first batch transaction!"
+  memo="My first batch transaction!",
 )
-
-tx = secret.tx.broadcast(signed_tx)
 ```
 
 <br/>
