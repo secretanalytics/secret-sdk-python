@@ -2,7 +2,7 @@ import math
 
 from typing import Dict, List, Union
 
-from secret_sdk.client.grpc.protobuf.cosmos.base.abci.v1beta1 import TxResponse
+from .protobuf.cosmos.base.abci.v1beta1 import TxResponse
 
 from .parsing import Tx, parse_tx
 
