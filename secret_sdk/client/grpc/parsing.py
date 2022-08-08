@@ -350,7 +350,7 @@ async def parse_tx(
     for i in range(len(decoded_tx.body["messages"])):
         msg_type, msg_bytes = decoded_tx.body["messages"][i].values()
 
-        print(f"{msg_bytes=}")
+        # print(f"{msg_bytes=}")
 
         msg = get_msg(msg_type, msg_bytes)
 
@@ -384,7 +384,7 @@ async def parse_tx(
                 # Not encrypted or can't decrypt because not original sender
                 pass
 
-        print(f"\n\n{msg=}\n\n")
+        # print(f"\n\n{msg=}\n\n")
 
         decoded_tx.body["messages"][i] = msg
 
