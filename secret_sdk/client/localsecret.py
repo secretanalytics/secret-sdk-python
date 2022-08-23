@@ -4,7 +4,7 @@ from secret_sdk.key.mnemonic import MnemonicKey
 
 from .lcd import AsyncLCDClient, AsyncWallet, LCDClient, Wallet
 
-__all__ = ["LOCAL_MNEMONICS", "LocalSecret", "AsyncLocalSecret"]
+__all__ = ["LOCAL_DEFAULTS", "LOCAL_MNEMONICS", "LocalSecret", "AsyncLocalSecret"]
 
 test_net_chain_id = "pulsar-2"
 main_net_chain_id = "secret-4"
