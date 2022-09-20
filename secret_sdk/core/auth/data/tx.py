@@ -330,9 +330,9 @@ class SearchTxsResponse(JSONSerializable):
     def from_data(cls, data: dict) -> SearchTxsResponse:
         return cls(
             data["total_count"],
-            data["count"],
+            data.get("count", 0),
             data["page_number"],
             data["page_total"],
             data["limit"],
-            [TxInfo.from_data(m) for m in data["txs"]],
+            [TxInfo.from_data(m) for m in data.get("txs", [])],
         )
