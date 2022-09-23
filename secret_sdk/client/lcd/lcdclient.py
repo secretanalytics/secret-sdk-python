@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from asyncio import AbstractEventLoop, get_event_loop
 from json import JSONDecodeError
+from threading import Lock
 from typing import Optional, Union
 
 import nest_asyncio
@@ -194,6 +195,7 @@ class LCDClient(AsyncLCDClient):
         self.wasm = WasmAPI(self)
         self.tx = TxAPI(self)
         self.utils = LCDUtils(self)
+        self.lock = Lock()
 
     async def __aenter__(self):
         raise NotImplementedError(
@@ -217,23 +219,25 @@ class LCDClient(AsyncLCDClient):
     async def _get(self, *args, **kwargs):
         # session has to be manually created and torn down for each HTTP request in a
         # synchronous client
-        self.session = ClientSession(
-            headers={"Accept": "application/json"}, loop=self.loop
-        )
-        try:
-            result = await super()._get(*args, **kwargs)
-        finally:
-            await self.session.close()
+        with self.lock:
+            self.session = ClientSession(
+                headers={"Accept": "application/json"}, loop=self.loop
+            )
+            try:
+                result = await super()._get(*args, **kwargs)
+            finally:
+                await self.session.close()
         return result
 
     async def _post(self, *args, **kwargs):
         # session has to be manually created and torn down for each HTTP request in a
         # synchronous client
-        self.session = ClientSession(
-            headers={"Accept": "application/json"}, loop=self.loop
-        )
-        try:
-            result = await super()._post(*args, **kwargs)
-        finally:
-            await self.session.close()
+        with self.lock:
+            self.session = ClientSession(
+                headers={"Accept": "application/json"}, loop=self.loop
+            )
+            try:
+                result = await super()._post(*args, **kwargs)
+            finally:
+                await self.session.close()
         return result
