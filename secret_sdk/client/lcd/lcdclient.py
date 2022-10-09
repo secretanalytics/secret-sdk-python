@@ -186,6 +186,7 @@ class LCDClient(AsyncLCDClient):
             _create_session=False,
             loop=nest_asyncio.apply(get_event_loop()),
         )
+        self.lock = Lock()
 
         self.auth = AuthAPI(self)
         self.bank = BankAPI(self)
@@ -195,7 +196,7 @@ class LCDClient(AsyncLCDClient):
         self.wasm = WasmAPI(self)
         self.tx = TxAPI(self)
         self.utils = LCDUtils(self)
-        self.lock = Lock()
+
 
     async def __aenter__(self):
         raise NotImplementedError(
