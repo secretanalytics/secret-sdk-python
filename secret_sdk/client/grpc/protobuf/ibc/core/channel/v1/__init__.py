@@ -2,11 +2,26 @@
 # sources: ibc/core/channel/v1/channel.proto, ibc/core/channel/v1/genesis.proto, ibc/core/channel/v1/query.proto, ibc/core/channel/v1/tx.proto
 # plugin: python-betterproto
 from dataclasses import dataclass
-from typing import Dict, List, Optional
+from typing import (
+    TYPE_CHECKING,
+    Dict,
+    List,
+    Optional,
+)
 
 import betterproto
-from betterproto.grpc.grpclib_server import ServiceBase
+import betterproto.lib.google.protobuf as betterproto_lib_google_protobuf
 import grpclib
+from betterproto.grpc.grpclib_server import ServiceBase
+
+from .....cosmos.base.query import v1beta1 as ____cosmos_base_query_v1_beta1__
+from ...client import v1 as __client_v1__
+
+
+if TYPE_CHECKING:
+    import grpclib.server
+    from betterproto.grpc.grpclib_client import MetadataLike
+    from grpclib.metadata import Deadline
 
 
 class State(betterproto.Enum):
@@ -15,30 +30,44 @@ class State(betterproto.Enum):
     TRYOPEN, OPEN or UNINITIALIZED.
     """
 
-    # Default State
     STATE_UNINITIALIZED_UNSPECIFIED = 0
-    # A channel has just started the opening handshake.
+    """Default State"""
+
     STATE_INIT = 1
-    # A channel has acknowledged the handshake step on the counterparty chain.
+    """A channel has just started the opening handshake."""
+
     STATE_TRYOPEN = 2
-    # A channel has completed the handshake. Open channels are ready to send and
-    # receive packets.
+    """
+    A channel has acknowledged the handshake step on the counterparty chain.
+    """
+
     STATE_OPEN = 3
-    # A channel has been closed and can no longer be used to send or receive
-    # packets.
+    """
+    A channel has completed the handshake. Open channels are ready to send and
+    receive packets.
+    """
+
     STATE_CLOSED = 4
+    """
+    A channel has been closed and can no longer be used to send or receive
+    packets.
+    """
 
 
 class Order(betterproto.Enum):
     """Order defines if a channel is ORDERED or UNORDERED"""
 
-    # zero-value for channel ordering
     ORDER_NONE_UNSPECIFIED = 0
-    # packets can be delivered in any order, which may differ from the order in
-    # which they were sent.
+    """zero-value for channel ordering"""
+
     ORDER_UNORDERED = 1
-    # packets are delivered exactly in the order which they were sent
+    """
+    packets can be delivered in any order, which may differ from the order in
+    which they were sent.
+    """
+
     ORDER_ORDERED = 2
+    """packets are delivered exactly in the order which they were sent"""
 
 
 class ResponseResultType(betterproto.Enum):
@@ -47,13 +76,17 @@ class ResponseResultType(betterproto.Enum):
     message
     """
 
-    # Default zero value enumeration
     RESPONSE_RESULT_UNSPECIFIED = 0
-    # The message did not call the IBC application callbacks (because, for
-    # example, the packet had already been relayed)
+    """Default zero value enumeration"""
+
     RESPONSE_RESULT_NOOP = 1
-    # The message was executed successfully
+    """
+    The message did not call the IBC application callbacks (because, for
+    example, the packet had already been relayed)
+    """
+
     RESPONSE_RESULT_SUCCESS = 2
+    """The message was executed successfully"""
 
 
 @dataclass(eq=False, repr=False)
@@ -64,17 +97,23 @@ class Channel(betterproto.Message):
     sending packets and one end capable of receiving packets.
     """
 
-    # current state of the channel end
     state: "State" = betterproto.enum_field(1)
-    # whether the channel is ordered or unordered
+    """current state of the channel end"""
+
     ordering: "Order" = betterproto.enum_field(2)
-    # counterparty channel end
+    """whether the channel is ordered or unordered"""
+
     counterparty: "Counterparty" = betterproto.message_field(3)
-    # list of connection identifiers, in order, along which packets sent on this
-    # channel will travel
+    """counterparty channel end"""
+
     connection_hops: List[str] = betterproto.string_field(4)
-    # opaque channel version, which is agreed upon during the handshake
+    """
+    list of connection identifiers, in order, along which packets sent on this
+    channel will travel
+    """
+
     version: str = betterproto.string_field(5)
+    """opaque channel version, which is agreed upon during the handshake"""
 
 
 @dataclass(eq=False, repr=False)
@@ -84,31 +123,42 @@ class IdentifiedChannel(betterproto.Message):
     identifier fields.
     """
 
-    # current state of the channel end
     state: "State" = betterproto.enum_field(1)
-    # whether the channel is ordered or unordered
+    """current state of the channel end"""
+
     ordering: "Order" = betterproto.enum_field(2)
-    # counterparty channel end
+    """whether the channel is ordered or unordered"""
+
     counterparty: "Counterparty" = betterproto.message_field(3)
-    # list of connection identifiers, in order, along which packets sent on this
-    # channel will travel
+    """counterparty channel end"""
+
     connection_hops: List[str] = betterproto.string_field(4)
-    # opaque channel version, which is agreed upon during the handshake
+    """
+    list of connection identifiers, in order, along which packets sent on this
+    channel will travel
+    """
+
     version: str = betterproto.string_field(5)
-    # port identifier
+    """opaque channel version, which is agreed upon during the handshake"""
+
     port_id: str = betterproto.string_field(6)
-    # channel identifier
+    """port identifier"""
+
     channel_id: str = betterproto.string_field(7)
+    """channel identifier"""
 
 
 @dataclass(eq=False, repr=False)
 class Counterparty(betterproto.Message):
     """Counterparty defines a channel end counterparty"""
 
-    # port on the counterparty chain which owns the other end of the channel.
     port_id: str = betterproto.string_field(1)
-    # channel end on the counterparty chain
+    """
+    port on the counterparty chain which owns the other end of the channel.
+    """
+
     channel_id: str = betterproto.string_field(2)
+    """channel end on the counterparty chain"""
 
 
 @dataclass(eq=False, repr=False)
@@ -117,24 +167,33 @@ class Packet(betterproto.Message):
     Packet defines a type that carries data across different chains through IBC
     """
 
-    # number corresponds to the order of sends and receives, where a Packet with
-    # an earlier sequence number must be sent and received before a Packet with a
-    # later sequence number.
     sequence: int = betterproto.uint64_field(1)
-    # identifies the port on the sending chain.
+    """
+    number corresponds to the order of sends and receives, where a Packet with
+    an earlier sequence number must be sent and received before a Packet with a
+    later sequence number.
+    """
+
     source_port: str = betterproto.string_field(2)
-    # identifies the channel end on the sending chain.
+    """identifies the port on the sending chain."""
+
     source_channel: str = betterproto.string_field(3)
-    # identifies the port on the receiving chain.
+    """identifies the channel end on the sending chain."""
+
     destination_port: str = betterproto.string_field(4)
-    # identifies the channel end on the receiving chain.
+    """identifies the port on the receiving chain."""
+
     destination_channel: str = betterproto.string_field(5)
-    # actual opaque bytes transferred directly to the application module
+    """identifies the channel end on the receiving chain."""
+
     data: bytes = betterproto.bytes_field(6)
-    # block height after which the packet times out
+    """actual opaque bytes transferred directly to the application module"""
+
     timeout_height: "__client_v1__.Height" = betterproto.message_field(7)
-    # block timestamp (in nanoseconds) after which the packet times out
+    """block height after which the packet times out"""
+
     timeout_timestamp: int = betterproto.uint64_field(8)
+    """block timestamp (in nanoseconds) after which the packet times out"""
 
 
 @dataclass(eq=False, repr=False)
@@ -146,14 +205,17 @@ class PacketState(betterproto.Message):
     acknowledgement, or a receipt.
     """
 
-    # channel port identifier.
     port_id: str = betterproto.string_field(1)
-    # channel unique identifier.
+    """channel port identifier."""
+
     channel_id: str = betterproto.string_field(2)
-    # packet sequence.
+    """channel unique identifier."""
+
     sequence: int = betterproto.uint64_field(3)
-    # embedded data that represents packet state.
+    """packet sequence."""
+
     data: bytes = betterproto.bytes_field(4)
+    """embedded data that represents packet state."""
 
 
 @dataclass(eq=False, repr=False)
@@ -184,8 +246,8 @@ class GenesisState(betterproto.Message):
     send_sequences: List["PacketSequence"] = betterproto.message_field(5)
     recv_sequences: List["PacketSequence"] = betterproto.message_field(6)
     ack_sequences: List["PacketSequence"] = betterproto.message_field(7)
-    # the sequence for the next generated channel identifier
     next_channel_sequence: int = betterproto.uint64_field(8)
+    """the sequence for the next generated channel identifier"""
 
 
 @dataclass(eq=False, repr=False)
@@ -230,12 +292,18 @@ class MsgChannelOpenTry(betterproto.Message):
     """
 
     port_id: str = betterproto.string_field(1)
-    # in the case of crossing hello's, when both chains call OpenInit, we need
-    # the channel identifier of the previous channel in state INIT
     previous_channel_id: str = betterproto.string_field(2)
-    # NOTE: the version field within the channel has been deprecated. Its value
-    # will be ignored by core IBC.
+    """
+    in the case of crossing hello's, when both chains call OpenInit, we need
+    the channel identifier of the previous channel in state INIT
+    """
+
     channel: "Channel" = betterproto.message_field(3)
+    """
+    NOTE: the version field within the channel has been deprecated. Its value
+    will be ignored by core IBC.
+    """
+
     counterparty_version: str = betterproto.string_field(4)
     proof_init: bytes = betterproto.bytes_field(5)
     proof_height: "__client_v1__.Height" = betterproto.message_field(6)
@@ -429,10 +497,11 @@ class QueryChannelRequest(betterproto.Message):
     QueryChannelRequest is the request type for the Query/Channel RPC method
     """
 
-    # port unique identifier
     port_id: str = betterproto.string_field(1)
-    # channel unique identifier
+    """port unique identifier"""
+
     channel_id: str = betterproto.string_field(2)
+    """channel unique identifier"""
 
 
 @dataclass(eq=False, repr=False)
@@ -443,12 +512,14 @@ class QueryChannelResponse(betterproto.Message):
     proof was retrieved.
     """
 
-    # channel associated with the request identifiers
     channel: "Channel" = betterproto.message_field(1)
-    # merkle proof of existence
+    """channel associated with the request identifiers"""
+
     proof: bytes = betterproto.bytes_field(2)
-    # height at which the proof was retrieved
+    """merkle proof of existence"""
+
     proof_height: "__client_v1__.Height" = betterproto.message_field(3)
+    """height at which the proof was retrieved"""
 
 
 @dataclass(eq=False, repr=False)
@@ -457,10 +528,10 @@ class QueryChannelsRequest(betterproto.Message):
     QueryChannelsRequest is the request type for the Query/Channels RPC method
     """
 
-    # pagination request
     pagination: "____cosmos_base_query_v1_beta1__.PageRequest" = (
         betterproto.message_field(1)
     )
+    """pagination request"""
 
 
 @dataclass(eq=False, repr=False)
@@ -470,14 +541,16 @@ class QueryChannelsResponse(betterproto.Message):
     method.
     """
 
-    # list of stored channels of the chain.
     channels: List["IdentifiedChannel"] = betterproto.message_field(1)
-    # pagination response
+    """list of stored channels of the chain."""
+
     pagination: "____cosmos_base_query_v1_beta1__.PageResponse" = (
         betterproto.message_field(2)
     )
-    # query block height
+    """pagination response"""
+
     height: "__client_v1__.Height" = betterproto.message_field(3)
+    """query block height"""
 
 
 @dataclass(eq=False, repr=False)
@@ -487,12 +560,13 @@ class QueryConnectionChannelsRequest(betterproto.Message):
     Query/QueryConnectionChannels RPC method
     """
 
-    # connection unique identifier
     connection: str = betterproto.string_field(1)
-    # pagination request
+    """connection unique identifier"""
+
     pagination: "____cosmos_base_query_v1_beta1__.PageRequest" = (
         betterproto.message_field(2)
     )
+    """pagination request"""
 
 
 @dataclass(eq=False, repr=False)
@@ -502,14 +576,16 @@ class QueryConnectionChannelsResponse(betterproto.Message):
     Query/QueryConnectionChannels RPC method
     """
 
-    # list of channels associated with a connection.
     channels: List["IdentifiedChannel"] = betterproto.message_field(1)
-    # pagination response
+    """list of channels associated with a connection."""
+
     pagination: "____cosmos_base_query_v1_beta1__.PageResponse" = (
         betterproto.message_field(2)
     )
-    # query block height
+    """pagination response"""
+
     height: "__client_v1__.Height" = betterproto.message_field(3)
+    """query block height"""
 
 
 @dataclass(eq=False, repr=False)
@@ -519,10 +595,11 @@ class QueryChannelClientStateRequest(betterproto.Message):
     Query/ClientState RPC method
     """
 
-    # port unique identifier
     port_id: str = betterproto.string_field(1)
-    # channel unique identifier
+    """port unique identifier"""
+
     channel_id: str = betterproto.string_field(2)
+    """channel unique identifier"""
 
 
 @dataclass(eq=False, repr=False)
@@ -532,14 +609,16 @@ class QueryChannelClientStateResponse(betterproto.Message):
     Query/QueryChannelClientState RPC method
     """
 
-    # client state associated with the channel
     identified_client_state: "__client_v1__.IdentifiedClientState" = (
         betterproto.message_field(1)
     )
-    # merkle proof of existence
+    """client state associated with the channel"""
+
     proof: bytes = betterproto.bytes_field(2)
-    # height at which the proof was retrieved
+    """merkle proof of existence"""
+
     proof_height: "__client_v1__.Height" = betterproto.message_field(3)
+    """height at which the proof was retrieved"""
 
 
 @dataclass(eq=False, repr=False)
@@ -549,14 +628,17 @@ class QueryChannelConsensusStateRequest(betterproto.Message):
     Query/ConsensusState RPC method
     """
 
-    # port unique identifier
     port_id: str = betterproto.string_field(1)
-    # channel unique identifier
+    """port unique identifier"""
+
     channel_id: str = betterproto.string_field(2)
-    # revision number of the consensus state
+    """channel unique identifier"""
+
     revision_number: int = betterproto.uint64_field(3)
-    # revision height of the consensus state
+    """revision number of the consensus state"""
+
     revision_height: int = betterproto.uint64_field(4)
+    """revision height of the consensus state"""
 
 
 @dataclass(eq=False, repr=False)
@@ -566,16 +648,19 @@ class QueryChannelConsensusStateResponse(betterproto.Message):
     Query/QueryChannelClientState RPC method
     """
 
-    # consensus state associated with the channel
     consensus_state: "betterproto_lib_google_protobuf.Any" = betterproto.message_field(
         1
     )
-    # client ID associated with the consensus state
+    """consensus state associated with the channel"""
+
     client_id: str = betterproto.string_field(2)
-    # merkle proof of existence
+    """client ID associated with the consensus state"""
+
     proof: bytes = betterproto.bytes_field(3)
-    # height at which the proof was retrieved
+    """merkle proof of existence"""
+
     proof_height: "__client_v1__.Height" = betterproto.message_field(4)
+    """height at which the proof was retrieved"""
 
 
 @dataclass(eq=False, repr=False)
@@ -585,12 +670,14 @@ class QueryPacketCommitmentRequest(betterproto.Message):
     Query/PacketCommitment RPC method
     """
 
-    # port unique identifier
     port_id: str = betterproto.string_field(1)
-    # channel unique identifier
+    """port unique identifier"""
+
     channel_id: str = betterproto.string_field(2)
-    # packet sequence
+    """channel unique identifier"""
+
     sequence: int = betterproto.uint64_field(3)
+    """packet sequence"""
 
 
 @dataclass(eq=False, repr=False)
@@ -601,12 +688,14 @@ class QueryPacketCommitmentResponse(betterproto.Message):
     retrieved
     """
 
-    # packet associated with the request fields
     commitment: bytes = betterproto.bytes_field(1)
-    # merkle proof of existence
+    """packet associated with the request fields"""
+
     proof: bytes = betterproto.bytes_field(2)
-    # height at which the proof was retrieved
+    """merkle proof of existence"""
+
     proof_height: "__client_v1__.Height" = betterproto.message_field(3)
+    """height at which the proof was retrieved"""
 
 
 @dataclass(eq=False, repr=False)
@@ -616,14 +705,16 @@ class QueryPacketCommitmentsRequest(betterproto.Message):
     Query/QueryPacketCommitments RPC method
     """
 
-    # port unique identifier
     port_id: str = betterproto.string_field(1)
-    # channel unique identifier
+    """port unique identifier"""
+
     channel_id: str = betterproto.string_field(2)
-    # pagination request
+    """channel unique identifier"""
+
     pagination: "____cosmos_base_query_v1_beta1__.PageRequest" = (
         betterproto.message_field(3)
     )
+    """pagination request"""
 
 
 @dataclass(eq=False, repr=False)
@@ -634,12 +725,13 @@ class QueryPacketCommitmentsResponse(betterproto.Message):
     """
 
     commitments: List["PacketState"] = betterproto.message_field(1)
-    # pagination response
     pagination: "____cosmos_base_query_v1_beta1__.PageResponse" = (
         betterproto.message_field(2)
     )
-    # query block height
+    """pagination response"""
+
     height: "__client_v1__.Height" = betterproto.message_field(3)
+    """query block height"""
 
 
 @dataclass(eq=False, repr=False)
@@ -649,12 +741,14 @@ class QueryPacketReceiptRequest(betterproto.Message):
     RPC method
     """
 
-    # port unique identifier
     port_id: str = betterproto.string_field(1)
-    # channel unique identifier
+    """port unique identifier"""
+
     channel_id: str = betterproto.string_field(2)
-    # packet sequence
+    """channel unique identifier"""
+
     sequence: int = betterproto.uint64_field(3)
+    """packet sequence"""
 
 
 @dataclass(eq=False, repr=False)
@@ -665,12 +759,14 @@ class QueryPacketReceiptResponse(betterproto.Message):
     was retrieved
     """
 
-    # success flag for if receipt exists
     received: bool = betterproto.bool_field(2)
-    # merkle proof of existence
+    """success flag for if receipt exists"""
+
     proof: bytes = betterproto.bytes_field(3)
-    # height at which the proof was retrieved
+    """merkle proof of existence"""
+
     proof_height: "__client_v1__.Height" = betterproto.message_field(4)
+    """height at which the proof was retrieved"""
 
 
 @dataclass(eq=False, repr=False)
@@ -680,12 +776,14 @@ class QueryPacketAcknowledgementRequest(betterproto.Message):
     Query/PacketAcknowledgement RPC method
     """
 
-    # port unique identifier
     port_id: str = betterproto.string_field(1)
-    # channel unique identifier
+    """port unique identifier"""
+
     channel_id: str = betterproto.string_field(2)
-    # packet sequence
+    """channel unique identifier"""
+
     sequence: int = betterproto.uint64_field(3)
+    """packet sequence"""
 
 
 @dataclass(eq=False, repr=False)
@@ -696,12 +794,14 @@ class QueryPacketAcknowledgementResponse(betterproto.Message):
     retrieved
     """
 
-    # packet associated with the request fields
     acknowledgement: bytes = betterproto.bytes_field(1)
-    # merkle proof of existence
+    """packet associated with the request fields"""
+
     proof: bytes = betterproto.bytes_field(2)
-    # height at which the proof was retrieved
+    """merkle proof of existence"""
+
     proof_height: "__client_v1__.Height" = betterproto.message_field(3)
+    """height at which the proof was retrieved"""
 
 
 @dataclass(eq=False, repr=False)
@@ -711,16 +811,19 @@ class QueryPacketAcknowledgementsRequest(betterproto.Message):
     Query/QueryPacketCommitments RPC method
     """
 
-    # port unique identifier
     port_id: str = betterproto.string_field(1)
-    # channel unique identifier
+    """port unique identifier"""
+
     channel_id: str = betterproto.string_field(2)
-    # pagination request
+    """channel unique identifier"""
+
     pagination: "____cosmos_base_query_v1_beta1__.PageRequest" = (
         betterproto.message_field(3)
     )
-    # list of packet sequences
+    """pagination request"""
+
     packet_commitment_sequences: List[int] = betterproto.uint64_field(4)
+    """list of packet sequences"""
 
 
 @dataclass(eq=False, repr=False)
@@ -731,12 +834,13 @@ class QueryPacketAcknowledgementsResponse(betterproto.Message):
     """
 
     acknowledgements: List["PacketState"] = betterproto.message_field(1)
-    # pagination response
     pagination: "____cosmos_base_query_v1_beta1__.PageResponse" = (
         betterproto.message_field(2)
     )
-    # query block height
+    """pagination response"""
+
     height: "__client_v1__.Height" = betterproto.message_field(3)
+    """query block height"""
 
 
 @dataclass(eq=False, repr=False)
@@ -746,12 +850,14 @@ class QueryUnreceivedPacketsRequest(betterproto.Message):
     Query/UnreceivedPackets RPC method
     """
 
-    # port unique identifier
     port_id: str = betterproto.string_field(1)
-    # channel unique identifier
+    """port unique identifier"""
+
     channel_id: str = betterproto.string_field(2)
-    # list of packet sequences
+    """channel unique identifier"""
+
     packet_commitment_sequences: List[int] = betterproto.uint64_field(3)
+    """list of packet sequences"""
 
 
 @dataclass(eq=False, repr=False)
@@ -761,10 +867,11 @@ class QueryUnreceivedPacketsResponse(betterproto.Message):
     Query/UnreceivedPacketCommitments RPC method
     """
 
-    # list of unreceived packet sequences
     sequences: List[int] = betterproto.uint64_field(1)
-    # query block height
+    """list of unreceived packet sequences"""
+
     height: "__client_v1__.Height" = betterproto.message_field(2)
+    """query block height"""
 
 
 @dataclass(eq=False, repr=False)
@@ -774,12 +881,14 @@ class QueryUnreceivedAcksRequest(betterproto.Message):
     method
     """
 
-    # port unique identifier
     port_id: str = betterproto.string_field(1)
-    # channel unique identifier
+    """port unique identifier"""
+
     channel_id: str = betterproto.string_field(2)
-    # list of acknowledgement sequences
+    """channel unique identifier"""
+
     packet_ack_sequences: List[int] = betterproto.uint64_field(3)
+    """list of acknowledgement sequences"""
 
 
 @dataclass(eq=False, repr=False)
@@ -789,10 +898,11 @@ class QueryUnreceivedAcksResponse(betterproto.Message):
     Query/UnreceivedAcks RPC method
     """
 
-    # list of unreceived acknowledgement sequences
     sequences: List[int] = betterproto.uint64_field(1)
-    # query block height
+    """list of unreceived acknowledgement sequences"""
+
     height: "__client_v1__.Height" = betterproto.message_field(2)
+    """query block height"""
 
 
 @dataclass(eq=False, repr=False)
@@ -802,10 +912,11 @@ class QueryNextSequenceReceiveRequest(betterproto.Message):
     Query/QueryNextSequenceReceiveRequest RPC method
     """
 
-    # port unique identifier
     port_id: str = betterproto.string_field(1)
-    # channel unique identifier
+    """port unique identifier"""
+
     channel_id: str = betterproto.string_field(2)
+    """channel unique identifier"""
 
 
 @dataclass(eq=False, repr=False)
@@ -815,702 +926,536 @@ class QueryNextSequenceReceiveResponse(betterproto.Message):
     Query/QueryNextSequenceReceiveResponse RPC method
     """
 
-    # next sequence receive number
     next_sequence_receive: int = betterproto.uint64_field(1)
-    # merkle proof of existence
+    """next sequence receive number"""
+
     proof: bytes = betterproto.bytes_field(2)
-    # height at which the proof was retrieved
+    """merkle proof of existence"""
+
     proof_height: "__client_v1__.Height" = betterproto.message_field(3)
+    """height at which the proof was retrieved"""
 
 
 class MsgStub(betterproto.ServiceStub):
     async def channel_open_init(
-        self, *, port_id: str = "", channel: "Channel" = None, signer: str = ""
+        self,
+        msg_channel_open_init: "MsgChannelOpenInit",
+        *,
+        timeout: Optional[float] = None,
+        deadline: Optional["Deadline"] = None,
+        metadata: Optional["MetadataLike"] = None
     ) -> "MsgChannelOpenInitResponse":
-
-        request = MsgChannelOpenInit()
-        request.port_id = port_id
-        if channel is not None:
-            request.channel = channel
-        request.signer = signer
-
         return await self._unary_unary(
             "/ibc.core.channel.v1.Msg/ChannelOpenInit",
-            request,
+            msg_channel_open_init,
             MsgChannelOpenInitResponse,
+            timeout=timeout,
+            deadline=deadline,
+            metadata=metadata,
         )
 
     async def channel_open_try(
         self,
+        msg_channel_open_try: "MsgChannelOpenTry",
         *,
-        port_id: str = "",
-        previous_channel_id: str = "",
-        channel: "Channel" = None,
-        counterparty_version: str = "",
-        proof_init: bytes = b"",
-        proof_height: "__client_v1__.Height" = None,
-        signer: str = ""
+        timeout: Optional[float] = None,
+        deadline: Optional["Deadline"] = None,
+        metadata: Optional["MetadataLike"] = None
     ) -> "MsgChannelOpenTryResponse":
-
-        request = MsgChannelOpenTry()
-        request.port_id = port_id
-        request.previous_channel_id = previous_channel_id
-        if channel is not None:
-            request.channel = channel
-        request.counterparty_version = counterparty_version
-        request.proof_init = proof_init
-        if proof_height is not None:
-            request.proof_height = proof_height
-        request.signer = signer
-
         return await self._unary_unary(
             "/ibc.core.channel.v1.Msg/ChannelOpenTry",
-            request,
+            msg_channel_open_try,
             MsgChannelOpenTryResponse,
+            timeout=timeout,
+            deadline=deadline,
+            metadata=metadata,
         )
 
     async def channel_open_ack(
         self,
+        msg_channel_open_ack: "MsgChannelOpenAck",
         *,
-        port_id: str = "",
-        channel_id: str = "",
-        counterparty_channel_id: str = "",
-        counterparty_version: str = "",
-        proof_try: bytes = b"",
-        proof_height: "__client_v1__.Height" = None,
-        signer: str = ""
+        timeout: Optional[float] = None,
+        deadline: Optional["Deadline"] = None,
+        metadata: Optional["MetadataLike"] = None
     ) -> "MsgChannelOpenAckResponse":
-
-        request = MsgChannelOpenAck()
-        request.port_id = port_id
-        request.channel_id = channel_id
-        request.counterparty_channel_id = counterparty_channel_id
-        request.counterparty_version = counterparty_version
-        request.proof_try = proof_try
-        if proof_height is not None:
-            request.proof_height = proof_height
-        request.signer = signer
-
         return await self._unary_unary(
             "/ibc.core.channel.v1.Msg/ChannelOpenAck",
-            request,
+            msg_channel_open_ack,
             MsgChannelOpenAckResponse,
+            timeout=timeout,
+            deadline=deadline,
+            metadata=metadata,
         )
 
     async def channel_open_confirm(
         self,
+        msg_channel_open_confirm: "MsgChannelOpenConfirm",
         *,
-        port_id: str = "",
-        channel_id: str = "",
-        proof_ack: bytes = b"",
-        proof_height: "__client_v1__.Height" = None,
-        signer: str = ""
+        timeout: Optional[float] = None,
+        deadline: Optional["Deadline"] = None,
+        metadata: Optional["MetadataLike"] = None
     ) -> "MsgChannelOpenConfirmResponse":
-
-        request = MsgChannelOpenConfirm()
-        request.port_id = port_id
-        request.channel_id = channel_id
-        request.proof_ack = proof_ack
-        if proof_height is not None:
-            request.proof_height = proof_height
-        request.signer = signer
-
         return await self._unary_unary(
             "/ibc.core.channel.v1.Msg/ChannelOpenConfirm",
-            request,
+            msg_channel_open_confirm,
             MsgChannelOpenConfirmResponse,
+            timeout=timeout,
+            deadline=deadline,
+            metadata=metadata,
         )
 
     async def channel_close_init(
-        self, *, port_id: str = "", channel_id: str = "", signer: str = ""
+        self,
+        msg_channel_close_init: "MsgChannelCloseInit",
+        *,
+        timeout: Optional[float] = None,
+        deadline: Optional["Deadline"] = None,
+        metadata: Optional["MetadataLike"] = None
     ) -> "MsgChannelCloseInitResponse":
-
-        request = MsgChannelCloseInit()
-        request.port_id = port_id
-        request.channel_id = channel_id
-        request.signer = signer
-
         return await self._unary_unary(
             "/ibc.core.channel.v1.Msg/ChannelCloseInit",
-            request,
+            msg_channel_close_init,
             MsgChannelCloseInitResponse,
+            timeout=timeout,
+            deadline=deadline,
+            metadata=metadata,
         )
 
     async def channel_close_confirm(
         self,
+        msg_channel_close_confirm: "MsgChannelCloseConfirm",
         *,
-        port_id: str = "",
-        channel_id: str = "",
-        proof_init: bytes = b"",
-        proof_height: "__client_v1__.Height" = None,
-        signer: str = ""
+        timeout: Optional[float] = None,
+        deadline: Optional["Deadline"] = None,
+        metadata: Optional["MetadataLike"] = None
     ) -> "MsgChannelCloseConfirmResponse":
-
-        request = MsgChannelCloseConfirm()
-        request.port_id = port_id
-        request.channel_id = channel_id
-        request.proof_init = proof_init
-        if proof_height is not None:
-            request.proof_height = proof_height
-        request.signer = signer
-
         return await self._unary_unary(
             "/ibc.core.channel.v1.Msg/ChannelCloseConfirm",
-            request,
+            msg_channel_close_confirm,
             MsgChannelCloseConfirmResponse,
+            timeout=timeout,
+            deadline=deadline,
+            metadata=metadata,
         )
 
     async def recv_packet(
         self,
+        msg_recv_packet: "MsgRecvPacket",
         *,
-        packet: "Packet" = None,
-        proof_commitment: bytes = b"",
-        proof_height: "__client_v1__.Height" = None,
-        signer: str = ""
+        timeout: Optional[float] = None,
+        deadline: Optional["Deadline"] = None,
+        metadata: Optional["MetadataLike"] = None
     ) -> "MsgRecvPacketResponse":
-
-        request = MsgRecvPacket()
-        if packet is not None:
-            request.packet = packet
-        request.proof_commitment = proof_commitment
-        if proof_height is not None:
-            request.proof_height = proof_height
-        request.signer = signer
-
         return await self._unary_unary(
-            "/ibc.core.channel.v1.Msg/RecvPacket", request, MsgRecvPacketResponse
+            "/ibc.core.channel.v1.Msg/RecvPacket",
+            msg_recv_packet,
+            MsgRecvPacketResponse,
+            timeout=timeout,
+            deadline=deadline,
+            metadata=metadata,
         )
 
     async def timeout(
         self,
+        msg_timeout: "MsgTimeout",
         *,
-        packet: "Packet" = None,
-        proof_unreceived: bytes = b"",
-        proof_height: "__client_v1__.Height" = None,
-        next_sequence_recv: int = 0,
-        signer: str = ""
+        timeout: Optional[float] = None,
+        deadline: Optional["Deadline"] = None,
+        metadata: Optional["MetadataLike"] = None
     ) -> "MsgTimeoutResponse":
-
-        request = MsgTimeout()
-        if packet is not None:
-            request.packet = packet
-        request.proof_unreceived = proof_unreceived
-        if proof_height is not None:
-            request.proof_height = proof_height
-        request.next_sequence_recv = next_sequence_recv
-        request.signer = signer
-
         return await self._unary_unary(
-            "/ibc.core.channel.v1.Msg/Timeout", request, MsgTimeoutResponse
+            "/ibc.core.channel.v1.Msg/Timeout",
+            msg_timeout,
+            MsgTimeoutResponse,
+            timeout=timeout,
+            deadline=deadline,
+            metadata=metadata,
         )
 
     async def timeout_on_close(
         self,
+        msg_timeout_on_close: "MsgTimeoutOnClose",
         *,
-        packet: "Packet" = None,
-        proof_unreceived: bytes = b"",
-        proof_close: bytes = b"",
-        proof_height: "__client_v1__.Height" = None,
-        next_sequence_recv: int = 0,
-        signer: str = ""
+        timeout: Optional[float] = None,
+        deadline: Optional["Deadline"] = None,
+        metadata: Optional["MetadataLike"] = None
     ) -> "MsgTimeoutOnCloseResponse":
-
-        request = MsgTimeoutOnClose()
-        if packet is not None:
-            request.packet = packet
-        request.proof_unreceived = proof_unreceived
-        request.proof_close = proof_close
-        if proof_height is not None:
-            request.proof_height = proof_height
-        request.next_sequence_recv = next_sequence_recv
-        request.signer = signer
-
         return await self._unary_unary(
             "/ibc.core.channel.v1.Msg/TimeoutOnClose",
-            request,
+            msg_timeout_on_close,
             MsgTimeoutOnCloseResponse,
+            timeout=timeout,
+            deadline=deadline,
+            metadata=metadata,
         )
 
     async def acknowledgement(
         self,
+        msg_acknowledgement: "MsgAcknowledgement",
         *,
-        packet: "Packet" = None,
-        acknowledgement: bytes = b"",
-        proof_acked: bytes = b"",
-        proof_height: "__client_v1__.Height" = None,
-        signer: str = ""
+        timeout: Optional[float] = None,
+        deadline: Optional["Deadline"] = None,
+        metadata: Optional["MetadataLike"] = None
     ) -> "MsgAcknowledgementResponse":
-
-        request = MsgAcknowledgement()
-        if packet is not None:
-            request.packet = packet
-        request.acknowledgement = acknowledgement
-        request.proof_acked = proof_acked
-        if proof_height is not None:
-            request.proof_height = proof_height
-        request.signer = signer
-
         return await self._unary_unary(
             "/ibc.core.channel.v1.Msg/Acknowledgement",
-            request,
+            msg_acknowledgement,
             MsgAcknowledgementResponse,
+            timeout=timeout,
+            deadline=deadline,
+            metadata=metadata,
         )
 
 
 class QueryStub(betterproto.ServiceStub):
     async def channel(
-        self, *, port_id: str = "", channel_id: str = ""
+        self,
+        query_channel_request: "QueryChannelRequest",
+        *,
+        timeout: Optional[float] = None,
+        deadline: Optional["Deadline"] = None,
+        metadata: Optional["MetadataLike"] = None
     ) -> "QueryChannelResponse":
-
-        request = QueryChannelRequest()
-        request.port_id = port_id
-        request.channel_id = channel_id
-
         return await self._unary_unary(
-            "/ibc.core.channel.v1.Query/Channel", request, QueryChannelResponse
+            "/ibc.core.channel.v1.Query/Channel",
+            query_channel_request,
+            QueryChannelResponse,
+            timeout=timeout,
+            deadline=deadline,
+            metadata=metadata,
         )
 
     async def channels(
-        self, *, pagination: "____cosmos_base_query_v1_beta1__.PageRequest" = None
+        self,
+        query_channels_request: "QueryChannelsRequest",
+        *,
+        timeout: Optional[float] = None,
+        deadline: Optional["Deadline"] = None,
+        metadata: Optional["MetadataLike"] = None
     ) -> "QueryChannelsResponse":
-
-        request = QueryChannelsRequest()
-        if pagination is not None:
-            request.pagination = pagination
-
         return await self._unary_unary(
-            "/ibc.core.channel.v1.Query/Channels", request, QueryChannelsResponse
+            "/ibc.core.channel.v1.Query/Channels",
+            query_channels_request,
+            QueryChannelsResponse,
+            timeout=timeout,
+            deadline=deadline,
+            metadata=metadata,
         )
 
     async def connection_channels(
         self,
+        query_connection_channels_request: "QueryConnectionChannelsRequest",
         *,
-        connection: str = "",
-        pagination: "____cosmos_base_query_v1_beta1__.PageRequest" = None
+        timeout: Optional[float] = None,
+        deadline: Optional["Deadline"] = None,
+        metadata: Optional["MetadataLike"] = None
     ) -> "QueryConnectionChannelsResponse":
-
-        request = QueryConnectionChannelsRequest()
-        request.connection = connection
-        if pagination is not None:
-            request.pagination = pagination
-
         return await self._unary_unary(
             "/ibc.core.channel.v1.Query/ConnectionChannels",
-            request,
+            query_connection_channels_request,
             QueryConnectionChannelsResponse,
+            timeout=timeout,
+            deadline=deadline,
+            metadata=metadata,
         )
 
     async def channel_client_state(
-        self, *, port_id: str = "", channel_id: str = ""
+        self,
+        query_channel_client_state_request: "QueryChannelClientStateRequest",
+        *,
+        timeout: Optional[float] = None,
+        deadline: Optional["Deadline"] = None,
+        metadata: Optional["MetadataLike"] = None
     ) -> "QueryChannelClientStateResponse":
-
-        request = QueryChannelClientStateRequest()
-        request.port_id = port_id
-        request.channel_id = channel_id
-
         return await self._unary_unary(
             "/ibc.core.channel.v1.Query/ChannelClientState",
-            request,
+            query_channel_client_state_request,
             QueryChannelClientStateResponse,
+            timeout=timeout,
+            deadline=deadline,
+            metadata=metadata,
         )
 
     async def channel_consensus_state(
         self,
+        query_channel_consensus_state_request: "QueryChannelConsensusStateRequest",
         *,
-        port_id: str = "",
-        channel_id: str = "",
-        revision_number: int = 0,
-        revision_height: int = 0
+        timeout: Optional[float] = None,
+        deadline: Optional["Deadline"] = None,
+        metadata: Optional["MetadataLike"] = None
     ) -> "QueryChannelConsensusStateResponse":
-
-        request = QueryChannelConsensusStateRequest()
-        request.port_id = port_id
-        request.channel_id = channel_id
-        request.revision_number = revision_number
-        request.revision_height = revision_height
-
         return await self._unary_unary(
             "/ibc.core.channel.v1.Query/ChannelConsensusState",
-            request,
+            query_channel_consensus_state_request,
             QueryChannelConsensusStateResponse,
+            timeout=timeout,
+            deadline=deadline,
+            metadata=metadata,
         )
 
     async def packet_commitment(
-        self, *, port_id: str = "", channel_id: str = "", sequence: int = 0
+        self,
+        query_packet_commitment_request: "QueryPacketCommitmentRequest",
+        *,
+        timeout: Optional[float] = None,
+        deadline: Optional["Deadline"] = None,
+        metadata: Optional["MetadataLike"] = None
     ) -> "QueryPacketCommitmentResponse":
-
-        request = QueryPacketCommitmentRequest()
-        request.port_id = port_id
-        request.channel_id = channel_id
-        request.sequence = sequence
-
         return await self._unary_unary(
             "/ibc.core.channel.v1.Query/PacketCommitment",
-            request,
+            query_packet_commitment_request,
             QueryPacketCommitmentResponse,
+            timeout=timeout,
+            deadline=deadline,
+            metadata=metadata,
         )
 
     async def packet_commitments(
         self,
+        query_packet_commitments_request: "QueryPacketCommitmentsRequest",
         *,
-        port_id: str = "",
-        channel_id: str = "",
-        pagination: "____cosmos_base_query_v1_beta1__.PageRequest" = None
+        timeout: Optional[float] = None,
+        deadline: Optional["Deadline"] = None,
+        metadata: Optional["MetadataLike"] = None
     ) -> "QueryPacketCommitmentsResponse":
-
-        request = QueryPacketCommitmentsRequest()
-        request.port_id = port_id
-        request.channel_id = channel_id
-        if pagination is not None:
-            request.pagination = pagination
-
         return await self._unary_unary(
             "/ibc.core.channel.v1.Query/PacketCommitments",
-            request,
+            query_packet_commitments_request,
             QueryPacketCommitmentsResponse,
+            timeout=timeout,
+            deadline=deadline,
+            metadata=metadata,
         )
 
     async def packet_receipt(
-        self, *, port_id: str = "", channel_id: str = "", sequence: int = 0
+        self,
+        query_packet_receipt_request: "QueryPacketReceiptRequest",
+        *,
+        timeout: Optional[float] = None,
+        deadline: Optional["Deadline"] = None,
+        metadata: Optional["MetadataLike"] = None
     ) -> "QueryPacketReceiptResponse":
-
-        request = QueryPacketReceiptRequest()
-        request.port_id = port_id
-        request.channel_id = channel_id
-        request.sequence = sequence
-
         return await self._unary_unary(
             "/ibc.core.channel.v1.Query/PacketReceipt",
-            request,
+            query_packet_receipt_request,
             QueryPacketReceiptResponse,
+            timeout=timeout,
+            deadline=deadline,
+            metadata=metadata,
         )
 
     async def packet_acknowledgement(
-        self, *, port_id: str = "", channel_id: str = "", sequence: int = 0
+        self,
+        query_packet_acknowledgement_request: "QueryPacketAcknowledgementRequest",
+        *,
+        timeout: Optional[float] = None,
+        deadline: Optional["Deadline"] = None,
+        metadata: Optional["MetadataLike"] = None
     ) -> "QueryPacketAcknowledgementResponse":
-
-        request = QueryPacketAcknowledgementRequest()
-        request.port_id = port_id
-        request.channel_id = channel_id
-        request.sequence = sequence
-
         return await self._unary_unary(
             "/ibc.core.channel.v1.Query/PacketAcknowledgement",
-            request,
+            query_packet_acknowledgement_request,
             QueryPacketAcknowledgementResponse,
+            timeout=timeout,
+            deadline=deadline,
+            metadata=metadata,
         )
 
     async def packet_acknowledgements(
         self,
+        query_packet_acknowledgements_request: "QueryPacketAcknowledgementsRequest",
         *,
-        port_id: str = "",
-        channel_id: str = "",
-        pagination: "____cosmos_base_query_v1_beta1__.PageRequest" = None,
-        packet_commitment_sequences: Optional[List[int]] = None
+        timeout: Optional[float] = None,
+        deadline: Optional["Deadline"] = None,
+        metadata: Optional["MetadataLike"] = None
     ) -> "QueryPacketAcknowledgementsResponse":
-        packet_commitment_sequences = packet_commitment_sequences or []
-
-        request = QueryPacketAcknowledgementsRequest()
-        request.port_id = port_id
-        request.channel_id = channel_id
-        if pagination is not None:
-            request.pagination = pagination
-        request.packet_commitment_sequences = packet_commitment_sequences
-
         return await self._unary_unary(
             "/ibc.core.channel.v1.Query/PacketAcknowledgements",
-            request,
+            query_packet_acknowledgements_request,
             QueryPacketAcknowledgementsResponse,
+            timeout=timeout,
+            deadline=deadline,
+            metadata=metadata,
         )
 
     async def unreceived_packets(
         self,
+        query_unreceived_packets_request: "QueryUnreceivedPacketsRequest",
         *,
-        port_id: str = "",
-        channel_id: str = "",
-        packet_commitment_sequences: Optional[List[int]] = None
+        timeout: Optional[float] = None,
+        deadline: Optional["Deadline"] = None,
+        metadata: Optional["MetadataLike"] = None
     ) -> "QueryUnreceivedPacketsResponse":
-        packet_commitment_sequences = packet_commitment_sequences or []
-
-        request = QueryUnreceivedPacketsRequest()
-        request.port_id = port_id
-        request.channel_id = channel_id
-        request.packet_commitment_sequences = packet_commitment_sequences
-
         return await self._unary_unary(
             "/ibc.core.channel.v1.Query/UnreceivedPackets",
-            request,
+            query_unreceived_packets_request,
             QueryUnreceivedPacketsResponse,
+            timeout=timeout,
+            deadline=deadline,
+            metadata=metadata,
         )
 
     async def unreceived_acks(
         self,
+        query_unreceived_acks_request: "QueryUnreceivedAcksRequest",
         *,
-        port_id: str = "",
-        channel_id: str = "",
-        packet_ack_sequences: Optional[List[int]] = None
+        timeout: Optional[float] = None,
+        deadline: Optional["Deadline"] = None,
+        metadata: Optional["MetadataLike"] = None
     ) -> "QueryUnreceivedAcksResponse":
-        packet_ack_sequences = packet_ack_sequences or []
-
-        request = QueryUnreceivedAcksRequest()
-        request.port_id = port_id
-        request.channel_id = channel_id
-        request.packet_ack_sequences = packet_ack_sequences
-
         return await self._unary_unary(
             "/ibc.core.channel.v1.Query/UnreceivedAcks",
-            request,
+            query_unreceived_acks_request,
             QueryUnreceivedAcksResponse,
+            timeout=timeout,
+            deadline=deadline,
+            metadata=metadata,
         )
 
     async def next_sequence_receive(
-        self, *, port_id: str = "", channel_id: str = ""
+        self,
+        query_next_sequence_receive_request: "QueryNextSequenceReceiveRequest",
+        *,
+        timeout: Optional[float] = None,
+        deadline: Optional["Deadline"] = None,
+        metadata: Optional["MetadataLike"] = None
     ) -> "QueryNextSequenceReceiveResponse":
-
-        request = QueryNextSequenceReceiveRequest()
-        request.port_id = port_id
-        request.channel_id = channel_id
-
         return await self._unary_unary(
             "/ibc.core.channel.v1.Query/NextSequenceReceive",
-            request,
+            query_next_sequence_receive_request,
             QueryNextSequenceReceiveResponse,
+            timeout=timeout,
+            deadline=deadline,
+            metadata=metadata,
         )
 
 
 class MsgBase(ServiceBase):
     async def channel_open_init(
-        self, port_id: str, channel: "Channel", signer: str
+        self, msg_channel_open_init: "MsgChannelOpenInit"
     ) -> "MsgChannelOpenInitResponse":
         raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
 
     async def channel_open_try(
-        self,
-        port_id: str,
-        previous_channel_id: str,
-        channel: "Channel",
-        counterparty_version: str,
-        proof_init: bytes,
-        proof_height: "__client_v1__.Height",
-        signer: str,
+        self, msg_channel_open_try: "MsgChannelOpenTry"
     ) -> "MsgChannelOpenTryResponse":
         raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
 
     async def channel_open_ack(
-        self,
-        port_id: str,
-        channel_id: str,
-        counterparty_channel_id: str,
-        counterparty_version: str,
-        proof_try: bytes,
-        proof_height: "__client_v1__.Height",
-        signer: str,
+        self, msg_channel_open_ack: "MsgChannelOpenAck"
     ) -> "MsgChannelOpenAckResponse":
         raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
 
     async def channel_open_confirm(
-        self,
-        port_id: str,
-        channel_id: str,
-        proof_ack: bytes,
-        proof_height: "__client_v1__.Height",
-        signer: str,
+        self, msg_channel_open_confirm: "MsgChannelOpenConfirm"
     ) -> "MsgChannelOpenConfirmResponse":
         raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
 
     async def channel_close_init(
-        self, port_id: str, channel_id: str, signer: str
+        self, msg_channel_close_init: "MsgChannelCloseInit"
     ) -> "MsgChannelCloseInitResponse":
         raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
 
     async def channel_close_confirm(
-        self,
-        port_id: str,
-        channel_id: str,
-        proof_init: bytes,
-        proof_height: "__client_v1__.Height",
-        signer: str,
+        self, msg_channel_close_confirm: "MsgChannelCloseConfirm"
     ) -> "MsgChannelCloseConfirmResponse":
         raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
 
     async def recv_packet(
-        self,
-        packet: "Packet",
-        proof_commitment: bytes,
-        proof_height: "__client_v1__.Height",
-        signer: str,
+        self, msg_recv_packet: "MsgRecvPacket"
     ) -> "MsgRecvPacketResponse":
         raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
 
-    async def timeout(
-        self,
-        packet: "Packet",
-        proof_unreceived: bytes,
-        proof_height: "__client_v1__.Height",
-        next_sequence_recv: int,
-        signer: str,
-    ) -> "MsgTimeoutResponse":
+    async def timeout(self, msg_timeout: "MsgTimeout") -> "MsgTimeoutResponse":
         raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
 
     async def timeout_on_close(
-        self,
-        packet: "Packet",
-        proof_unreceived: bytes,
-        proof_close: bytes,
-        proof_height: "__client_v1__.Height",
-        next_sequence_recv: int,
-        signer: str,
+        self, msg_timeout_on_close: "MsgTimeoutOnClose"
     ) -> "MsgTimeoutOnCloseResponse":
         raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
 
     async def acknowledgement(
-        self,
-        packet: "Packet",
-        acknowledgement: bytes,
-        proof_acked: bytes,
-        proof_height: "__client_v1__.Height",
-        signer: str,
+        self, msg_acknowledgement: "MsgAcknowledgement"
     ) -> "MsgAcknowledgementResponse":
         raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
 
-    async def __rpc_channel_open_init(self, stream: grpclib.server.Stream) -> None:
+    async def __rpc_channel_open_init(
+        self,
+        stream: "grpclib.server.Stream[MsgChannelOpenInit, MsgChannelOpenInitResponse]",
+    ) -> None:
         request = await stream.recv_message()
-
-        request_kwargs = {
-            "port_id": request.port_id,
-            "channel": request.channel,
-            "signer": request.signer,
-        }
-
-        response = await self.channel_open_init(**request_kwargs)
+        response = await self.channel_open_init(request)
         await stream.send_message(response)
 
-    async def __rpc_channel_open_try(self, stream: grpclib.server.Stream) -> None:
+    async def __rpc_channel_open_try(
+        self,
+        stream: "grpclib.server.Stream[MsgChannelOpenTry, MsgChannelOpenTryResponse]",
+    ) -> None:
         request = await stream.recv_message()
-
-        request_kwargs = {
-            "port_id": request.port_id,
-            "previous_channel_id": request.previous_channel_id,
-            "channel": request.channel,
-            "counterparty_version": request.counterparty_version,
-            "proof_init": request.proof_init,
-            "proof_height": request.proof_height,
-            "signer": request.signer,
-        }
-
-        response = await self.channel_open_try(**request_kwargs)
+        response = await self.channel_open_try(request)
         await stream.send_message(response)
 
-    async def __rpc_channel_open_ack(self, stream: grpclib.server.Stream) -> None:
+    async def __rpc_channel_open_ack(
+        self,
+        stream: "grpclib.server.Stream[MsgChannelOpenAck, MsgChannelOpenAckResponse]",
+    ) -> None:
         request = await stream.recv_message()
-
-        request_kwargs = {
-            "port_id": request.port_id,
-            "channel_id": request.channel_id,
-            "counterparty_channel_id": request.counterparty_channel_id,
-            "counterparty_version": request.counterparty_version,
-            "proof_try": request.proof_try,
-            "proof_height": request.proof_height,
-            "signer": request.signer,
-        }
-
-        response = await self.channel_open_ack(**request_kwargs)
+        response = await self.channel_open_ack(request)
         await stream.send_message(response)
 
-    async def __rpc_channel_open_confirm(self, stream: grpclib.server.Stream) -> None:
+    async def __rpc_channel_open_confirm(
+        self,
+        stream: "grpclib.server.Stream[MsgChannelOpenConfirm, MsgChannelOpenConfirmResponse]",
+    ) -> None:
         request = await stream.recv_message()
-
-        request_kwargs = {
-            "port_id": request.port_id,
-            "channel_id": request.channel_id,
-            "proof_ack": request.proof_ack,
-            "proof_height": request.proof_height,
-            "signer": request.signer,
-        }
-
-        response = await self.channel_open_confirm(**request_kwargs)
+        response = await self.channel_open_confirm(request)
         await stream.send_message(response)
 
-    async def __rpc_channel_close_init(self, stream: grpclib.server.Stream) -> None:
+    async def __rpc_channel_close_init(
+        self,
+        stream: "grpclib.server.Stream[MsgChannelCloseInit, MsgChannelCloseInitResponse]",
+    ) -> None:
         request = await stream.recv_message()
-
-        request_kwargs = {
-            "port_id": request.port_id,
-            "channel_id": request.channel_id,
-            "signer": request.signer,
-        }
-
-        response = await self.channel_close_init(**request_kwargs)
+        response = await self.channel_close_init(request)
         await stream.send_message(response)
 
-    async def __rpc_channel_close_confirm(self, stream: grpclib.server.Stream) -> None:
+    async def __rpc_channel_close_confirm(
+        self,
+        stream: "grpclib.server.Stream[MsgChannelCloseConfirm, MsgChannelCloseConfirmResponse]",
+    ) -> None:
         request = await stream.recv_message()
-
-        request_kwargs = {
-            "port_id": request.port_id,
-            "channel_id": request.channel_id,
-            "proof_init": request.proof_init,
-            "proof_height": request.proof_height,
-            "signer": request.signer,
-        }
-
-        response = await self.channel_close_confirm(**request_kwargs)
+        response = await self.channel_close_confirm(request)
         await stream.send_message(response)
 
-    async def __rpc_recv_packet(self, stream: grpclib.server.Stream) -> None:
+    async def __rpc_recv_packet(
+        self, stream: "grpclib.server.Stream[MsgRecvPacket, MsgRecvPacketResponse]"
+    ) -> None:
         request = await stream.recv_message()
-
-        request_kwargs = {
-            "packet": request.packet,
-            "proof_commitment": request.proof_commitment,
-            "proof_height": request.proof_height,
-            "signer": request.signer,
-        }
-
-        response = await self.recv_packet(**request_kwargs)
+        response = await self.recv_packet(request)
         await stream.send_message(response)
 
-    async def __rpc_timeout(self, stream: grpclib.server.Stream) -> None:
+    async def __rpc_timeout(
+        self, stream: "grpclib.server.Stream[MsgTimeout, MsgTimeoutResponse]"
+    ) -> None:
         request = await stream.recv_message()
-
-        request_kwargs = {
-            "packet": request.packet,
-            "proof_unreceived": request.proof_unreceived,
-            "proof_height": request.proof_height,
-            "next_sequence_recv": request.next_sequence_recv,
-            "signer": request.signer,
-        }
-
-        response = await self.timeout(**request_kwargs)
+        response = await self.timeout(request)
         await stream.send_message(response)
 
-    async def __rpc_timeout_on_close(self, stream: grpclib.server.Stream) -> None:
+    async def __rpc_timeout_on_close(
+        self,
+        stream: "grpclib.server.Stream[MsgTimeoutOnClose, MsgTimeoutOnCloseResponse]",
+    ) -> None:
         request = await stream.recv_message()
-
-        request_kwargs = {
-            "packet": request.packet,
-            "proof_unreceived": request.proof_unreceived,
-            "proof_close": request.proof_close,
-            "proof_height": request.proof_height,
-            "next_sequence_recv": request.next_sequence_recv,
-            "signer": request.signer,
-        }
-
-        response = await self.timeout_on_close(**request_kwargs)
+        response = await self.timeout_on_close(request)
         await stream.send_message(response)
 
-    async def __rpc_acknowledgement(self, stream: grpclib.server.Stream) -> None:
+    async def __rpc_acknowledgement(
+        self,
+        stream: "grpclib.server.Stream[MsgAcknowledgement, MsgAcknowledgementResponse]",
+    ) -> None:
         request = await stream.recv_message()
-
-        request_kwargs = {
-            "packet": request.packet,
-            "acknowledgement": request.acknowledgement,
-            "proof_acked": request.proof_acked,
-            "proof_height": request.proof_height,
-            "signer": request.signer,
-        }
-
-        response = await self.acknowledgement(**request_kwargs)
+        response = await self.acknowledgement(request)
         await stream.send_message(response)
 
     def __mapping__(self) -> Dict[str, grpclib.const.Handler]:
@@ -1579,235 +1524,173 @@ class MsgBase(ServiceBase):
 
 
 class QueryBase(ServiceBase):
-    async def channel(self, port_id: str, channel_id: str) -> "QueryChannelResponse":
+    async def channel(
+        self, query_channel_request: "QueryChannelRequest"
+    ) -> "QueryChannelResponse":
         raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
 
     async def channels(
-        self, pagination: "____cosmos_base_query_v1_beta1__.PageRequest"
+        self, query_channels_request: "QueryChannelsRequest"
     ) -> "QueryChannelsResponse":
         raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
 
     async def connection_channels(
-        self,
-        connection: str,
-        pagination: "____cosmos_base_query_v1_beta1__.PageRequest",
+        self, query_connection_channels_request: "QueryConnectionChannelsRequest"
     ) -> "QueryConnectionChannelsResponse":
         raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
 
     async def channel_client_state(
-        self, port_id: str, channel_id: str
+        self, query_channel_client_state_request: "QueryChannelClientStateRequest"
     ) -> "QueryChannelClientStateResponse":
         raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
 
     async def channel_consensus_state(
-        self, port_id: str, channel_id: str, revision_number: int, revision_height: int
+        self, query_channel_consensus_state_request: "QueryChannelConsensusStateRequest"
     ) -> "QueryChannelConsensusStateResponse":
         raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
 
     async def packet_commitment(
-        self, port_id: str, channel_id: str, sequence: int
+        self, query_packet_commitment_request: "QueryPacketCommitmentRequest"
     ) -> "QueryPacketCommitmentResponse":
         raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
 
     async def packet_commitments(
-        self,
-        port_id: str,
-        channel_id: str,
-        pagination: "____cosmos_base_query_v1_beta1__.PageRequest",
+        self, query_packet_commitments_request: "QueryPacketCommitmentsRequest"
     ) -> "QueryPacketCommitmentsResponse":
         raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
 
     async def packet_receipt(
-        self, port_id: str, channel_id: str, sequence: int
+        self, query_packet_receipt_request: "QueryPacketReceiptRequest"
     ) -> "QueryPacketReceiptResponse":
         raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
 
     async def packet_acknowledgement(
-        self, port_id: str, channel_id: str, sequence: int
+        self, query_packet_acknowledgement_request: "QueryPacketAcknowledgementRequest"
     ) -> "QueryPacketAcknowledgementResponse":
         raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
 
     async def packet_acknowledgements(
         self,
-        port_id: str,
-        channel_id: str,
-        pagination: "____cosmos_base_query_v1_beta1__.PageRequest",
-        packet_commitment_sequences: Optional[List[int]],
+        query_packet_acknowledgements_request: "QueryPacketAcknowledgementsRequest",
     ) -> "QueryPacketAcknowledgementsResponse":
         raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
 
     async def unreceived_packets(
-        self,
-        port_id: str,
-        channel_id: str,
-        packet_commitment_sequences: Optional[List[int]],
+        self, query_unreceived_packets_request: "QueryUnreceivedPacketsRequest"
     ) -> "QueryUnreceivedPacketsResponse":
         raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
 
     async def unreceived_acks(
-        self, port_id: str, channel_id: str, packet_ack_sequences: Optional[List[int]]
+        self, query_unreceived_acks_request: "QueryUnreceivedAcksRequest"
     ) -> "QueryUnreceivedAcksResponse":
         raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
 
     async def next_sequence_receive(
-        self, port_id: str, channel_id: str
+        self, query_next_sequence_receive_request: "QueryNextSequenceReceiveRequest"
     ) -> "QueryNextSequenceReceiveResponse":
         raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
 
-    async def __rpc_channel(self, stream: grpclib.server.Stream) -> None:
+    async def __rpc_channel(
+        self, stream: "grpclib.server.Stream[QueryChannelRequest, QueryChannelResponse]"
+    ) -> None:
         request = await stream.recv_message()
-
-        request_kwargs = {
-            "port_id": request.port_id,
-            "channel_id": request.channel_id,
-        }
-
-        response = await self.channel(**request_kwargs)
+        response = await self.channel(request)
         await stream.send_message(response)
 
-    async def __rpc_channels(self, stream: grpclib.server.Stream) -> None:
+    async def __rpc_channels(
+        self,
+        stream: "grpclib.server.Stream[QueryChannelsRequest, QueryChannelsResponse]",
+    ) -> None:
         request = await stream.recv_message()
-
-        request_kwargs = {
-            "pagination": request.pagination,
-        }
-
-        response = await self.channels(**request_kwargs)
+        response = await self.channels(request)
         await stream.send_message(response)
 
-    async def __rpc_connection_channels(self, stream: grpclib.server.Stream) -> None:
+    async def __rpc_connection_channels(
+        self,
+        stream: "grpclib.server.Stream[QueryConnectionChannelsRequest, QueryConnectionChannelsResponse]",
+    ) -> None:
         request = await stream.recv_message()
-
-        request_kwargs = {
-            "connection": request.connection,
-            "pagination": request.pagination,
-        }
-
-        response = await self.connection_channels(**request_kwargs)
+        response = await self.connection_channels(request)
         await stream.send_message(response)
 
-    async def __rpc_channel_client_state(self, stream: grpclib.server.Stream) -> None:
+    async def __rpc_channel_client_state(
+        self,
+        stream: "grpclib.server.Stream[QueryChannelClientStateRequest, QueryChannelClientStateResponse]",
+    ) -> None:
         request = await stream.recv_message()
-
-        request_kwargs = {
-            "port_id": request.port_id,
-            "channel_id": request.channel_id,
-        }
-
-        response = await self.channel_client_state(**request_kwargs)
+        response = await self.channel_client_state(request)
         await stream.send_message(response)
 
     async def __rpc_channel_consensus_state(
-        self, stream: grpclib.server.Stream
+        self,
+        stream: "grpclib.server.Stream[QueryChannelConsensusStateRequest, QueryChannelConsensusStateResponse]",
     ) -> None:
         request = await stream.recv_message()
-
-        request_kwargs = {
-            "port_id": request.port_id,
-            "channel_id": request.channel_id,
-            "revision_number": request.revision_number,
-            "revision_height": request.revision_height,
-        }
-
-        response = await self.channel_consensus_state(**request_kwargs)
+        response = await self.channel_consensus_state(request)
         await stream.send_message(response)
 
-    async def __rpc_packet_commitment(self, stream: grpclib.server.Stream) -> None:
+    async def __rpc_packet_commitment(
+        self,
+        stream: "grpclib.server.Stream[QueryPacketCommitmentRequest, QueryPacketCommitmentResponse]",
+    ) -> None:
         request = await stream.recv_message()
-
-        request_kwargs = {
-            "port_id": request.port_id,
-            "channel_id": request.channel_id,
-            "sequence": request.sequence,
-        }
-
-        response = await self.packet_commitment(**request_kwargs)
+        response = await self.packet_commitment(request)
         await stream.send_message(response)
 
-    async def __rpc_packet_commitments(self, stream: grpclib.server.Stream) -> None:
+    async def __rpc_packet_commitments(
+        self,
+        stream: "grpclib.server.Stream[QueryPacketCommitmentsRequest, QueryPacketCommitmentsResponse]",
+    ) -> None:
         request = await stream.recv_message()
-
-        request_kwargs = {
-            "port_id": request.port_id,
-            "channel_id": request.channel_id,
-            "pagination": request.pagination,
-        }
-
-        response = await self.packet_commitments(**request_kwargs)
+        response = await self.packet_commitments(request)
         await stream.send_message(response)
 
-    async def __rpc_packet_receipt(self, stream: grpclib.server.Stream) -> None:
+    async def __rpc_packet_receipt(
+        self,
+        stream: "grpclib.server.Stream[QueryPacketReceiptRequest, QueryPacketReceiptResponse]",
+    ) -> None:
         request = await stream.recv_message()
-
-        request_kwargs = {
-            "port_id": request.port_id,
-            "channel_id": request.channel_id,
-            "sequence": request.sequence,
-        }
-
-        response = await self.packet_receipt(**request_kwargs)
+        response = await self.packet_receipt(request)
         await stream.send_message(response)
 
-    async def __rpc_packet_acknowledgement(self, stream: grpclib.server.Stream) -> None:
+    async def __rpc_packet_acknowledgement(
+        self,
+        stream: "grpclib.server.Stream[QueryPacketAcknowledgementRequest, QueryPacketAcknowledgementResponse]",
+    ) -> None:
         request = await stream.recv_message()
-
-        request_kwargs = {
-            "port_id": request.port_id,
-            "channel_id": request.channel_id,
-            "sequence": request.sequence,
-        }
-
-        response = await self.packet_acknowledgement(**request_kwargs)
+        response = await self.packet_acknowledgement(request)
         await stream.send_message(response)
 
     async def __rpc_packet_acknowledgements(
-        self, stream: grpclib.server.Stream
+        self,
+        stream: "grpclib.server.Stream[QueryPacketAcknowledgementsRequest, QueryPacketAcknowledgementsResponse]",
     ) -> None:
         request = await stream.recv_message()
-
-        request_kwargs = {
-            "port_id": request.port_id,
-            "channel_id": request.channel_id,
-            "pagination": request.pagination,
-            "packet_commitment_sequences": request.packet_commitment_sequences,
-        }
-
-        response = await self.packet_acknowledgements(**request_kwargs)
+        response = await self.packet_acknowledgements(request)
         await stream.send_message(response)
 
-    async def __rpc_unreceived_packets(self, stream: grpclib.server.Stream) -> None:
+    async def __rpc_unreceived_packets(
+        self,
+        stream: "grpclib.server.Stream[QueryUnreceivedPacketsRequest, QueryUnreceivedPacketsResponse]",
+    ) -> None:
         request = await stream.recv_message()
-
-        request_kwargs = {
-            "port_id": request.port_id,
-            "channel_id": request.channel_id,
-            "packet_commitment_sequences": request.packet_commitment_sequences,
-        }
-
-        response = await self.unreceived_packets(**request_kwargs)
+        response = await self.unreceived_packets(request)
         await stream.send_message(response)
 
-    async def __rpc_unreceived_acks(self, stream: grpclib.server.Stream) -> None:
+    async def __rpc_unreceived_acks(
+        self,
+        stream: "grpclib.server.Stream[QueryUnreceivedAcksRequest, QueryUnreceivedAcksResponse]",
+    ) -> None:
         request = await stream.recv_message()
-
-        request_kwargs = {
-            "port_id": request.port_id,
-            "channel_id": request.channel_id,
-            "packet_ack_sequences": request.packet_ack_sequences,
-        }
-
-        response = await self.unreceived_acks(**request_kwargs)
+        response = await self.unreceived_acks(request)
         await stream.send_message(response)
 
-    async def __rpc_next_sequence_receive(self, stream: grpclib.server.Stream) -> None:
+    async def __rpc_next_sequence_receive(
+        self,
+        stream: "grpclib.server.Stream[QueryNextSequenceReceiveRequest, QueryNextSequenceReceiveResponse]",
+    ) -> None:
         request = await stream.recv_message()
-
-        request_kwargs = {
-            "port_id": request.port_id,
-            "channel_id": request.channel_id,
-        }
-
-        response = await self.next_sequence_receive(**request_kwargs)
+        response = await self.next_sequence_receive(request)
         await stream.send_message(response)
 
     def __mapping__(self) -> Dict[str, grpclib.const.Handler]:
@@ -1891,8 +1774,3 @@ class QueryBase(ServiceBase):
                 QueryNextSequenceReceiveResponse,
             ),
         }
-
-
-from .....cosmos.base.query import v1beta1 as ____cosmos_base_query_v1_beta1__
-from ...client import v1 as __client_v1__
-import betterproto.lib.google.protobuf as betterproto_lib_google_protobuf

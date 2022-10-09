@@ -5,7 +5,8 @@ from dataclasses import dataclass
 from typing import List
 
 import betterproto
-from betterproto.grpc.grpclib_server import ServiceBase
+
+from .. import crypto as _crypto__
 
 
 @dataclass(eq=False, repr=False)
@@ -84,6 +85,3 @@ class PexAddrs(betterproto.Message):
 class Message(betterproto.Message):
     pex_request: "PexRequest" = betterproto.message_field(1, group="sum")
     pex_addrs: "PexAddrs" = betterproto.message_field(2, group="sum")
-
-
-from .. import crypto as _crypto__

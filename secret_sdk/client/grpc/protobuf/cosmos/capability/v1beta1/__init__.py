@@ -5,7 +5,6 @@ from dataclasses import dataclass
 from typing import List
 
 import betterproto
-from betterproto.grpc.grpclib_server import ServiceBase
 
 
 @dataclass(eq=False, repr=False)
@@ -45,18 +44,22 @@ class GenesisOwners(betterproto.Message):
     GenesisOwners defines the capability owners with their corresponding index.
     """
 
-    # index is the index of the capability owner.
     index: int = betterproto.uint64_field(1)
-    # index_owners are the owners at the given index.
+    """index is the index of the capability owner."""
+
     index_owners: "CapabilityOwners" = betterproto.message_field(2)
+    """index_owners are the owners at the given index."""
 
 
 @dataclass(eq=False, repr=False)
 class GenesisState(betterproto.Message):
     """GenesisState defines the capability module's genesis state."""
 
-    # index is the capability global index.
     index: int = betterproto.uint64_field(1)
-    # owners represents a map from index to owners of the capability index index
-    # key is string to allow amino marshalling.
+    """index is the capability global index."""
+
     owners: List["GenesisOwners"] = betterproto.message_field(2)
+    """
+    owners represents a map from index to owners of the capability index index
+    key is string to allow amino marshalling.
+    """

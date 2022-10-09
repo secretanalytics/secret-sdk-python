@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from typing import List
 
 import betterproto
-from betterproto.grpc.grpclib_server import ServiceBase
+import betterproto.lib.google.protobuf as betterproto_lib_google_protobuf
 
 
 @dataclass(eq=False, repr=False)
@@ -19,6 +19,3 @@ class LegacyAminoPubKey(betterproto.Message):
     public_keys: List[
         "betterproto_lib_google_protobuf.Any"
     ] = betterproto.message_field(2)
-
-
-import betterproto.lib.google.protobuf as betterproto_lib_google_protobuf

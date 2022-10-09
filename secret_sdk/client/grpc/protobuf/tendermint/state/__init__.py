@@ -6,7 +6,12 @@ from datetime import datetime
 from typing import List
 
 import betterproto
-from betterproto.grpc.grpclib_server import ServiceBase
+
+from .. import (
+    abci as _abci__,
+    types as _types__,
+    version as _version__,
+)
 
 
 @dataclass(eq=False, repr=False)
@@ -52,32 +57,36 @@ class Version(betterproto.Message):
 @dataclass(eq=False, repr=False)
 class State(betterproto.Message):
     version: "Version" = betterproto.message_field(1)
-    # immutable
     chain_id: str = betterproto.string_field(2)
+    """immutable"""
+
     initial_height: int = betterproto.int64_field(14)
-    # LastBlockHeight=0 at genesis (ie. block(H=0) does not exist)
     last_block_height: int = betterproto.int64_field(3)
+    """LastBlockHeight=0 at genesis (ie. block(H=0) does not exist)"""
+
     last_block_id: "_types__.BlockId" = betterproto.message_field(4)
     last_block_time: datetime = betterproto.message_field(5)
-    # LastValidators is used to validate block.LastCommit. Validators are
-    # persisted to the database separately every time they change, so we can
-    # query for historical validator sets. Note that if s.LastBlockHeight causes
-    # a valset change, we set s.LastHeightValidatorsChanged = s.LastBlockHeight +
-    # 1 + 1 Extra +1 due to nextValSet delay.
     next_validators: "_types__.ValidatorSet" = betterproto.message_field(6)
+    """
+    LastValidators is used to validate block.LastCommit. Validators are
+    persisted to the database separately every time they change, so we can
+    query for historical validator sets. Note that if s.LastBlockHeight causes
+    a valset change, we set s.LastHeightValidatorsChanged = s.LastBlockHeight +
+    1 + 1 Extra +1 due to nextValSet delay.
+    """
+
     validators: "_types__.ValidatorSet" = betterproto.message_field(7)
     last_validators: "_types__.ValidatorSet" = betterproto.message_field(8)
     last_height_validators_changed: int = betterproto.int64_field(9)
-    # Consensus parameters used for validating blocks. Changes returned by
-    # EndBlock and updated after Commit.
     consensus_params: "_types__.ConsensusParams" = betterproto.message_field(10)
+    """
+    Consensus parameters used for validating blocks. Changes returned by
+    EndBlock and updated after Commit.
+    """
+
     last_height_consensus_params_changed: int = betterproto.int64_field(11)
-    # Merkle root of the results from executing prev block
     last_results_hash: bytes = betterproto.bytes_field(12)
-    # the latest AppHash we've received from calling abci.Commit()
+    """Merkle root of the results from executing prev block"""
+
     app_hash: bytes = betterproto.bytes_field(13)
-
-
-from .. import abci as _abci__
-from .. import types as _types__
-from .. import version as _version__
+    """the latest AppHash we've received from calling abci.Commit()"""

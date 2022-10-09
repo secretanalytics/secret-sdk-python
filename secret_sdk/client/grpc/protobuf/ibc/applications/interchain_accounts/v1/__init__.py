@@ -5,7 +5,11 @@ from dataclasses import dataclass
 from typing import List
 
 import betterproto
-from betterproto.grpc.grpclib_server import ServiceBase
+import betterproto.lib.google.protobuf as betterproto_lib_google_protobuf
+
+from .....cosmos.auth import v1beta1 as ____cosmos_auth_v1_beta1__
+from ..controller import v1 as _controller_v1__
+from ..host import v1 as _host_v1__
 
 
 class Type(betterproto.Enum):
@@ -14,10 +18,11 @@ class Type(betterproto.Enum):
     its associated interchain accounts host
     """
 
-    # Default zero value enumeration
     TYPE_UNSPECIFIED = 0
-    # Execute a transaction on an interchain accounts host chain
+    """Default zero value enumeration"""
+
     TYPE_EXECUTE_TX = 1
+    """Execute a transaction on an interchain accounts host chain"""
 
 
 @dataclass(eq=False, repr=False)
@@ -64,22 +69,35 @@ class Metadata(betterproto.Message):
     packet-semantics#Versioning
     """
 
-    # version defines the ICS27 protocol version
     version: str = betterproto.string_field(1)
-    # controller_connection_id is the connection identifier associated with the
-    # controller chain
+    """version defines the ICS27 protocol version"""
+
     controller_connection_id: str = betterproto.string_field(2)
-    # host_connection_id is the connection identifier associated with the host
-    # chain
+    """
+    controller_connection_id is the connection identifier associated with the
+    controller chain
+    """
+
     host_connection_id: str = betterproto.string_field(3)
-    # address defines the interchain account address to be fulfilled upon the
-    # OnChanOpenTry handshake step NOTE: the address field is empty on the
-    # OnChanOpenInit handshake step
+    """
+    host_connection_id is the connection identifier associated with the host
+    chain
+    """
+
     address: str = betterproto.string_field(4)
-    # encoding defines the supported codec format
+    """
+    address defines the interchain account address to be fulfilled upon the
+    OnChanOpenTry handshake step NOTE: the address field is empty on the
+    OnChanOpenInit handshake step
+    """
+
     encoding: str = betterproto.string_field(5)
-    # tx_type defines the type of transactions the interchain account can execute
+    """encoding defines the supported codec format"""
+
     tx_type: str = betterproto.string_field(6)
+    """
+    tx_type defines the type of transactions the interchain account can execute
+    """
 
 
 @dataclass(eq=False, repr=False)
@@ -139,9 +157,3 @@ class RegisteredInterchainAccount(betterproto.Message):
     connection_id: str = betterproto.string_field(1)
     port_id: str = betterproto.string_field(2)
     account_address: str = betterproto.string_field(3)
-
-
-from .....cosmos.auth import v1beta1 as ____cosmos_auth_v1_beta1__
-from ..controller import v1 as _controller_v1__
-from ..host import v1 as _host_v1__
-import betterproto.lib.google.protobuf as betterproto_lib_google_protobuf

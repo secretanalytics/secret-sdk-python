@@ -2,11 +2,26 @@
 # sources: ibc/applications/transfer/v1/genesis.proto, ibc/applications/transfer/v1/query.proto, ibc/applications/transfer/v1/transfer.proto, ibc/applications/transfer/v1/tx.proto
 # plugin: python-betterproto
 from dataclasses import dataclass
-from typing import Dict, List
+from typing import (
+    TYPE_CHECKING,
+    Dict,
+    List,
+    Optional,
+)
 
 import betterproto
-from betterproto.grpc.grpclib_server import ServiceBase
 import grpclib
+from betterproto.grpc.grpclib_server import ServiceBase
+
+from .....cosmos.base import v1beta1 as ____cosmos_base_v1_beta1__
+from .....cosmos.base.query import v1beta1 as ____cosmos_base_query_v1_beta1__
+from ....core.client import v1 as ___core_client_v1__
+
+
+if TYPE_CHECKING:
+    import grpclib.server
+    from betterproto.grpc.grpclib_client import MetadataLike
+    from grpclib.metadata import Deadline
 
 
 @dataclass(eq=False, repr=False)
@@ -18,22 +33,32 @@ class MsgTransfer(betterproto.Message):
     transfer#data-structures
     """
 
-    # the port on which the packet will be sent
     source_port: str = betterproto.string_field(1)
-    # the channel by which the packet will be sent
+    """the port on which the packet will be sent"""
+
     source_channel: str = betterproto.string_field(2)
-    # the tokens to be transferred
+    """the channel by which the packet will be sent"""
+
     token: "____cosmos_base_v1_beta1__.Coin" = betterproto.message_field(3)
-    # the sender address
+    """the tokens to be transferred"""
+
     sender: str = betterproto.string_field(4)
-    # the recipient address on the destination chain
+    """the sender address"""
+
     receiver: str = betterproto.string_field(5)
-    # Timeout height relative to the current block height. The timeout is
-    # disabled when set to 0.
+    """the recipient address on the destination chain"""
+
     timeout_height: "___core_client_v1__.Height" = betterproto.message_field(6)
-    # Timeout timestamp in absolute nanoseconds since unix epoch. The timeout is
-    # disabled when set to 0.
+    """
+    Timeout height relative to the current block height. The timeout is
+    disabled when set to 0.
+    """
+
     timeout_timestamp: int = betterproto.uint64_field(7)
+    """
+    Timeout timestamp in absolute nanoseconds since unix epoch. The timeout is
+    disabled when set to 0.
+    """
 
 
 @dataclass(eq=False, repr=False)
@@ -50,11 +75,14 @@ class DenomTrace(betterproto.Message):
     source tracing information path.
     """
 
-    # path defines the chain of port/channel identifiers used for tracing the
-    # source of the fungible token.
     path: str = betterproto.string_field(1)
-    # base denomination of the relayed fungible token.
+    """
+    path defines the chain of port/channel identifiers used for tracing the
+    source of the fungible token.
+    """
+
     base_denom: str = betterproto.string_field(2)
+    """base denomination of the relayed fungible token."""
 
 
 @dataclass(eq=False, repr=False)
@@ -66,12 +94,17 @@ class Params(betterproto.Message):
     denomination to false.
     """
 
-    # send_enabled enables or disables all cross-chain token transfers from this
-    # chain.
     send_enabled: bool = betterproto.bool_field(1)
-    # receive_enabled enables or disables all cross-chain token transfers to this
-    # chain.
+    """
+    send_enabled enables or disables all cross-chain token transfers from this
+    chain.
+    """
+
     receive_enabled: bool = betterproto.bool_field(2)
+    """
+    receive_enabled enables or disables all cross-chain token transfers to this
+    chain.
+    """
 
 
 @dataclass(eq=False, repr=False)
@@ -81,8 +114,8 @@ class QueryDenomTraceRequest(betterproto.Message):
     method
     """
 
-    # hash (in hex format) of the denomination trace information.
     hash: str = betterproto.string_field(1)
+    """hash (in hex format) of the denomination trace information."""
 
 
 @dataclass(eq=False, repr=False)
@@ -92,8 +125,8 @@ class QueryDenomTraceResponse(betterproto.Message):
     method.
     """
 
-    # denom_trace returns the requested denomination trace information.
     denom_trace: "DenomTrace" = betterproto.message_field(1)
+    """denom_trace returns the requested denomination trace information."""
 
 
 @dataclass(eq=False, repr=False)
@@ -103,10 +136,10 @@ class QueryDenomTracesRequest(betterproto.Message):
     method
     """
 
-    # pagination defines an optional pagination for the request.
     pagination: "____cosmos_base_query_v1_beta1__.PageRequest" = (
         betterproto.message_field(1)
     )
+    """pagination defines an optional pagination for the request."""
 
 
 @dataclass(eq=False, repr=False)
@@ -116,12 +149,13 @@ class QueryDenomTracesResponse(betterproto.Message):
     method.
     """
 
-    # denom_traces returns all denominations trace information.
     denom_traces: List["DenomTrace"] = betterproto.message_field(1)
-    # pagination defines the pagination in the response.
+    """denom_traces returns all denominations trace information."""
+
     pagination: "____cosmos_base_query_v1_beta1__.PageResponse" = (
         betterproto.message_field(2)
     )
+    """pagination defines the pagination in the response."""
 
 
 @dataclass(eq=False, repr=False)
@@ -139,8 +173,8 @@ class QueryParamsResponse(betterproto.Message):
     QueryParamsResponse is the response type for the Query/Params RPC method.
     """
 
-    # params defines the parameters of the module.
     params: "Params" = betterproto.message_field(1)
+    """params defines the parameters of the module."""
 
 
 @dataclass(eq=False, repr=False)
@@ -150,8 +184,8 @@ class QueryDenomHashRequest(betterproto.Message):
     method
     """
 
-    # The denomination trace ([port_id]/[channel_id])+/[denom]
     trace: str = betterproto.string_field(1)
+    """The denomination trace ([port_id]/[channel_id])+/[denom]"""
 
 
 @dataclass(eq=False, repr=False)
@@ -161,8 +195,8 @@ class QueryDenomHashResponse(betterproto.Message):
     method.
     """
 
-    # hash (in hex format) of the denomination trace information.
     hash: str = betterproto.string_field(1)
+    """hash (in hex format) of the denomination trace information."""
 
 
 @dataclass(eq=False, repr=False)
@@ -177,105 +211,101 @@ class GenesisState(betterproto.Message):
 class MsgStub(betterproto.ServiceStub):
     async def transfer(
         self,
+        msg_transfer: "MsgTransfer",
         *,
-        source_port: str = "",
-        source_channel: str = "",
-        token: "____cosmos_base_v1_beta1__.Coin" = None,
-        sender: str = "",
-        receiver: str = "",
-        timeout_height: "___core_client_v1__.Height" = None,
-        timeout_timestamp: int = 0
+        timeout: Optional[float] = None,
+        deadline: Optional["Deadline"] = None,
+        metadata: Optional["MetadataLike"] = None
     ) -> "MsgTransferResponse":
-
-        request = MsgTransfer()
-        request.source_port = source_port
-        request.source_channel = source_channel
-        if token is not None:
-            request.token = token
-        request.sender = sender
-        request.receiver = receiver
-        if timeout_height is not None:
-            request.timeout_height = timeout_height
-        request.timeout_timestamp = timeout_timestamp
-
         return await self._unary_unary(
-            "/ibc.applications.transfer.v1.Msg/Transfer", request, MsgTransferResponse
+            "/ibc.applications.transfer.v1.Msg/Transfer",
+            msg_transfer,
+            MsgTransferResponse,
+            timeout=timeout,
+            deadline=deadline,
+            metadata=metadata,
         )
 
 
 class QueryStub(betterproto.ServiceStub):
-    async def denom_trace(self, *, hash: str = "") -> "QueryDenomTraceResponse":
-
-        request = QueryDenomTraceRequest()
-        request.hash = hash
-
+    async def denom_trace(
+        self,
+        query_denom_trace_request: "QueryDenomTraceRequest",
+        *,
+        timeout: Optional[float] = None,
+        deadline: Optional["Deadline"] = None,
+        metadata: Optional["MetadataLike"] = None
+    ) -> "QueryDenomTraceResponse":
         return await self._unary_unary(
             "/ibc.applications.transfer.v1.Query/DenomTrace",
-            request,
+            query_denom_trace_request,
             QueryDenomTraceResponse,
+            timeout=timeout,
+            deadline=deadline,
+            metadata=metadata,
         )
 
     async def denom_traces(
-        self, *, pagination: "____cosmos_base_query_v1_beta1__.PageRequest" = None
+        self,
+        query_denom_traces_request: "QueryDenomTracesRequest",
+        *,
+        timeout: Optional[float] = None,
+        deadline: Optional["Deadline"] = None,
+        metadata: Optional["MetadataLike"] = None
     ) -> "QueryDenomTracesResponse":
-
-        request = QueryDenomTracesRequest()
-        if pagination is not None:
-            request.pagination = pagination
-
         return await self._unary_unary(
             "/ibc.applications.transfer.v1.Query/DenomTraces",
-            request,
+            query_denom_traces_request,
             QueryDenomTracesResponse,
+            timeout=timeout,
+            deadline=deadline,
+            metadata=metadata,
         )
 
-    async def params(self) -> "QueryParamsResponse":
-
-        request = QueryParamsRequest()
-
+    async def params(
+        self,
+        query_params_request: "QueryParamsRequest",
+        *,
+        timeout: Optional[float] = None,
+        deadline: Optional["Deadline"] = None,
+        metadata: Optional["MetadataLike"] = None
+    ) -> "QueryParamsResponse":
         return await self._unary_unary(
-            "/ibc.applications.transfer.v1.Query/Params", request, QueryParamsResponse
+            "/ibc.applications.transfer.v1.Query/Params",
+            query_params_request,
+            QueryParamsResponse,
+            timeout=timeout,
+            deadline=deadline,
+            metadata=metadata,
         )
 
-    async def denom_hash(self, *, trace: str = "") -> "QueryDenomHashResponse":
-
-        request = QueryDenomHashRequest()
-        request.trace = trace
-
+    async def denom_hash(
+        self,
+        query_denom_hash_request: "QueryDenomHashRequest",
+        *,
+        timeout: Optional[float] = None,
+        deadline: Optional["Deadline"] = None,
+        metadata: Optional["MetadataLike"] = None
+    ) -> "QueryDenomHashResponse":
         return await self._unary_unary(
             "/ibc.applications.transfer.v1.Query/DenomHash",
-            request,
+            query_denom_hash_request,
             QueryDenomHashResponse,
+            timeout=timeout,
+            deadline=deadline,
+            metadata=metadata,
         )
 
 
 class MsgBase(ServiceBase):
-    async def transfer(
-        self,
-        source_port: str,
-        source_channel: str,
-        token: "____cosmos_base_v1_beta1__.Coin",
-        sender: str,
-        receiver: str,
-        timeout_height: "___core_client_v1__.Height",
-        timeout_timestamp: int,
-    ) -> "MsgTransferResponse":
+    async def transfer(self, msg_transfer: "MsgTransfer") -> "MsgTransferResponse":
         raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
 
-    async def __rpc_transfer(self, stream: grpclib.server.Stream) -> None:
+    async def __rpc_transfer(
+        self, stream: "grpclib.server.Stream[MsgTransfer, MsgTransferResponse]"
+    ) -> None:
         request = await stream.recv_message()
-
-        request_kwargs = {
-            "source_port": request.source_port,
-            "source_channel": request.source_channel,
-            "token": request.token,
-            "sender": request.sender,
-            "receiver": request.receiver,
-            "timeout_height": request.timeout_height,
-            "timeout_timestamp": request.timeout_timestamp,
-        }
-
-        response = await self.transfer(**request_kwargs)
+        response = await self.transfer(request)
         await stream.send_message(response)
 
     def __mapping__(self) -> Dict[str, grpclib.const.Handler]:
@@ -290,56 +320,55 @@ class MsgBase(ServiceBase):
 
 
 class QueryBase(ServiceBase):
-    async def denom_trace(self, hash: str) -> "QueryDenomTraceResponse":
+    async def denom_trace(
+        self, query_denom_trace_request: "QueryDenomTraceRequest"
+    ) -> "QueryDenomTraceResponse":
         raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
 
     async def denom_traces(
-        self, pagination: "____cosmos_base_query_v1_beta1__.PageRequest"
+        self, query_denom_traces_request: "QueryDenomTracesRequest"
     ) -> "QueryDenomTracesResponse":
         raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
 
-    async def params(self) -> "QueryParamsResponse":
+    async def params(
+        self, query_params_request: "QueryParamsRequest"
+    ) -> "QueryParamsResponse":
         raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
 
-    async def denom_hash(self, trace: str) -> "QueryDenomHashResponse":
+    async def denom_hash(
+        self, query_denom_hash_request: "QueryDenomHashRequest"
+    ) -> "QueryDenomHashResponse":
         raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
 
-    async def __rpc_denom_trace(self, stream: grpclib.server.Stream) -> None:
+    async def __rpc_denom_trace(
+        self,
+        stream: "grpclib.server.Stream[QueryDenomTraceRequest, QueryDenomTraceResponse]",
+    ) -> None:
         request = await stream.recv_message()
-
-        request_kwargs = {
-            "hash": request.hash,
-        }
-
-        response = await self.denom_trace(**request_kwargs)
+        response = await self.denom_trace(request)
         await stream.send_message(response)
 
-    async def __rpc_denom_traces(self, stream: grpclib.server.Stream) -> None:
+    async def __rpc_denom_traces(
+        self,
+        stream: "grpclib.server.Stream[QueryDenomTracesRequest, QueryDenomTracesResponse]",
+    ) -> None:
         request = await stream.recv_message()
-
-        request_kwargs = {
-            "pagination": request.pagination,
-        }
-
-        response = await self.denom_traces(**request_kwargs)
+        response = await self.denom_traces(request)
         await stream.send_message(response)
 
-    async def __rpc_params(self, stream: grpclib.server.Stream) -> None:
+    async def __rpc_params(
+        self, stream: "grpclib.server.Stream[QueryParamsRequest, QueryParamsResponse]"
+    ) -> None:
         request = await stream.recv_message()
-
-        request_kwargs = {}
-
-        response = await self.params(**request_kwargs)
+        response = await self.params(request)
         await stream.send_message(response)
 
-    async def __rpc_denom_hash(self, stream: grpclib.server.Stream) -> None:
+    async def __rpc_denom_hash(
+        self,
+        stream: "grpclib.server.Stream[QueryDenomHashRequest, QueryDenomHashResponse]",
+    ) -> None:
         request = await stream.recv_message()
-
-        request_kwargs = {
-            "trace": request.trace,
-        }
-
-        response = await self.denom_hash(**request_kwargs)
+        response = await self.denom_hash(request)
         await stream.send_message(response)
 
     def __mapping__(self) -> Dict[str, grpclib.const.Handler]:
@@ -369,8 +398,3 @@ class QueryBase(ServiceBase):
                 QueryDenomHashResponse,
             ),
         }
-
-
-from .....cosmos.base import v1beta1 as ____cosmos_base_v1_beta1__
-from .....cosmos.base.query import v1beta1 as ____cosmos_base_query_v1_beta1__
-from ....core.client import v1 as ___core_client_v1__

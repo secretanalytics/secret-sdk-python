@@ -4,7 +4,8 @@
 from dataclasses import dataclass
 
 import betterproto
-from betterproto.grpc.grpclib_server import ServiceBase
+
+from ....core.client import v1 as ___core_client_v1__
 
 
 @dataclass(eq=False, repr=False)
@@ -14,10 +15,8 @@ class ClientState(betterproto.Message):
     access to keys outside the client prefix.
     """
 
-    # self chain ID
     chain_id: str = betterproto.string_field(1)
-    # self latest block height
+    """self chain ID"""
+
     height: "___core_client_v1__.Height" = betterproto.message_field(2)
-
-
-from ....core.client import v1 as ___core_client_v1__
+    """self latest block height"""

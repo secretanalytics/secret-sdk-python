@@ -5,7 +5,6 @@ from dataclasses import dataclass
 from typing import List
 
 import betterproto
-from betterproto.grpc.grpclib_server import ServiceBase
 
 
 @dataclass(eq=False, repr=False)
@@ -51,10 +50,11 @@ class SnapshotIavlItem(betterproto.Message):
 
     key: bytes = betterproto.bytes_field(1)
     value: bytes = betterproto.bytes_field(2)
-    # version is block height
     version: int = betterproto.int64_field(3)
-    # height is depth of the tree.
+    """version is block height"""
+
     height: int = betterproto.int32_field(4)
+    """height is depth of the tree."""
 
 
 @dataclass(eq=False, repr=False)

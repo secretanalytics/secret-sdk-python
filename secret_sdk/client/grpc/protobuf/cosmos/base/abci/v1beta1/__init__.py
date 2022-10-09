@@ -5,7 +5,9 @@ from dataclasses import dataclass
 from typing import List
 
 import betterproto
-from betterproto.grpc.grpclib_server import ServiceBase
+import betterproto.lib.google.protobuf as betterproto_lib_google_protobuf
+
+from .....tendermint import abci as ____tendermint_abci__
 
 
 @dataclass(eq=False, repr=False)
@@ -15,39 +17,59 @@ class TxResponse(betterproto.Message):
     The tags are stringified and the log is JSON decoded.
     """
 
-    # The block height
     height: int = betterproto.int64_field(1)
-    # The transaction hash.
+    """The block height"""
+
     txhash: str = betterproto.string_field(2)
-    # Namespace for the Code
+    """The transaction hash."""
+
     codespace: str = betterproto.string_field(3)
-    # Response code.
+    """Namespace for the Code"""
+
     code: int = betterproto.uint32_field(4)
-    # Result bytes, if any.
+    """Response code."""
+
     data: str = betterproto.string_field(5)
-    # The output of the application's logger (raw string). May be non-
-    # deterministic.
+    """Result bytes, if any."""
+
     raw_log: str = betterproto.string_field(6)
-    # The output of the application's logger (typed). May be non-deterministic.
+    """
+    The output of the application's logger (raw string). May be non-
+    deterministic.
+    """
+
     logs: List["AbciMessageLog"] = betterproto.message_field(7)
-    # Additional information. May be non-deterministic.
+    """
+    The output of the application's logger (typed). May be non-deterministic.
+    """
+
     info: str = betterproto.string_field(8)
-    # Amount of gas requested for transaction.
+    """Additional information. May be non-deterministic."""
+
     gas_wanted: int = betterproto.int64_field(9)
-    # Amount of gas consumed by transaction.
+    """Amount of gas requested for transaction."""
+
     gas_used: int = betterproto.int64_field(10)
-    # The request transaction bytes.
+    """Amount of gas consumed by transaction."""
+
     tx: "betterproto_lib_google_protobuf.Any" = betterproto.message_field(11)
-    # Time of the previous block. For heights > 1, it's the weighted median of
-    # the timestamps of the valid votes in the block.LastCommit. For height == 1,
-    # it's genesis time.
+    """The request transaction bytes."""
+
     timestamp: str = betterproto.string_field(12)
-    # Events defines all the events emitted by processing a transaction. Note,
-    # these events include those emitted by processing all the messages and those
-    # emitted from the ante handler. Whereas Logs contains the events, with
-    # additional metadata, emitted only by processing the messages. Since:
-    # cosmos-sdk 0.42.11, 0.44.5, 0.45
+    """
+    Time of the previous block. For heights > 1, it's the weighted median of
+    the timestamps of the valid votes in the block.LastCommit. For height == 1,
+    it's genesis time.
+    """
+
     events: List["____tendermint_abci__.Event"] = betterproto.message_field(13)
+    """
+    Events defines all the events emitted by processing a transaction. Note,
+    these events include those emitted by processing all the messages and those
+    emitted from the ante handler. Whereas Logs contains the events, with
+    additional metadata, emitted only by processing the messages. Since:
+    cosmos-sdk 0.42.11, 0.44.5, 0.45
+    """
 
 
 @dataclass(eq=False, repr=False)
@@ -59,9 +81,11 @@ class AbciMessageLog(betterproto.Message):
 
     msg_index: int = betterproto.uint32_field(1)
     log: str = betterproto.string_field(2)
-    # Events contains a slice of Event objects that were emitted during some
-    # execution.
     events: List["StringEvent"] = betterproto.message_field(3)
+    """
+    Events contains a slice of Event objects that were emitted during some
+    execution.
+    """
 
 
 @dataclass(eq=False, repr=False)
@@ -90,24 +114,31 @@ class Attribute(betterproto.Message):
 class GasInfo(betterproto.Message):
     """GasInfo defines tx execution gas context."""
 
-    # GasWanted is the maximum units of work we allow this tx to perform.
     gas_wanted: int = betterproto.uint64_field(1)
-    # GasUsed is the amount of gas actually consumed.
+    """GasWanted is the maximum units of work we allow this tx to perform."""
+
     gas_used: int = betterproto.uint64_field(2)
+    """GasUsed is the amount of gas actually consumed."""
 
 
 @dataclass(eq=False, repr=False)
 class Result(betterproto.Message):
     """Result is the union of ResponseFormat and ResponseCheckTx."""
 
-    # Data is any data returned from message or handler execution. It MUST be
-    # length prefixed in order to separate data from multiple message executions.
     data: bytes = betterproto.bytes_field(1)
-    # Log contains the log information from message or handler execution.
+    """
+    Data is any data returned from message or handler execution. It MUST be
+    length prefixed in order to separate data from multiple message executions.
+    """
+
     log: str = betterproto.string_field(2)
-    # Events contains a slice of Event objects that were emitted during message
-    # or handler execution.
+    """Log contains the log information from message or handler execution."""
+
     events: List["____tendermint_abci__.Event"] = betterproto.message_field(3)
+    """
+    Events contains a slice of Event objects that were emitted during message
+    or handler execution.
+    """
 
 
 @dataclass(eq=False, repr=False)
@@ -146,19 +177,20 @@ class TxMsgData(betterproto.Message):
 class SearchTxsResult(betterproto.Message):
     """SearchTxsResult defines a structure for querying txs pageable"""
 
-    # Count of all txs
     total_count: int = betterproto.uint64_field(1)
-    # Count of txs in current page
+    """Count of all txs"""
+
     count: int = betterproto.uint64_field(2)
-    # Index of current page, start from 1
+    """Count of txs in current page"""
+
     page_number: int = betterproto.uint64_field(3)
-    # Count of total pages
+    """Index of current page, start from 1"""
+
     page_total: int = betterproto.uint64_field(4)
-    # Max count txs per page
+    """Count of total pages"""
+
     limit: int = betterproto.uint64_field(5)
-    # List of txs in current page
+    """Max count txs per page"""
+
     txs: List["TxResponse"] = betterproto.message_field(6)
-
-
-from .....tendermint import abci as ____tendermint_abci__
-import betterproto.lib.google.protobuf as betterproto_lib_google_protobuf
+    """List of txs in current page"""

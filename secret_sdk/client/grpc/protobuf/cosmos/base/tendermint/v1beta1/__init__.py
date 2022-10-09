@@ -2,11 +2,29 @@
 # sources: cosmos/base/tendermint/v1beta1/query.proto
 # plugin: python-betterproto
 from dataclasses import dataclass
-from typing import Dict, List
+from typing import (
+    TYPE_CHECKING,
+    Dict,
+    List,
+    Optional,
+)
 
 import betterproto
-from betterproto.grpc.grpclib_server import ServiceBase
+import betterproto.lib.google.protobuf as betterproto_lib_google_protobuf
 import grpclib
+from betterproto.grpc.grpclib_server import ServiceBase
+
+from .....tendermint import (
+    p2p as ____tendermint_p2_p__,
+    types as ____tendermint_types__,
+)
+from ...query import v1beta1 as __query_v1_beta1__
+
+
+if TYPE_CHECKING:
+    import grpclib.server
+    from betterproto.grpc.grpclib_client import MetadataLike
+    from grpclib.metadata import Deadline
 
 
 @dataclass(eq=False, repr=False)
@@ -17,8 +35,8 @@ class GetValidatorSetByHeightRequest(betterproto.Message):
     """
 
     height: int = betterproto.int64_field(1)
-    # pagination defines an pagination for the request.
     pagination: "__query_v1_beta1__.PageRequest" = betterproto.message_field(2)
+    """pagination defines an pagination for the request."""
 
 
 @dataclass(eq=False, repr=False)
@@ -30,8 +48,8 @@ class GetValidatorSetByHeightResponse(betterproto.Message):
 
     block_height: int = betterproto.int64_field(1)
     validators: List["Validator"] = betterproto.message_field(2)
-    # pagination defines an pagination for the response.
     pagination: "__query_v1_beta1__.PageResponse" = betterproto.message_field(3)
+    """pagination defines an pagination for the response."""
 
 
 @dataclass(eq=False, repr=False)
@@ -41,8 +59,8 @@ class GetLatestValidatorSetRequest(betterproto.Message):
     Query/GetValidatorSetByHeight RPC method.
     """
 
-    # pagination defines an pagination for the request.
     pagination: "__query_v1_beta1__.PageRequest" = betterproto.message_field(1)
+    """pagination defines an pagination for the request."""
 
 
 @dataclass(eq=False, repr=False)
@@ -54,8 +72,8 @@ class GetLatestValidatorSetResponse(betterproto.Message):
 
     block_height: int = betterproto.int64_field(1)
     validators: List["Validator"] = betterproto.message_field(2)
-    # pagination defines an pagination for the response.
     pagination: "__query_v1_beta1__.PageResponse" = betterproto.message_field(3)
+    """pagination defines an pagination for the response."""
 
 
 @dataclass(eq=False, repr=False)
@@ -163,176 +181,203 @@ class VersionInfo(betterproto.Message):
     build_tags: str = betterproto.string_field(5)
     go_version: str = betterproto.string_field(6)
     build_deps: List["Module"] = betterproto.message_field(7)
-    # Since: cosmos-sdk 0.43
     cosmos_sdk_version: str = betterproto.string_field(8)
+    """Since: cosmos-sdk 0.43"""
 
 
 @dataclass(eq=False, repr=False)
 class Module(betterproto.Message):
     """Module is the type for VersionInfo"""
 
-    # module path
     path: str = betterproto.string_field(1)
-    # module version
+    """module path"""
+
     version: str = betterproto.string_field(2)
-    # checksum
+    """module version"""
+
     sum: str = betterproto.string_field(3)
+    """checksum"""
 
 
 class ServiceStub(betterproto.ServiceStub):
-    async def get_node_info(self) -> "GetNodeInfoResponse":
-
-        request = GetNodeInfoRequest()
-
+    async def get_node_info(
+        self,
+        get_node_info_request: "GetNodeInfoRequest",
+        *,
+        timeout: Optional[float] = None,
+        deadline: Optional["Deadline"] = None,
+        metadata: Optional["MetadataLike"] = None
+    ) -> "GetNodeInfoResponse":
         return await self._unary_unary(
             "/cosmos.base.tendermint.v1beta1.Service/GetNodeInfo",
-            request,
+            get_node_info_request,
             GetNodeInfoResponse,
+            timeout=timeout,
+            deadline=deadline,
+            metadata=metadata,
         )
 
-    async def get_syncing(self) -> "GetSyncingResponse":
-
-        request = GetSyncingRequest()
-
+    async def get_syncing(
+        self,
+        get_syncing_request: "GetSyncingRequest",
+        *,
+        timeout: Optional[float] = None,
+        deadline: Optional["Deadline"] = None,
+        metadata: Optional["MetadataLike"] = None
+    ) -> "GetSyncingResponse":
         return await self._unary_unary(
             "/cosmos.base.tendermint.v1beta1.Service/GetSyncing",
-            request,
+            get_syncing_request,
             GetSyncingResponse,
+            timeout=timeout,
+            deadline=deadline,
+            metadata=metadata,
         )
 
-    async def get_latest_block(self) -> "GetLatestBlockResponse":
-
-        request = GetLatestBlockRequest()
-
+    async def get_latest_block(
+        self,
+        get_latest_block_request: "GetLatestBlockRequest",
+        *,
+        timeout: Optional[float] = None,
+        deadline: Optional["Deadline"] = None,
+        metadata: Optional["MetadataLike"] = None
+    ) -> "GetLatestBlockResponse":
         return await self._unary_unary(
             "/cosmos.base.tendermint.v1beta1.Service/GetLatestBlock",
-            request,
+            get_latest_block_request,
             GetLatestBlockResponse,
+            timeout=timeout,
+            deadline=deadline,
+            metadata=metadata,
         )
 
     async def get_block_by_height(
-        self, *, height: int = 0
+        self,
+        get_block_by_height_request: "GetBlockByHeightRequest",
+        *,
+        timeout: Optional[float] = None,
+        deadline: Optional["Deadline"] = None,
+        metadata: Optional["MetadataLike"] = None
     ) -> "GetBlockByHeightResponse":
-
-        request = GetBlockByHeightRequest()
-        request.height = height
-
         return await self._unary_unary(
             "/cosmos.base.tendermint.v1beta1.Service/GetBlockByHeight",
-            request,
+            get_block_by_height_request,
             GetBlockByHeightResponse,
+            timeout=timeout,
+            deadline=deadline,
+            metadata=metadata,
         )
 
     async def get_latest_validator_set(
-        self, *, pagination: "__query_v1_beta1__.PageRequest" = None
+        self,
+        get_latest_validator_set_request: "GetLatestValidatorSetRequest",
+        *,
+        timeout: Optional[float] = None,
+        deadline: Optional["Deadline"] = None,
+        metadata: Optional["MetadataLike"] = None
     ) -> "GetLatestValidatorSetResponse":
-
-        request = GetLatestValidatorSetRequest()
-        if pagination is not None:
-            request.pagination = pagination
-
         return await self._unary_unary(
             "/cosmos.base.tendermint.v1beta1.Service/GetLatestValidatorSet",
-            request,
+            get_latest_validator_set_request,
             GetLatestValidatorSetResponse,
+            timeout=timeout,
+            deadline=deadline,
+            metadata=metadata,
         )
 
     async def get_validator_set_by_height(
-        self, *, height: int = 0, pagination: "__query_v1_beta1__.PageRequest" = None
+        self,
+        get_validator_set_by_height_request: "GetValidatorSetByHeightRequest",
+        *,
+        timeout: Optional[float] = None,
+        deadline: Optional["Deadline"] = None,
+        metadata: Optional["MetadataLike"] = None
     ) -> "GetValidatorSetByHeightResponse":
-
-        request = GetValidatorSetByHeightRequest()
-        request.height = height
-        if pagination is not None:
-            request.pagination = pagination
-
         return await self._unary_unary(
             "/cosmos.base.tendermint.v1beta1.Service/GetValidatorSetByHeight",
-            request,
+            get_validator_set_by_height_request,
             GetValidatorSetByHeightResponse,
+            timeout=timeout,
+            deadline=deadline,
+            metadata=metadata,
         )
 
 
 class ServiceBase(ServiceBase):
-    async def get_node_info(self) -> "GetNodeInfoResponse":
+    async def get_node_info(
+        self, get_node_info_request: "GetNodeInfoRequest"
+    ) -> "GetNodeInfoResponse":
         raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
 
-    async def get_syncing(self) -> "GetSyncingResponse":
+    async def get_syncing(
+        self, get_syncing_request: "GetSyncingRequest"
+    ) -> "GetSyncingResponse":
         raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
 
-    async def get_latest_block(self) -> "GetLatestBlockResponse":
+    async def get_latest_block(
+        self, get_latest_block_request: "GetLatestBlockRequest"
+    ) -> "GetLatestBlockResponse":
         raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
 
-    async def get_block_by_height(self, height: int) -> "GetBlockByHeightResponse":
+    async def get_block_by_height(
+        self, get_block_by_height_request: "GetBlockByHeightRequest"
+    ) -> "GetBlockByHeightResponse":
         raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
 
     async def get_latest_validator_set(
-        self, pagination: "__query_v1_beta1__.PageRequest"
+        self, get_latest_validator_set_request: "GetLatestValidatorSetRequest"
     ) -> "GetLatestValidatorSetResponse":
         raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
 
     async def get_validator_set_by_height(
-        self, height: int, pagination: "__query_v1_beta1__.PageRequest"
+        self, get_validator_set_by_height_request: "GetValidatorSetByHeightRequest"
     ) -> "GetValidatorSetByHeightResponse":
         raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
 
-    async def __rpc_get_node_info(self, stream: grpclib.server.Stream) -> None:
+    async def __rpc_get_node_info(
+        self, stream: "grpclib.server.Stream[GetNodeInfoRequest, GetNodeInfoResponse]"
+    ) -> None:
         request = await stream.recv_message()
-
-        request_kwargs = {}
-
-        response = await self.get_node_info(**request_kwargs)
+        response = await self.get_node_info(request)
         await stream.send_message(response)
 
-    async def __rpc_get_syncing(self, stream: grpclib.server.Stream) -> None:
+    async def __rpc_get_syncing(
+        self, stream: "grpclib.server.Stream[GetSyncingRequest, GetSyncingResponse]"
+    ) -> None:
         request = await stream.recv_message()
-
-        request_kwargs = {}
-
-        response = await self.get_syncing(**request_kwargs)
+        response = await self.get_syncing(request)
         await stream.send_message(response)
 
-    async def __rpc_get_latest_block(self, stream: grpclib.server.Stream) -> None:
+    async def __rpc_get_latest_block(
+        self,
+        stream: "grpclib.server.Stream[GetLatestBlockRequest, GetLatestBlockResponse]",
+    ) -> None:
         request = await stream.recv_message()
-
-        request_kwargs = {}
-
-        response = await self.get_latest_block(**request_kwargs)
+        response = await self.get_latest_block(request)
         await stream.send_message(response)
 
-    async def __rpc_get_block_by_height(self, stream: grpclib.server.Stream) -> None:
+    async def __rpc_get_block_by_height(
+        self,
+        stream: "grpclib.server.Stream[GetBlockByHeightRequest, GetBlockByHeightResponse]",
+    ) -> None:
         request = await stream.recv_message()
-
-        request_kwargs = {
-            "height": request.height,
-        }
-
-        response = await self.get_block_by_height(**request_kwargs)
+        response = await self.get_block_by_height(request)
         await stream.send_message(response)
 
     async def __rpc_get_latest_validator_set(
-        self, stream: grpclib.server.Stream
+        self,
+        stream: "grpclib.server.Stream[GetLatestValidatorSetRequest, GetLatestValidatorSetResponse]",
     ) -> None:
         request = await stream.recv_message()
-
-        request_kwargs = {
-            "pagination": request.pagination,
-        }
-
-        response = await self.get_latest_validator_set(**request_kwargs)
+        response = await self.get_latest_validator_set(request)
         await stream.send_message(response)
 
     async def __rpc_get_validator_set_by_height(
-        self, stream: grpclib.server.Stream
+        self,
+        stream: "grpclib.server.Stream[GetValidatorSetByHeightRequest, GetValidatorSetByHeightResponse]",
     ) -> None:
         request = await stream.recv_message()
-
-        request_kwargs = {
-            "height": request.height,
-            "pagination": request.pagination,
-        }
-
-        response = await self.get_validator_set_by_height(**request_kwargs)
+        response = await self.get_validator_set_by_height(request)
         await stream.send_message(response)
 
     def __mapping__(self) -> Dict[str, grpclib.const.Handler]:
@@ -374,9 +419,3 @@ class ServiceBase(ServiceBase):
                 GetValidatorSetByHeightResponse,
             ),
         }
-
-
-from .....tendermint import p2p as ____tendermint_p2_p__
-from .....tendermint import types as ____tendermint_types__
-from ...query import v1beta1 as __query_v1_beta1__
-import betterproto.lib.google.protobuf as betterproto_lib_google_protobuf

@@ -2,11 +2,18 @@
 # sources: ibc/lightclients/tendermint/v1/tendermint.proto
 # plugin: python-betterproto
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import (
+    datetime,
+    timedelta,
+)
 from typing import List
 
 import betterproto
-from betterproto.grpc.grpclib_server import ServiceBase
+
+from ..... import ics23 as ____ics23__
+from .....tendermint import types as ____tendermint_types__
+from ....core.client import v1 as ___core_client_v1__
+from ....core.commitment import v1 as ___core_commitment_v1__
 
 
 @dataclass(eq=False, repr=False)
@@ -18,44 +25,66 @@ class ClientState(betterproto.Message):
 
     chain_id: str = betterproto.string_field(1)
     trust_level: "Fraction" = betterproto.message_field(2)
-    # duration of the period since the LastestTimestamp during which the
-    # submitted headers are valid for upgrade
     trusting_period: timedelta = betterproto.message_field(3)
-    # duration of the staking unbonding period
+    """
+    duration of the period since the LastestTimestamp during which the
+    submitted headers are valid for upgrade
+    """
+
     unbonding_period: timedelta = betterproto.message_field(4)
-    # defines how much new (untrusted) header's Time can drift into the future.
+    """duration of the staking unbonding period"""
+
     max_clock_drift: timedelta = betterproto.message_field(5)
-    # Block height when the client was frozen due to a misbehaviour
+    """
+    defines how much new (untrusted) header's Time can drift into the future.
+    """
+
     frozen_height: "___core_client_v1__.Height" = betterproto.message_field(6)
-    # Latest height the client was updated to
+    """Block height when the client was frozen due to a misbehaviour"""
+
     latest_height: "___core_client_v1__.Height" = betterproto.message_field(7)
-    # Proof specifications used in verifying counterparty state
+    """Latest height the client was updated to"""
+
     proof_specs: List["____ics23__.ProofSpec"] = betterproto.message_field(8)
-    # Path at which next upgraded client will be committed. Each element
-    # corresponds to the key for a single CommitmentProof in the chained proof.
-    # NOTE: ClientState must stored under
-    # `{upgradePath}/{upgradeHeight}/clientState` ConsensusState must be stored
-    # under `{upgradepath}/{upgradeHeight}/consensusState` For SDK chains using
-    # the default upgrade module, upgrade_path should be []string{"upgrade",
-    # "upgradedIBCState"}`
+    """Proof specifications used in verifying counterparty state"""
+
     upgrade_path: List[str] = betterproto.string_field(9)
-    # This flag, when set to true, will allow governance to recover a client
-    # which has expired
+    """
+    Path at which next upgraded client will be committed. Each element
+    corresponds to the key for a single CommitmentProof in the chained proof.
+    NOTE: ClientState must stored under
+    `{upgradePath}/{upgradeHeight}/clientState` ConsensusState must be stored
+    under `{upgradepath}/{upgradeHeight}/consensusState` For SDK chains using
+    the default upgrade module, upgrade_path should be []string{"upgrade",
+    "upgradedIBCState"}`
+    """
+
     allow_update_after_expiry: bool = betterproto.bool_field(10)
-    # This flag, when set to true, will allow governance to unfreeze a client
-    # whose chain has experienced a misbehaviour event
+    """
+    This flag, when set to true, will allow governance to recover a client
+    which has expired
+    """
+
     allow_update_after_misbehaviour: bool = betterproto.bool_field(11)
+    """
+    This flag, when set to true, will allow governance to unfreeze a client
+    whose chain has experienced a misbehaviour event
+    """
 
 
 @dataclass(eq=False, repr=False)
 class ConsensusState(betterproto.Message):
     """ConsensusState defines the consensus state from Tendermint."""
 
-    # timestamp that corresponds to the block height in which the ConsensusState
-    # was stored.
     timestamp: datetime = betterproto.message_field(1)
-    # commitment root (i.e app hash)
+    """
+    timestamp that corresponds to the block height in which the ConsensusState
+    was stored.
+    """
+
     root: "___core_commitment_v1__.MerkleRoot" = betterproto.message_field(2)
+    """commitment root (i.e app hash)"""
+
     next_validators_hash: bytes = betterproto.bytes_field(3)
 
 
@@ -105,9 +134,3 @@ class Fraction(betterproto.Message):
 
     numerator: int = betterproto.uint64_field(1)
     denominator: int = betterproto.uint64_field(2)
-
-
-from ..... import ics23 as ____ics23__
-from .....tendermint import types as ____tendermint_types__
-from ....core.client import v1 as ___core_client_v1__
-from ....core.commitment import v1 as ___core_commitment_v1__

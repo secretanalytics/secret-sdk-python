@@ -2,11 +2,25 @@
 # sources: cosmos/distribution/v1beta1/distribution.proto, cosmos/distribution/v1beta1/genesis.proto, cosmos/distribution/v1beta1/query.proto, cosmos/distribution/v1beta1/tx.proto
 # plugin: python-betterproto
 from dataclasses import dataclass
-from typing import Dict, List, Optional
+from typing import (
+    TYPE_CHECKING,
+    Dict,
+    List,
+    Optional,
+)
 
 import betterproto
-from betterproto.grpc.grpclib_server import ServiceBase
 import grpclib
+from betterproto.grpc.grpclib_server import ServiceBase
+
+from ...base import v1beta1 as __base_v1_beta1__
+from ...base.query import v1beta1 as __base_query_v1_beta1__
+
+
+if TYPE_CHECKING:
+    import grpclib.server
+    from betterproto.grpc.grpclib_client import MetadataLike
+    from grpclib.metadata import Deadline
 
 
 @dataclass(eq=False, repr=False)
@@ -254,8 +268,8 @@ class QueryParamsResponse(betterproto.Message):
     QueryParamsResponse is the response type for the Query/Params RPC method.
     """
 
-    # params defines the parameters of the module.
     params: "Params" = betterproto.message_field(1)
+    """params defines the parameters of the module."""
 
 
 @dataclass(eq=False, repr=False)
@@ -265,8 +279,8 @@ class QueryValidatorOutstandingRewardsRequest(betterproto.Message):
     Query/ValidatorOutstandingRewards RPC method.
     """
 
-    # validator_address defines the validator address to query for.
     validator_address: str = betterproto.string_field(1)
+    """validator_address defines the validator address to query for."""
 
 
 @dataclass(eq=False, repr=False)
@@ -286,8 +300,8 @@ class QueryValidatorCommissionRequest(betterproto.Message):
     Query/ValidatorCommission RPC method
     """
 
-    # validator_address defines the validator address to query for.
     validator_address: str = betterproto.string_field(1)
+    """validator_address defines the validator address to query for."""
 
 
 @dataclass(eq=False, repr=False)
@@ -297,8 +311,8 @@ class QueryValidatorCommissionResponse(betterproto.Message):
     Query/ValidatorCommission RPC method
     """
 
-    # commission defines the commision the validator received.
     commission: "ValidatorAccumulatedCommission" = betterproto.message_field(1)
+    """commission defines the commision the validator received."""
 
 
 @dataclass(eq=False, repr=False)
@@ -308,14 +322,21 @@ class QueryValidatorSlashesRequest(betterproto.Message):
     Query/ValidatorSlashes RPC method
     """
 
-    # validator_address defines the validator address to query for.
     validator_address: str = betterproto.string_field(1)
-    # starting_height defines the optional starting height to query the slashes.
+    """validator_address defines the validator address to query for."""
+
     starting_height: int = betterproto.uint64_field(2)
-    # starting_height defines the optional ending height to query the slashes.
+    """
+    starting_height defines the optional starting height to query the slashes.
+    """
+
     ending_height: int = betterproto.uint64_field(3)
-    # pagination defines an optional pagination for the request.
+    """
+    starting_height defines the optional ending height to query the slashes.
+    """
+
     pagination: "__base_query_v1_beta1__.PageRequest" = betterproto.message_field(4)
+    """pagination defines an optional pagination for the request."""
 
 
 @dataclass(eq=False, repr=False)
@@ -325,10 +346,11 @@ class QueryValidatorSlashesResponse(betterproto.Message):
     Query/ValidatorSlashes RPC method.
     """
 
-    # slashes defines the slashes the validator received.
     slashes: List["ValidatorSlashEvent"] = betterproto.message_field(1)
-    # pagination defines the pagination in the response.
+    """slashes defines the slashes the validator received."""
+
     pagination: "__base_query_v1_beta1__.PageResponse" = betterproto.message_field(2)
+    """pagination defines the pagination in the response."""
 
 
 @dataclass(eq=False, repr=False)
@@ -338,10 +360,11 @@ class QueryDelegationRewardsRequest(betterproto.Message):
     Query/DelegationRewards RPC method.
     """
 
-    # delegator_address defines the delegator address to query for.
     delegator_address: str = betterproto.string_field(1)
-    # validator_address defines the validator address to query for.
+    """delegator_address defines the delegator address to query for."""
+
     validator_address: str = betterproto.string_field(2)
+    """validator_address defines the validator address to query for."""
 
 
 @dataclass(eq=False, repr=False)
@@ -351,8 +374,8 @@ class QueryDelegationRewardsResponse(betterproto.Message):
     Query/DelegationRewards RPC method.
     """
 
-    # rewards defines the rewards accrued by a delegation.
     rewards: List["__base_v1_beta1__.DecCoin"] = betterproto.message_field(1)
+    """rewards defines the rewards accrued by a delegation."""
 
 
 @dataclass(eq=False, repr=False)
@@ -362,8 +385,8 @@ class QueryDelegationTotalRewardsRequest(betterproto.Message):
     Query/DelegationTotalRewards RPC method.
     """
 
-    # delegator_address defines the delegator address to query for.
     delegator_address: str = betterproto.string_field(1)
+    """delegator_address defines the delegator address to query for."""
 
 
 @dataclass(eq=False, repr=False)
@@ -373,10 +396,11 @@ class QueryDelegationTotalRewardsResponse(betterproto.Message):
     Query/DelegationTotalRewards RPC method.
     """
 
-    # rewards defines all the rewards accrued by a delegator.
     rewards: List["DelegationDelegatorReward"] = betterproto.message_field(1)
-    # total defines the sum of all the rewards.
+    """rewards defines all the rewards accrued by a delegator."""
+
     total: List["__base_v1_beta1__.DecCoin"] = betterproto.message_field(2)
+    """total defines the sum of all the rewards."""
 
 
 @dataclass(eq=False, repr=False)
@@ -386,8 +410,8 @@ class QueryDelegatorValidatorsRequest(betterproto.Message):
     Query/DelegatorValidators RPC method.
     """
 
-    # delegator_address defines the delegator address to query for.
     delegator_address: str = betterproto.string_field(1)
+    """delegator_address defines the delegator address to query for."""
 
 
 @dataclass(eq=False, repr=False)
@@ -397,8 +421,8 @@ class QueryDelegatorValidatorsResponse(betterproto.Message):
     Query/DelegatorValidators RPC method.
     """
 
-    # validators defines the validators a delegator is delegating for.
     validators: List[str] = betterproto.string_field(1)
+    """validators defines the validators a delegator is delegating for."""
 
 
 @dataclass(eq=False, repr=False)
@@ -408,8 +432,8 @@ class QueryDelegatorWithdrawAddressRequest(betterproto.Message):
     Query/DelegatorWithdrawAddress RPC method.
     """
 
-    # delegator_address defines the delegator address to query for.
     delegator_address: str = betterproto.string_field(1)
+    """delegator_address defines the delegator address to query for."""
 
 
 @dataclass(eq=False, repr=False)
@@ -419,8 +443,8 @@ class QueryDelegatorWithdrawAddressResponse(betterproto.Message):
     Query/DelegatorWithdrawAddress RPC method.
     """
 
-    # withdraw_address defines the delegator address to query for.
     withdraw_address: str = betterproto.string_field(1)
+    """withdraw_address defines the delegator address to query for."""
 
 
 @dataclass(eq=False, repr=False)
@@ -440,8 +464,9 @@ class QueryFoundationTaxResponse(betterproto.Message):
     Query/DelegatorWithdrawAddress RPC method.
     """
 
-    # withdraw_address defines the delegator address to query for.
     tax: str = betterproto.string_field(1)
+    """withdraw_address defines the delegator address to query for."""
+
     foundation_address: str = betterproto.string_field(2)
 
 
@@ -462,8 +487,8 @@ class QueryCommunityPoolResponse(betterproto.Message):
     RPC method.
     """
 
-    # pool defines community pool's coins.
     pool: List["__base_v1_beta1__.DecCoin"] = betterproto.message_field(1)
+    """pool defines community pool's coins."""
 
 
 @dataclass(eq=False, repr=False)
@@ -474,10 +499,13 @@ class DelegatorWithdrawInfo(betterproto.Message):
     default withdraw addresses.
     """
 
-    # delegator_address is the address of the delegator.
     delegator_address: str = betterproto.string_field(1)
-    # withdraw_address is the address to withdraw the delegation rewards to.
+    """delegator_address is the address of the delegator."""
+
     withdraw_address: str = betterproto.string_field(2)
+    """
+    withdraw_address is the address to withdraw the delegation rewards to.
+    """
 
 
 @dataclass(eq=False, repr=False)
@@ -487,12 +515,15 @@ class ValidatorOutstandingRewardsRecord(betterproto.Message):
     json.
     """
 
-    # validator_address is the address of the validator.
     validator_address: str = betterproto.string_field(1)
-    # outstanding_rewards represents the oustanding rewards of a validator.
+    """validator_address is the address of the validator."""
+
     outstanding_rewards: List["__base_v1_beta1__.DecCoin"] = betterproto.message_field(
         2
     )
+    """
+    outstanding_rewards represents the oustanding rewards of a validator.
+    """
 
 
 @dataclass(eq=False, repr=False)
@@ -502,10 +533,11 @@ class ValidatorAccumulatedCommissionRecord(betterproto.Message):
     genesis json.
     """
 
-    # validator_address is the address of the validator.
     validator_address: str = betterproto.string_field(1)
-    # accumulated is the accumulated commission of a validator.
+    """validator_address is the address of the validator."""
+
     accumulated: "ValidatorAccumulatedCommission" = betterproto.message_field(2)
+    """accumulated is the accumulated commission of a validator."""
 
 
 @dataclass(eq=False, repr=False)
@@ -515,12 +547,14 @@ class ValidatorHistoricalRewardsRecord(betterproto.Message):
     json.
     """
 
-    # validator_address is the address of the validator.
     validator_address: str = betterproto.string_field(1)
-    # period defines the period the historical rewards apply to.
+    """validator_address is the address of the validator."""
+
     period: int = betterproto.uint64_field(2)
-    # rewards defines the historical rewards of a validator.
+    """period defines the period the historical rewards apply to."""
+
     rewards: "ValidatorHistoricalRewards" = betterproto.message_field(3)
+    """rewards defines the historical rewards of a validator."""
 
 
 @dataclass(eq=False, repr=False)
@@ -529,10 +563,11 @@ class ValidatorCurrentRewardsRecord(betterproto.Message):
     ValidatorCurrentRewardsRecord is used for import / export via genesis json.
     """
 
-    # validator_address is the address of the validator.
     validator_address: str = betterproto.string_field(1)
-    # rewards defines the current rewards of a validator.
+    """validator_address is the address of the validator."""
+
     rewards: "ValidatorCurrentRewards" = betterproto.message_field(2)
+    """rewards defines the current rewards of a validator."""
 
 
 @dataclass(eq=False, repr=False)
@@ -541,12 +576,14 @@ class DelegatorStartingInfoRecord(betterproto.Message):
     DelegatorStartingInfoRecord used for import / export via genesis json.
     """
 
-    # delegator_address is the address of the delegator.
     delegator_address: str = betterproto.string_field(1)
-    # validator_address is the address of the validator.
+    """delegator_address is the address of the delegator."""
+
     validator_address: str = betterproto.string_field(2)
-    # starting_info defines the starting info of a delegator.
+    """validator_address is the address of the validator."""
+
     starting_info: "DelegatorStartingInfo" = betterproto.message_field(3)
+    """starting_info defines the starting info of a delegator."""
 
 
 @dataclass(eq=False, repr=False)
@@ -555,315 +592,367 @@ class ValidatorSlashEventRecord(betterproto.Message):
     ValidatorSlashEventRecord is used for import / export via genesis json.
     """
 
-    # validator_address is the address of the validator.
     validator_address: str = betterproto.string_field(1)
-    # height defines the block height at which the slash event occured.
+    """validator_address is the address of the validator."""
+
     height: int = betterproto.uint64_field(2)
-    # period is the period of the slash event.
+    """height defines the block height at which the slash event occured."""
+
     period: int = betterproto.uint64_field(3)
-    # validator_slash_event describes the slash event.
+    """period is the period of the slash event."""
+
     validator_slash_event: "ValidatorSlashEvent" = betterproto.message_field(4)
+    """validator_slash_event describes the slash event."""
 
 
 @dataclass(eq=False, repr=False)
 class GenesisState(betterproto.Message):
     """GenesisState defines the distribution module's genesis state."""
 
-    # params defines all the paramaters of the module.
     params: "Params" = betterproto.message_field(1)
-    # fee_pool defines the fee pool at genesis.
+    """params defines all the paramaters of the module."""
+
     fee_pool: "FeePool" = betterproto.message_field(2)
-    # fee_pool defines the delegator withdraw infos at genesis.
+    """fee_pool defines the fee pool at genesis."""
+
     delegator_withdraw_infos: List["DelegatorWithdrawInfo"] = betterproto.message_field(
         3
     )
-    # fee_pool defines the previous proposer at genesis.
+    """fee_pool defines the delegator withdraw infos at genesis."""
+
     previous_proposer: str = betterproto.string_field(4)
-    # fee_pool defines the outstanding rewards of all validators at genesis.
+    """fee_pool defines the previous proposer at genesis."""
+
     outstanding_rewards: List[
         "ValidatorOutstandingRewardsRecord"
     ] = betterproto.message_field(5)
-    # fee_pool defines the accumulated commisions of all validators at genesis.
+    """
+    fee_pool defines the outstanding rewards of all validators at genesis.
+    """
+
     validator_accumulated_commissions: List[
         "ValidatorAccumulatedCommissionRecord"
     ] = betterproto.message_field(6)
-    # fee_pool defines the historical rewards of all validators at genesis.
+    """
+    fee_pool defines the accumulated commisions of all validators at genesis.
+    """
+
     validator_historical_rewards: List[
         "ValidatorHistoricalRewardsRecord"
     ] = betterproto.message_field(7)
-    # fee_pool defines the current rewards of all validators at genesis.
+    """
+    fee_pool defines the historical rewards of all validators at genesis.
+    """
+
     validator_current_rewards: List[
         "ValidatorCurrentRewardsRecord"
     ] = betterproto.message_field(8)
-    # fee_pool defines the delegator starting infos at genesis.
+    """fee_pool defines the current rewards of all validators at genesis."""
+
     delegator_starting_infos: List[
         "DelegatorStartingInfoRecord"
     ] = betterproto.message_field(9)
-    # fee_pool defines the validator slash events at genesis.
+    """fee_pool defines the delegator starting infos at genesis."""
+
     validator_slash_events: List[
         "ValidatorSlashEventRecord"
     ] = betterproto.message_field(10)
+    """fee_pool defines the validator slash events at genesis."""
 
 
 class MsgStub(betterproto.ServiceStub):
     async def set_withdraw_address(
-        self, *, delegator_address: str = "", withdraw_address: str = ""
+        self,
+        msg_set_withdraw_address: "MsgSetWithdrawAddress",
+        *,
+        timeout: Optional[float] = None,
+        deadline: Optional["Deadline"] = None,
+        metadata: Optional["MetadataLike"] = None
     ) -> "MsgSetWithdrawAddressResponse":
-
-        request = MsgSetWithdrawAddress()
-        request.delegator_address = delegator_address
-        request.withdraw_address = withdraw_address
-
         return await self._unary_unary(
             "/cosmos.distribution.v1beta1.Msg/SetWithdrawAddress",
-            request,
+            msg_set_withdraw_address,
             MsgSetWithdrawAddressResponse,
+            timeout=timeout,
+            deadline=deadline,
+            metadata=metadata,
         )
 
     async def withdraw_delegator_reward(
-        self, *, delegator_address: str = "", validator_address: str = ""
+        self,
+        msg_withdraw_delegator_reward: "MsgWithdrawDelegatorReward",
+        *,
+        timeout: Optional[float] = None,
+        deadline: Optional["Deadline"] = None,
+        metadata: Optional["MetadataLike"] = None
     ) -> "MsgWithdrawDelegatorRewardResponse":
-
-        request = MsgWithdrawDelegatorReward()
-        request.delegator_address = delegator_address
-        request.validator_address = validator_address
-
         return await self._unary_unary(
             "/cosmos.distribution.v1beta1.Msg/WithdrawDelegatorReward",
-            request,
+            msg_withdraw_delegator_reward,
             MsgWithdrawDelegatorRewardResponse,
+            timeout=timeout,
+            deadline=deadline,
+            metadata=metadata,
         )
 
     async def withdraw_validator_commission(
-        self, *, validator_address: str = ""
+        self,
+        msg_withdraw_validator_commission: "MsgWithdrawValidatorCommission",
+        *,
+        timeout: Optional[float] = None,
+        deadline: Optional["Deadline"] = None,
+        metadata: Optional["MetadataLike"] = None
     ) -> "MsgWithdrawValidatorCommissionResponse":
-
-        request = MsgWithdrawValidatorCommission()
-        request.validator_address = validator_address
-
         return await self._unary_unary(
             "/cosmos.distribution.v1beta1.Msg/WithdrawValidatorCommission",
-            request,
+            msg_withdraw_validator_commission,
             MsgWithdrawValidatorCommissionResponse,
+            timeout=timeout,
+            deadline=deadline,
+            metadata=metadata,
         )
 
     async def fund_community_pool(
         self,
+        msg_fund_community_pool: "MsgFundCommunityPool",
         *,
-        amount: Optional[List["__base_v1_beta1__.Coin"]] = None,
-        depositor: str = ""
+        timeout: Optional[float] = None,
+        deadline: Optional["Deadline"] = None,
+        metadata: Optional["MetadataLike"] = None
     ) -> "MsgFundCommunityPoolResponse":
-        amount = amount or []
-
-        request = MsgFundCommunityPool()
-        if amount is not None:
-            request.amount = amount
-        request.depositor = depositor
-
         return await self._unary_unary(
             "/cosmos.distribution.v1beta1.Msg/FundCommunityPool",
-            request,
+            msg_fund_community_pool,
             MsgFundCommunityPoolResponse,
+            timeout=timeout,
+            deadline=deadline,
+            metadata=metadata,
         )
 
 
 class QueryStub(betterproto.ServiceStub):
-    async def params(self) -> "QueryParamsResponse":
-
-        request = QueryParamsRequest()
-
+    async def params(
+        self,
+        query_params_request: "QueryParamsRequest",
+        *,
+        timeout: Optional[float] = None,
+        deadline: Optional["Deadline"] = None,
+        metadata: Optional["MetadataLike"] = None
+    ) -> "QueryParamsResponse":
         return await self._unary_unary(
-            "/cosmos.distribution.v1beta1.Query/Params", request, QueryParamsResponse
+            "/cosmos.distribution.v1beta1.Query/Params",
+            query_params_request,
+            QueryParamsResponse,
+            timeout=timeout,
+            deadline=deadline,
+            metadata=metadata,
         )
 
     async def validator_outstanding_rewards(
-        self, *, validator_address: str = ""
+        self,
+        query_validator_outstanding_rewards_request: "QueryValidatorOutstandingRewardsRequest",
+        *,
+        timeout: Optional[float] = None,
+        deadline: Optional["Deadline"] = None,
+        metadata: Optional["MetadataLike"] = None
     ) -> "QueryValidatorOutstandingRewardsResponse":
-
-        request = QueryValidatorOutstandingRewardsRequest()
-        request.validator_address = validator_address
-
         return await self._unary_unary(
             "/cosmos.distribution.v1beta1.Query/ValidatorOutstandingRewards",
-            request,
+            query_validator_outstanding_rewards_request,
             QueryValidatorOutstandingRewardsResponse,
+            timeout=timeout,
+            deadline=deadline,
+            metadata=metadata,
         )
 
     async def validator_commission(
-        self, *, validator_address: str = ""
+        self,
+        query_validator_commission_request: "QueryValidatorCommissionRequest",
+        *,
+        timeout: Optional[float] = None,
+        deadline: Optional["Deadline"] = None,
+        metadata: Optional["MetadataLike"] = None
     ) -> "QueryValidatorCommissionResponse":
-
-        request = QueryValidatorCommissionRequest()
-        request.validator_address = validator_address
-
         return await self._unary_unary(
             "/cosmos.distribution.v1beta1.Query/ValidatorCommission",
-            request,
+            query_validator_commission_request,
             QueryValidatorCommissionResponse,
+            timeout=timeout,
+            deadline=deadline,
+            metadata=metadata,
         )
 
     async def validator_slashes(
         self,
+        query_validator_slashes_request: "QueryValidatorSlashesRequest",
         *,
-        validator_address: str = "",
-        starting_height: int = 0,
-        ending_height: int = 0,
-        pagination: "__base_query_v1_beta1__.PageRequest" = None
+        timeout: Optional[float] = None,
+        deadline: Optional["Deadline"] = None,
+        metadata: Optional["MetadataLike"] = None
     ) -> "QueryValidatorSlashesResponse":
-
-        request = QueryValidatorSlashesRequest()
-        request.validator_address = validator_address
-        request.starting_height = starting_height
-        request.ending_height = ending_height
-        if pagination is not None:
-            request.pagination = pagination
-
         return await self._unary_unary(
             "/cosmos.distribution.v1beta1.Query/ValidatorSlashes",
-            request,
+            query_validator_slashes_request,
             QueryValidatorSlashesResponse,
+            timeout=timeout,
+            deadline=deadline,
+            metadata=metadata,
         )
 
     async def delegation_rewards(
-        self, *, delegator_address: str = "", validator_address: str = ""
+        self,
+        query_delegation_rewards_request: "QueryDelegationRewardsRequest",
+        *,
+        timeout: Optional[float] = None,
+        deadline: Optional["Deadline"] = None,
+        metadata: Optional["MetadataLike"] = None
     ) -> "QueryDelegationRewardsResponse":
-
-        request = QueryDelegationRewardsRequest()
-        request.delegator_address = delegator_address
-        request.validator_address = validator_address
-
         return await self._unary_unary(
             "/cosmos.distribution.v1beta1.Query/DelegationRewards",
-            request,
+            query_delegation_rewards_request,
             QueryDelegationRewardsResponse,
+            timeout=timeout,
+            deadline=deadline,
+            metadata=metadata,
         )
 
     async def delegation_total_rewards(
-        self, *, delegator_address: str = ""
+        self,
+        query_delegation_total_rewards_request: "QueryDelegationTotalRewardsRequest",
+        *,
+        timeout: Optional[float] = None,
+        deadline: Optional["Deadline"] = None,
+        metadata: Optional["MetadataLike"] = None
     ) -> "QueryDelegationTotalRewardsResponse":
-
-        request = QueryDelegationTotalRewardsRequest()
-        request.delegator_address = delegator_address
-
         return await self._unary_unary(
             "/cosmos.distribution.v1beta1.Query/DelegationTotalRewards",
-            request,
+            query_delegation_total_rewards_request,
             QueryDelegationTotalRewardsResponse,
+            timeout=timeout,
+            deadline=deadline,
+            metadata=metadata,
         )
 
     async def delegator_validators(
-        self, *, delegator_address: str = ""
+        self,
+        query_delegator_validators_request: "QueryDelegatorValidatorsRequest",
+        *,
+        timeout: Optional[float] = None,
+        deadline: Optional["Deadline"] = None,
+        metadata: Optional["MetadataLike"] = None
     ) -> "QueryDelegatorValidatorsResponse":
-
-        request = QueryDelegatorValidatorsRequest()
-        request.delegator_address = delegator_address
-
         return await self._unary_unary(
             "/cosmos.distribution.v1beta1.Query/DelegatorValidators",
-            request,
+            query_delegator_validators_request,
             QueryDelegatorValidatorsResponse,
+            timeout=timeout,
+            deadline=deadline,
+            metadata=metadata,
         )
 
     async def delegator_withdraw_address(
-        self, *, delegator_address: str = ""
+        self,
+        query_delegator_withdraw_address_request: "QueryDelegatorWithdrawAddressRequest",
+        *,
+        timeout: Optional[float] = None,
+        deadline: Optional["Deadline"] = None,
+        metadata: Optional["MetadataLike"] = None
     ) -> "QueryDelegatorWithdrawAddressResponse":
-
-        request = QueryDelegatorWithdrawAddressRequest()
-        request.delegator_address = delegator_address
-
         return await self._unary_unary(
             "/cosmos.distribution.v1beta1.Query/DelegatorWithdrawAddress",
-            request,
+            query_delegator_withdraw_address_request,
             QueryDelegatorWithdrawAddressResponse,
+            timeout=timeout,
+            deadline=deadline,
+            metadata=metadata,
         )
 
-    async def community_pool(self) -> "QueryCommunityPoolResponse":
-
-        request = QueryCommunityPoolRequest()
-
+    async def community_pool(
+        self,
+        query_community_pool_request: "QueryCommunityPoolRequest",
+        *,
+        timeout: Optional[float] = None,
+        deadline: Optional["Deadline"] = None,
+        metadata: Optional["MetadataLike"] = None
+    ) -> "QueryCommunityPoolResponse":
         return await self._unary_unary(
             "/cosmos.distribution.v1beta1.Query/CommunityPool",
-            request,
+            query_community_pool_request,
             QueryCommunityPoolResponse,
+            timeout=timeout,
+            deadline=deadline,
+            metadata=metadata,
         )
 
-    async def foundation_tax(self) -> "QueryFoundationTaxResponse":
-
-        request = QueryFoundationTaxRequest()
-
+    async def foundation_tax(
+        self,
+        query_foundation_tax_request: "QueryFoundationTaxRequest",
+        *,
+        timeout: Optional[float] = None,
+        deadline: Optional["Deadline"] = None,
+        metadata: Optional["MetadataLike"] = None
+    ) -> "QueryFoundationTaxResponse":
         return await self._unary_unary(
             "/cosmos.distribution.v1beta1.Query/FoundationTax",
-            request,
+            query_foundation_tax_request,
             QueryFoundationTaxResponse,
+            timeout=timeout,
+            deadline=deadline,
+            metadata=metadata,
         )
 
 
 class MsgBase(ServiceBase):
     async def set_withdraw_address(
-        self, delegator_address: str, withdraw_address: str
+        self, msg_set_withdraw_address: "MsgSetWithdrawAddress"
     ) -> "MsgSetWithdrawAddressResponse":
         raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
 
     async def withdraw_delegator_reward(
-        self, delegator_address: str, validator_address: str
+        self, msg_withdraw_delegator_reward: "MsgWithdrawDelegatorReward"
     ) -> "MsgWithdrawDelegatorRewardResponse":
         raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
 
     async def withdraw_validator_commission(
-        self, validator_address: str
+        self, msg_withdraw_validator_commission: "MsgWithdrawValidatorCommission"
     ) -> "MsgWithdrawValidatorCommissionResponse":
         raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
 
     async def fund_community_pool(
-        self, amount: Optional[List["__base_v1_beta1__.Coin"]], depositor: str
+        self, msg_fund_community_pool: "MsgFundCommunityPool"
     ) -> "MsgFundCommunityPoolResponse":
         raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
 
-    async def __rpc_set_withdraw_address(self, stream: grpclib.server.Stream) -> None:
+    async def __rpc_set_withdraw_address(
+        self,
+        stream: "grpclib.server.Stream[MsgSetWithdrawAddress, MsgSetWithdrawAddressResponse]",
+    ) -> None:
         request = await stream.recv_message()
-
-        request_kwargs = {
-            "delegator_address": request.delegator_address,
-            "withdraw_address": request.withdraw_address,
-        }
-
-        response = await self.set_withdraw_address(**request_kwargs)
+        response = await self.set_withdraw_address(request)
         await stream.send_message(response)
 
     async def __rpc_withdraw_delegator_reward(
-        self, stream: grpclib.server.Stream
+        self,
+        stream: "grpclib.server.Stream[MsgWithdrawDelegatorReward, MsgWithdrawDelegatorRewardResponse]",
     ) -> None:
         request = await stream.recv_message()
-
-        request_kwargs = {
-            "delegator_address": request.delegator_address,
-            "validator_address": request.validator_address,
-        }
-
-        response = await self.withdraw_delegator_reward(**request_kwargs)
+        response = await self.withdraw_delegator_reward(request)
         await stream.send_message(response)
 
     async def __rpc_withdraw_validator_commission(
-        self, stream: grpclib.server.Stream
+        self,
+        stream: "grpclib.server.Stream[MsgWithdrawValidatorCommission, MsgWithdrawValidatorCommissionResponse]",
     ) -> None:
         request = await stream.recv_message()
-
-        request_kwargs = {
-            "validator_address": request.validator_address,
-        }
-
-        response = await self.withdraw_validator_commission(**request_kwargs)
+        response = await self.withdraw_validator_commission(request)
         await stream.send_message(response)
 
-    async def __rpc_fund_community_pool(self, stream: grpclib.server.Stream) -> None:
+    async def __rpc_fund_community_pool(
+        self,
+        stream: "grpclib.server.Stream[MsgFundCommunityPool, MsgFundCommunityPoolResponse]",
+    ) -> None:
         request = await stream.recv_message()
-
-        request_kwargs = {
-            "amount": request.amount,
-            "depositor": request.depositor,
-        }
-
-        response = await self.fund_community_pool(**request_kwargs)
+        response = await self.fund_community_pool(request)
         await stream.send_message(response)
 
     def __mapping__(self) -> Dict[str, grpclib.const.Handler]:
@@ -896,156 +985,136 @@ class MsgBase(ServiceBase):
 
 
 class QueryBase(ServiceBase):
-    async def params(self) -> "QueryParamsResponse":
+    async def params(
+        self, query_params_request: "QueryParamsRequest"
+    ) -> "QueryParamsResponse":
         raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
 
     async def validator_outstanding_rewards(
-        self, validator_address: str
+        self,
+        query_validator_outstanding_rewards_request: "QueryValidatorOutstandingRewardsRequest",
     ) -> "QueryValidatorOutstandingRewardsResponse":
         raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
 
     async def validator_commission(
-        self, validator_address: str
+        self, query_validator_commission_request: "QueryValidatorCommissionRequest"
     ) -> "QueryValidatorCommissionResponse":
         raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
 
     async def validator_slashes(
-        self,
-        validator_address: str,
-        starting_height: int,
-        ending_height: int,
-        pagination: "__base_query_v1_beta1__.PageRequest",
+        self, query_validator_slashes_request: "QueryValidatorSlashesRequest"
     ) -> "QueryValidatorSlashesResponse":
         raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
 
     async def delegation_rewards(
-        self, delegator_address: str, validator_address: str
+        self, query_delegation_rewards_request: "QueryDelegationRewardsRequest"
     ) -> "QueryDelegationRewardsResponse":
         raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
 
     async def delegation_total_rewards(
-        self, delegator_address: str
+        self,
+        query_delegation_total_rewards_request: "QueryDelegationTotalRewardsRequest",
     ) -> "QueryDelegationTotalRewardsResponse":
         raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
 
     async def delegator_validators(
-        self, delegator_address: str
+        self, query_delegator_validators_request: "QueryDelegatorValidatorsRequest"
     ) -> "QueryDelegatorValidatorsResponse":
         raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
 
     async def delegator_withdraw_address(
-        self, delegator_address: str
+        self,
+        query_delegator_withdraw_address_request: "QueryDelegatorWithdrawAddressRequest",
     ) -> "QueryDelegatorWithdrawAddressResponse":
         raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
 
-    async def community_pool(self) -> "QueryCommunityPoolResponse":
+    async def community_pool(
+        self, query_community_pool_request: "QueryCommunityPoolRequest"
+    ) -> "QueryCommunityPoolResponse":
         raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
 
-    async def foundation_tax(self) -> "QueryFoundationTaxResponse":
+    async def foundation_tax(
+        self, query_foundation_tax_request: "QueryFoundationTaxRequest"
+    ) -> "QueryFoundationTaxResponse":
         raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
 
-    async def __rpc_params(self, stream: grpclib.server.Stream) -> None:
+    async def __rpc_params(
+        self, stream: "grpclib.server.Stream[QueryParamsRequest, QueryParamsResponse]"
+    ) -> None:
         request = await stream.recv_message()
-
-        request_kwargs = {}
-
-        response = await self.params(**request_kwargs)
+        response = await self.params(request)
         await stream.send_message(response)
 
     async def __rpc_validator_outstanding_rewards(
-        self, stream: grpclib.server.Stream
+        self,
+        stream: "grpclib.server.Stream[QueryValidatorOutstandingRewardsRequest, QueryValidatorOutstandingRewardsResponse]",
     ) -> None:
         request = await stream.recv_message()
-
-        request_kwargs = {
-            "validator_address": request.validator_address,
-        }
-
-        response = await self.validator_outstanding_rewards(**request_kwargs)
+        response = await self.validator_outstanding_rewards(request)
         await stream.send_message(response)
 
-    async def __rpc_validator_commission(self, stream: grpclib.server.Stream) -> None:
+    async def __rpc_validator_commission(
+        self,
+        stream: "grpclib.server.Stream[QueryValidatorCommissionRequest, QueryValidatorCommissionResponse]",
+    ) -> None:
         request = await stream.recv_message()
-
-        request_kwargs = {
-            "validator_address": request.validator_address,
-        }
-
-        response = await self.validator_commission(**request_kwargs)
+        response = await self.validator_commission(request)
         await stream.send_message(response)
 
-    async def __rpc_validator_slashes(self, stream: grpclib.server.Stream) -> None:
+    async def __rpc_validator_slashes(
+        self,
+        stream: "grpclib.server.Stream[QueryValidatorSlashesRequest, QueryValidatorSlashesResponse]",
+    ) -> None:
         request = await stream.recv_message()
-
-        request_kwargs = {
-            "validator_address": request.validator_address,
-            "starting_height": request.starting_height,
-            "ending_height": request.ending_height,
-            "pagination": request.pagination,
-        }
-
-        response = await self.validator_slashes(**request_kwargs)
+        response = await self.validator_slashes(request)
         await stream.send_message(response)
 
-    async def __rpc_delegation_rewards(self, stream: grpclib.server.Stream) -> None:
+    async def __rpc_delegation_rewards(
+        self,
+        stream: "grpclib.server.Stream[QueryDelegationRewardsRequest, QueryDelegationRewardsResponse]",
+    ) -> None:
         request = await stream.recv_message()
-
-        request_kwargs = {
-            "delegator_address": request.delegator_address,
-            "validator_address": request.validator_address,
-        }
-
-        response = await self.delegation_rewards(**request_kwargs)
+        response = await self.delegation_rewards(request)
         await stream.send_message(response)
 
     async def __rpc_delegation_total_rewards(
-        self, stream: grpclib.server.Stream
+        self,
+        stream: "grpclib.server.Stream[QueryDelegationTotalRewardsRequest, QueryDelegationTotalRewardsResponse]",
     ) -> None:
         request = await stream.recv_message()
-
-        request_kwargs = {
-            "delegator_address": request.delegator_address,
-        }
-
-        response = await self.delegation_total_rewards(**request_kwargs)
+        response = await self.delegation_total_rewards(request)
         await stream.send_message(response)
 
-    async def __rpc_delegator_validators(self, stream: grpclib.server.Stream) -> None:
+    async def __rpc_delegator_validators(
+        self,
+        stream: "grpclib.server.Stream[QueryDelegatorValidatorsRequest, QueryDelegatorValidatorsResponse]",
+    ) -> None:
         request = await stream.recv_message()
-
-        request_kwargs = {
-            "delegator_address": request.delegator_address,
-        }
-
-        response = await self.delegator_validators(**request_kwargs)
+        response = await self.delegator_validators(request)
         await stream.send_message(response)
 
     async def __rpc_delegator_withdraw_address(
-        self, stream: grpclib.server.Stream
+        self,
+        stream: "grpclib.server.Stream[QueryDelegatorWithdrawAddressRequest, QueryDelegatorWithdrawAddressResponse]",
     ) -> None:
         request = await stream.recv_message()
-
-        request_kwargs = {
-            "delegator_address": request.delegator_address,
-        }
-
-        response = await self.delegator_withdraw_address(**request_kwargs)
+        response = await self.delegator_withdraw_address(request)
         await stream.send_message(response)
 
-    async def __rpc_community_pool(self, stream: grpclib.server.Stream) -> None:
+    async def __rpc_community_pool(
+        self,
+        stream: "grpclib.server.Stream[QueryCommunityPoolRequest, QueryCommunityPoolResponse]",
+    ) -> None:
         request = await stream.recv_message()
-
-        request_kwargs = {}
-
-        response = await self.community_pool(**request_kwargs)
+        response = await self.community_pool(request)
         await stream.send_message(response)
 
-    async def __rpc_foundation_tax(self, stream: grpclib.server.Stream) -> None:
+    async def __rpc_foundation_tax(
+        self,
+        stream: "grpclib.server.Stream[QueryFoundationTaxRequest, QueryFoundationTaxResponse]",
+    ) -> None:
         request = await stream.recv_message()
-
-        request_kwargs = {}
-
-        response = await self.foundation_tax(**request_kwargs)
+        response = await self.foundation_tax(request)
         await stream.send_message(response)
 
     def __mapping__(self) -> Dict[str, grpclib.const.Handler]:
@@ -1111,7 +1180,3 @@ class QueryBase(ServiceBase):
                 QueryFoundationTaxResponse,
             ),
         }
-
-
-from ...base import v1beta1 as __base_v1_beta1__
-from ...base.query import v1beta1 as __base_query_v1_beta1__

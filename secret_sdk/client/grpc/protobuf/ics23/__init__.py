@@ -5,13 +5,15 @@ from dataclasses import dataclass
 from typing import List
 
 import betterproto
-from betterproto.grpc.grpclib_server import ServiceBase
 
 
 class HashOp(betterproto.Enum):
-    # NO_HASH is the default if no data passed. Note this is an illegal argument
-    # some places.
     NO_HASH = 0
+    """
+    NO_HASH is the default if no data passed. Note this is an illegal argument
+    some places.
+    """
+
     SHA256 = 1
     SHA512 = 2
     KECCAK = 3
@@ -27,28 +29,48 @@ class LengthOp(betterproto.Enum):
     encoded length)
     """
 
-    # NO_PREFIX don't include any length info
     NO_PREFIX = 0
-    # VAR_PROTO uses protobuf (and go-amino) varint encoding of the length
+    """NO_PREFIX don't include any length info"""
+
     VAR_PROTO = 1
-    # VAR_RLP uses rlp int encoding of the length
+    """VAR_PROTO uses protobuf (and go-amino) varint encoding of the length"""
+
     VAR_RLP = 2
-    # FIXED32_BIG uses big-endian encoding of the length as a 32 bit integer
+    """VAR_RLP uses rlp int encoding of the length"""
+
     FIXED32_BIG = 3
-    # FIXED32_LITTLE uses little-endian encoding of the length as a 32 bit
-    # integer
+    """
+    FIXED32_BIG uses big-endian encoding of the length as a 32 bit integer
+    """
+
     FIXED32_LITTLE = 4
-    # FIXED64_BIG uses big-endian encoding of the length as a 64 bit integer
+    """
+    FIXED32_LITTLE uses little-endian encoding of the length as a 32 bit
+    integer
+    """
+
     FIXED64_BIG = 5
-    # FIXED64_LITTLE uses little-endian encoding of the length as a 64 bit
-    # integer
+    """
+    FIXED64_BIG uses big-endian encoding of the length as a 64 bit integer
+    """
+
     FIXED64_LITTLE = 6
-    # REQUIRE_32_BYTES is like NONE, but will fail if the input is not exactly 32
-    # bytes (sha256 output)
+    """
+    FIXED64_LITTLE uses little-endian encoding of the length as a 64 bit
+    integer
+    """
+
     REQUIRE_32_BYTES = 7
-    # REQUIRE_64_BYTES is like NONE, but will fail if the input is not exactly 64
-    # bytes (sha512 output)
+    """
+    REQUIRE_32_BYTES is like NONE, but will fail if the input is not exactly 32
+    bytes (sha256 output)
+    """
+
     REQUIRE_64_BYTES = 8
+    """
+    REQUIRE_64_BYTES is like NONE, but will fail if the input is not exactly 64
+    bytes (sha512 output)
+    """
 
 
 @dataclass(eq=False, repr=False)
@@ -119,9 +141,11 @@ class LeafOp(betterproto.Message):
     prehash_key: "HashOp" = betterproto.enum_field(2)
     prehash_value: "HashOp" = betterproto.enum_field(3)
     length: "LengthOp" = betterproto.enum_field(4)
-    # prefix is a fixed bytes that may optionally be included at the beginning to
-    # differentiate a leaf node from an inner node.
     prefix: bytes = betterproto.bytes_field(5)
+    """
+    prefix is a fixed bytes that may optionally be included at the beginning to
+    differentiate a leaf node from an inner node.
+    """
 
 
 @dataclass(eq=False, repr=False)
@@ -157,16 +181,24 @@ class ProofSpec(betterproto.Message):
     not in code, rather a configuration object.
     """
 
-    # any field in the ExistenceProof must be the same as in this spec. except
-    # Prefix, which is just the first bytes of prefix (spec can be longer)
     leaf_spec: "LeafOp" = betterproto.message_field(1)
+    """
+    any field in the ExistenceProof must be the same as in this spec. except
+    Prefix, which is just the first bytes of prefix (spec can be longer)
+    """
+
     inner_spec: "InnerSpec" = betterproto.message_field(2)
-    # max_depth (if > 0) is the maximum number of InnerOps allowed (mainly for
-    # fixed-depth tries)
     max_depth: int = betterproto.int32_field(3)
-    # min_depth (if > 0) is the minimum number of InnerOps allowed (mainly for
-    # fixed-depth tries)
+    """
+    max_depth (if > 0) is the maximum number of InnerOps allowed (mainly for
+    fixed-depth tries)
+    """
+
     min_depth: int = betterproto.int32_field(4)
+    """
+    min_depth (if > 0) is the minimum number of InnerOps allowed (mainly for
+    fixed-depth tries)
+    """
 
 
 @dataclass(eq=False, repr=False)
@@ -178,17 +210,23 @@ class InnerSpec(betterproto.Message):
     InnerOp)isLeftNeighbor(spec: InnerSpec, left: InnerOp, right: InnerOp)
     """
 
-    # Child order is the ordering of the children node, must count from 0 iavl
-    # tree is [0, 1] (left then right) merk is [0, 2, 1] (left, right, here)
     child_order: List[int] = betterproto.int32_field(1)
+    """
+    Child order is the ordering of the children node, must count from 0 iavl
+    tree is [0, 1] (left then right) merk is [0, 2, 1] (left, right, here)
+    """
+
     child_size: int = betterproto.int32_field(2)
     min_prefix_length: int = betterproto.int32_field(3)
     max_prefix_length: int = betterproto.int32_field(4)
-    # empty child is the prehash image that is used when one child is nil (eg. 20
-    # bytes of 0)
     empty_child: bytes = betterproto.bytes_field(5)
-    # hash is the algorithm that must be used for each InnerOp
+    """
+    empty child is the prehash image that is used when one child is nil (eg. 20
+    bytes of 0)
+    """
+
     hash: "HashOp" = betterproto.enum_field(6)
+    """hash is the algorithm that must be used for each InnerOp"""
 
 
 @dataclass(eq=False, repr=False)
@@ -227,8 +265,10 @@ class CompressedExistenceProof(betterproto.Message):
     key: bytes = betterproto.bytes_field(1)
     value: bytes = betterproto.bytes_field(2)
     leaf: "LeafOp" = betterproto.message_field(3)
-    # these are indexes into the lookup_inners table in CompressedBatchProof
     path: List[int] = betterproto.int32_field(4)
+    """
+    these are indexes into the lookup_inners table in CompressedBatchProof
+    """
 
 
 @dataclass(eq=False, repr=False)

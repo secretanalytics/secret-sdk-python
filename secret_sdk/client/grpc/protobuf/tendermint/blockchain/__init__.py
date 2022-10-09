@@ -4,7 +4,8 @@
 from dataclasses import dataclass
 
 import betterproto
-from betterproto.grpc.grpclib_server import ServiceBase
+
+from .. import types as _types__
 
 
 @dataclass(eq=False, repr=False)
@@ -53,6 +54,3 @@ class Message(betterproto.Message):
     block_response: "BlockResponse" = betterproto.message_field(3, group="sum")
     status_request: "StatusRequest" = betterproto.message_field(4, group="sum")
     status_response: "StatusResponse" = betterproto.message_field(5, group="sum")
-
-
-from .. import types as _types__

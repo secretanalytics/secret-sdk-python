@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from typing import List
 
 import betterproto
-from betterproto.grpc.grpclib_server import ServiceBase
+import betterproto.lib.google.protobuf as betterproto_lib_google_protobuf
 
 
 @dataclass(eq=False, repr=False)
@@ -16,14 +16,19 @@ class Http(betterproto.Message):
     method to one or more HTTP REST API methods.
     """
 
-    # A list of HTTP configuration rules that apply to individual API methods.
-    # **NOTE:** All service configuration rules follow "last one wins" order.
     rules: List["HttpRule"] = betterproto.message_field(1)
-    # When set to true, URL path parmeters will be fully URI-decoded except in
-    # cases of single segment matches in reserved expansion, where "%2F" will be
-    # left encoded. The default behavior is to not decode RFC 6570 reserved
-    # characters in multi segment matches.
+    """
+    A list of HTTP configuration rules that apply to individual API methods.
+    **NOTE:** All service configuration rules follow "last one wins" order.
+    """
+
     fully_decode_reserved_expansion: bool = betterproto.bool_field(2)
+    """
+    When set to true, URL path parmeters will be fully URI-decoded except in
+    cases of single segment matches in reserved expansion, where "%2F" will be
+    left encoded. The default behavior is to not decode RFC 6570 reserved
+    characters in multi segment matches.
+    """
 
 
 @dataclass(eq=False, repr=False)
@@ -140,47 +145,67 @@ class HttpRule(betterproto.Message):
     repeated fields or map fields.
     """
 
-    # Selects methods to which this rule applies. Refer to
-    # [selector][google.api.DocumentationRule.selector] for syntax details.
     selector: str = betterproto.string_field(1)
-    # Used for listing and getting information about resources.
+    """
+    Selects methods to which this rule applies. Refer to
+    [selector][google.api.DocumentationRule.selector] for syntax details.
+    """
+
     get: str = betterproto.string_field(2, group="pattern")
-    # Used for updating a resource.
+    """Used for listing and getting information about resources."""
+
     put: str = betterproto.string_field(3, group="pattern")
-    # Used for creating a resource.
+    """Used for updating a resource."""
+
     post: str = betterproto.string_field(4, group="pattern")
-    # Used for deleting a resource.
+    """Used for creating a resource."""
+
     delete: str = betterproto.string_field(5, group="pattern")
-    # Used for updating a resource.
+    """Used for deleting a resource."""
+
     patch: str = betterproto.string_field(6, group="pattern")
-    # The custom pattern is used for specifying an HTTP method that is not
-    # included in the `pattern` field, such as HEAD, or "*" to leave the HTTP
-    # method unspecified for this rule. The wild-card rule is useful for services
-    # that provide content to Web (HTML) clients.
+    """Used for updating a resource."""
+
     custom: "CustomHttpPattern" = betterproto.message_field(8, group="pattern")
-    # The name of the request field whose value is mapped to the HTTP body, or
-    # `*` for mapping all fields not captured by the path pattern to the HTTP
-    # body. NOTE: the referred field must not be a repeated field and must be
-    # present at the top-level of request message type.
+    """
+    The custom pattern is used for specifying an HTTP method that is not
+    included in the `pattern` field, such as HEAD, or "*" to leave the HTTP
+    method unspecified for this rule. The wild-card rule is useful for services
+    that provide content to Web (HTML) clients.
+    """
+
     body: str = betterproto.string_field(7)
-    # Optional. The name of the response field whose value is mapped to the HTTP
-    # body of response. Other response fields are ignored. When not set, the
-    # response message will be used as HTTP body of response.
+    """
+    The name of the request field whose value is mapped to the HTTP body, or
+    `*` for mapping all fields not captured by the path pattern to the HTTP
+    body. NOTE: the referred field must not be a repeated field and must be
+    present at the top-level of request message type.
+    """
+
     response_body: str = betterproto.string_field(12)
-    # Additional HTTP bindings for the selector. Nested bindings must not contain
-    # an `additional_bindings` field themselves (that is, the nesting may only be
-    # one level deep).
+    """
+    Optional. The name of the response field whose value is mapped to the HTTP
+    body of response. Other response fields are ignored. When not set, the
+    response message will be used as HTTP body of response.
+    """
+
     additional_bindings: List["HttpRule"] = betterproto.message_field(11)
+    """
+    Additional HTTP bindings for the selector. Nested bindings must not contain
+    an `additional_bindings` field themselves (that is, the nesting may only be
+    one level deep).
+    """
 
 
 @dataclass(eq=False, repr=False)
 class CustomHttpPattern(betterproto.Message):
     """A custom pattern is used for defining custom HTTP verb."""
 
-    # The name of this custom HTTP verb.
     kind: str = betterproto.string_field(1)
-    # The path matched by this custom verb.
+    """The name of this custom HTTP verb."""
+
     path: str = betterproto.string_field(2)
+    """The path matched by this custom verb."""
 
 
 @dataclass(eq=False, repr=False)
@@ -206,15 +231,18 @@ class HttpBody(betterproto.Message):
     unchanged.
     """
 
-    # The HTTP Content-Type header value specifying the content type of the body.
     content_type: str = betterproto.string_field(1)
-    # The HTTP request/response body as raw binary.
+    """
+    The HTTP Content-Type header value specifying the content type of the body.
+    """
+
     data: bytes = betterproto.bytes_field(2)
-    # Application specific response metadata. Must be set in the first response
-    # for streaming APIs.
+    """The HTTP request/response body as raw binary."""
+
     extensions: List["betterproto_lib_google_protobuf.Any"] = betterproto.message_field(
         3
     )
-
-
-import betterproto.lib.google.protobuf as betterproto_lib_google_protobuf
+    """
+    Application specific response metadata. Must be set in the first response
+    for streaming APIs.
+    """

@@ -3,11 +3,25 @@
 # plugin: python-betterproto
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Dict, List
+from typing import (
+    TYPE_CHECKING,
+    Dict,
+    List,
+    Optional,
+)
 
 import betterproto
-from betterproto.grpc.grpclib_server import ServiceBase
+import betterproto.lib.google.protobuf as betterproto_lib_google_protobuf
 import grpclib
+from betterproto.grpc.grpclib_server import ServiceBase
+
+from ...base.query import v1beta1 as __base_query_v1_beta1__
+
+
+if TYPE_CHECKING:
+    import grpclib.server
+    from betterproto.grpc.grpclib_client import MetadataLike
+    from grpclib.metadata import Deadline
 
 
 @dataclass(eq=False, repr=False)
@@ -27,8 +41,8 @@ class MsgSubmitEvidenceResponse(betterproto.Message):
     MsgSubmitEvidenceResponse defines the Msg/SubmitEvidence response type.
     """
 
-    # hash defines the hash of the evidence.
     hash: bytes = betterproto.bytes_field(4)
+    """hash defines the hash of the evidence."""
 
 
 @dataclass(eq=False, repr=False)
@@ -50,8 +64,8 @@ class QueryEvidenceRequest(betterproto.Message):
     QueryEvidenceRequest is the request type for the Query/Evidence RPC method.
     """
 
-    # evidence_hash defines the hash of the requested evidence.
     evidence_hash: bytes = betterproto.bytes_field(1)
+    """evidence_hash defines the hash of the requested evidence."""
 
 
 @dataclass(eq=False, repr=False)
@@ -61,8 +75,8 @@ class QueryEvidenceResponse(betterproto.Message):
     method.
     """
 
-    # evidence returns the requested evidence.
     evidence: "betterproto_lib_google_protobuf.Any" = betterproto.message_field(1)
+    """evidence returns the requested evidence."""
 
 
 @dataclass(eq=False, repr=False)
@@ -72,8 +86,8 @@ class QueryAllEvidenceRequest(betterproto.Message):
     method.
     """
 
-    # pagination defines an optional pagination for the request.
     pagination: "__base_query_v1_beta1__.PageRequest" = betterproto.message_field(1)
+    """pagination defines an optional pagination for the request."""
 
 
 @dataclass(eq=False, repr=False)
@@ -83,80 +97,88 @@ class QueryAllEvidenceResponse(betterproto.Message):
     method.
     """
 
-    # evidence returns all evidences.
     evidence: List["betterproto_lib_google_protobuf.Any"] = betterproto.message_field(1)
-    # pagination defines the pagination in the response.
+    """evidence returns all evidences."""
+
     pagination: "__base_query_v1_beta1__.PageResponse" = betterproto.message_field(2)
+    """pagination defines the pagination in the response."""
 
 
 @dataclass(eq=False, repr=False)
 class GenesisState(betterproto.Message):
     """GenesisState defines the evidence module's genesis state."""
 
-    # evidence defines all the evidence at genesis.
     evidence: List["betterproto_lib_google_protobuf.Any"] = betterproto.message_field(1)
+    """evidence defines all the evidence at genesis."""
 
 
 class MsgStub(betterproto.ServiceStub):
     async def submit_evidence(
         self,
+        msg_submit_evidence: "MsgSubmitEvidence",
         *,
-        submitter: str = "",
-        evidence: "betterproto_lib_google_protobuf.Any" = None
+        timeout: Optional[float] = None,
+        deadline: Optional["Deadline"] = None,
+        metadata: Optional["MetadataLike"] = None
     ) -> "MsgSubmitEvidenceResponse":
-
-        request = MsgSubmitEvidence()
-        request.submitter = submitter
-        if evidence is not None:
-            request.evidence = evidence
-
         return await self._unary_unary(
             "/cosmos.evidence.v1beta1.Msg/SubmitEvidence",
-            request,
+            msg_submit_evidence,
             MsgSubmitEvidenceResponse,
+            timeout=timeout,
+            deadline=deadline,
+            metadata=metadata,
         )
 
 
 class QueryStub(betterproto.ServiceStub):
-    async def evidence(self, *, evidence_hash: bytes = b"") -> "QueryEvidenceResponse":
-
-        request = QueryEvidenceRequest()
-        request.evidence_hash = evidence_hash
-
+    async def evidence(
+        self,
+        query_evidence_request: "QueryEvidenceRequest",
+        *,
+        timeout: Optional[float] = None,
+        deadline: Optional["Deadline"] = None,
+        metadata: Optional["MetadataLike"] = None
+    ) -> "QueryEvidenceResponse":
         return await self._unary_unary(
-            "/cosmos.evidence.v1beta1.Query/Evidence", request, QueryEvidenceResponse
+            "/cosmos.evidence.v1beta1.Query/Evidence",
+            query_evidence_request,
+            QueryEvidenceResponse,
+            timeout=timeout,
+            deadline=deadline,
+            metadata=metadata,
         )
 
     async def all_evidence(
-        self, *, pagination: "__base_query_v1_beta1__.PageRequest" = None
+        self,
+        query_all_evidence_request: "QueryAllEvidenceRequest",
+        *,
+        timeout: Optional[float] = None,
+        deadline: Optional["Deadline"] = None,
+        metadata: Optional["MetadataLike"] = None
     ) -> "QueryAllEvidenceResponse":
-
-        request = QueryAllEvidenceRequest()
-        if pagination is not None:
-            request.pagination = pagination
-
         return await self._unary_unary(
             "/cosmos.evidence.v1beta1.Query/AllEvidence",
-            request,
+            query_all_evidence_request,
             QueryAllEvidenceResponse,
+            timeout=timeout,
+            deadline=deadline,
+            metadata=metadata,
         )
 
 
 class MsgBase(ServiceBase):
     async def submit_evidence(
-        self, submitter: str, evidence: "betterproto_lib_google_protobuf.Any"
+        self, msg_submit_evidence: "MsgSubmitEvidence"
     ) -> "MsgSubmitEvidenceResponse":
         raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
 
-    async def __rpc_submit_evidence(self, stream: grpclib.server.Stream) -> None:
+    async def __rpc_submit_evidence(
+        self,
+        stream: "grpclib.server.Stream[MsgSubmitEvidence, MsgSubmitEvidenceResponse]",
+    ) -> None:
         request = await stream.recv_message()
-
-        request_kwargs = {
-            "submitter": request.submitter,
-            "evidence": request.evidence,
-        }
-
-        response = await self.submit_evidence(**request_kwargs)
+        response = await self.submit_evidence(request)
         await stream.send_message(response)
 
     def __mapping__(self) -> Dict[str, grpclib.const.Handler]:
@@ -171,32 +193,30 @@ class MsgBase(ServiceBase):
 
 
 class QueryBase(ServiceBase):
-    async def evidence(self, evidence_hash: bytes) -> "QueryEvidenceResponse":
+    async def evidence(
+        self, query_evidence_request: "QueryEvidenceRequest"
+    ) -> "QueryEvidenceResponse":
         raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
 
     async def all_evidence(
-        self, pagination: "__base_query_v1_beta1__.PageRequest"
+        self, query_all_evidence_request: "QueryAllEvidenceRequest"
     ) -> "QueryAllEvidenceResponse":
         raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
 
-    async def __rpc_evidence(self, stream: grpclib.server.Stream) -> None:
+    async def __rpc_evidence(
+        self,
+        stream: "grpclib.server.Stream[QueryEvidenceRequest, QueryEvidenceResponse]",
+    ) -> None:
         request = await stream.recv_message()
-
-        request_kwargs = {
-            "evidence_hash": request.evidence_hash,
-        }
-
-        response = await self.evidence(**request_kwargs)
+        response = await self.evidence(request)
         await stream.send_message(response)
 
-    async def __rpc_all_evidence(self, stream: grpclib.server.Stream) -> None:
+    async def __rpc_all_evidence(
+        self,
+        stream: "grpclib.server.Stream[QueryAllEvidenceRequest, QueryAllEvidenceResponse]",
+    ) -> None:
         request = await stream.recv_message()
-
-        request_kwargs = {
-            "pagination": request.pagination,
-        }
-
-        response = await self.all_evidence(**request_kwargs)
+        response = await self.all_evidence(request)
         await stream.send_message(response)
 
     def __mapping__(self) -> Dict[str, grpclib.const.Handler]:
@@ -214,7 +234,3 @@ class QueryBase(ServiceBase):
                 QueryAllEvidenceResponse,
             ),
         }
-
-
-from ...base.query import v1beta1 as __base_query_v1_beta1__
-import betterproto.lib.google.protobuf as betterproto_lib_google_protobuf

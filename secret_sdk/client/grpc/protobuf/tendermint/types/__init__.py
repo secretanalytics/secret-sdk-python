@@ -3,11 +3,18 @@
 # plugin: python-betterproto
 import builtins
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import (
+    datetime,
+    timedelta,
+)
 from typing import List
 
 import betterproto
-from betterproto.grpc.grpclib_server import ServiceBase
+
+from .. import (
+    crypto as _crypto__,
+    version as _version__,
+)
 
 
 class BlockIdFlag(betterproto.Enum):
@@ -23,11 +30,12 @@ class SignedMsgType(betterproto.Enum):
     """SignedMsgType is a type of signed message in the consensus."""
 
     SIGNED_MSG_TYPE_UNKNOWN = 0
-    # Votes
     SIGNED_MSG_TYPE_PREVOTE = 1
+    """Votes"""
+
     SIGNED_MSG_TYPE_PRECOMMIT = 2
-    # Proposals
     SIGNED_MSG_TYPE_PROPOSAL = 32
+    """Proposals"""
 
 
 @dataclass(eq=False, repr=False)
@@ -78,24 +86,29 @@ class BlockId(betterproto.Message):
 class Header(betterproto.Message):
     """Header defines the structure of a Tendermint block header."""
 
-    # basic block info
     version: "_version__.Consensus" = betterproto.message_field(1)
+    """basic block info"""
+
     chain_id: str = betterproto.string_field(2)
     height: int = betterproto.int64_field(3)
     time: datetime = betterproto.message_field(4)
-    # prev block info
     last_block_id: "BlockId" = betterproto.message_field(5)
-    # hashes of block data
+    """prev block info"""
+
     last_commit_hash: bytes = betterproto.bytes_field(6)
+    """hashes of block data"""
+
     data_hash: bytes = betterproto.bytes_field(7)
-    # hashes from the app output from the prev block
     validators_hash: bytes = betterproto.bytes_field(8)
+    """hashes from the app output from the prev block"""
+
     next_validators_hash: bytes = betterproto.bytes_field(9)
     consensus_hash: bytes = betterproto.bytes_field(10)
     app_hash: bytes = betterproto.bytes_field(11)
     last_results_hash: bytes = betterproto.bytes_field(12)
-    # consensus info
     evidence_hash: bytes = betterproto.bytes_field(13)
+    """consensus info"""
+
     proposer_address: bytes = betterproto.bytes_field(14)
 
 
@@ -103,10 +116,12 @@ class Header(betterproto.Message):
 class Data(betterproto.Message):
     """Data contains the set of transactions included in the block"""
 
-    # Txs that will be applied by state @ block.Height+1. NOTE: not all txs here
-    # are valid.  We're just agreeing on the order first. This means that
-    # block.AppHash does not include these txs.
     txs: List[bytes] = betterproto.bytes_field(1)
+    """
+    Txs that will be applied by state @ block.Height+1. NOTE: not all txs here
+    are valid.  We're just agreeing on the order first. This means that
+    block.AppHash does not include these txs.
+    """
 
 
 @dataclass(eq=False, repr=False)
@@ -209,32 +224,44 @@ class ConsensusParams(betterproto.Message):
 class BlockParams(betterproto.Message):
     """BlockParams contains limits on the block size."""
 
-    # Max block size, in bytes. Note: must be greater than 0
     max_bytes: int = betterproto.int64_field(1)
-    # Max gas per block. Note: must be greater or equal to -1
+    """Max block size, in bytes. Note: must be greater than 0"""
+
     max_gas: int = betterproto.int64_field(2)
-    # Minimum time increment between consecutive blocks (in milliseconds) If the
-    # block header timestamp is ahead of the system clock, decrease this value.
-    # Not exposed to the application.
+    """Max gas per block. Note: must be greater or equal to -1"""
+
     time_iota_ms: int = betterproto.int64_field(3)
+    """
+    Minimum time increment between consecutive blocks (in milliseconds) If the
+    block header timestamp is ahead of the system clock, decrease this value.
+    Not exposed to the application.
+    """
 
 
 @dataclass(eq=False, repr=False)
 class EvidenceParams(betterproto.Message):
     """EvidenceParams determine how we handle evidence of malfeasance."""
 
-    # Max age of evidence, in blocks. The basic formula for calculating this is:
-    # MaxAgeDuration / {average block time}.
     max_age_num_blocks: int = betterproto.int64_field(1)
-    # Max age of evidence, in time. It should correspond with an app's "unbonding
-    # period" or other similar mechanism for handling [Nothing-At-Stake
-    # attacks](https://github.com/ethereum/wiki/wiki/Proof-of-Stake-FAQ#what-is-
-    # the-nothing-at-stake-problem-and-how-can-it-be-fixed).
+    """
+    Max age of evidence, in blocks. The basic formula for calculating this is:
+    MaxAgeDuration / {average block time}.
+    """
+
     max_age_duration: timedelta = betterproto.message_field(2)
-    # This sets the maximum size of total evidence in bytes that can be committed
-    # in a single block. and should fall comfortably under the max block bytes.
-    # Default is 1048576 or 1MB
+    """
+    Max age of evidence, in time. It should correspond with an app's "unbonding
+    period" or other similar mechanism for handling [Nothing-At-Stake
+    attacks](https://github.com/ethereum/wiki/wiki/Proof-of-Stake-FAQ#what-is-
+    the-nothing-at-stake-problem-and-how-can-it-be-fixed).
+    """
+
     max_bytes: int = betterproto.int64_field(3)
+    """
+    This sets the maximum size of total evidence in bytes that can be committed
+    in a single block. and should fall comfortably under the max block bytes.
+    Default is 1048576 or 1MB
+    """
 
 
 @dataclass(eq=False, repr=False)
@@ -354,7 +381,3 @@ class CanonicalVote(betterproto.Message):
     block_id: "CanonicalBlockId" = betterproto.message_field(4)
     timestamp: datetime = betterproto.message_field(5)
     chain_id: str = betterproto.string_field(6)
-
-
-from .. import crypto as _crypto__
-from .. import version as _version__

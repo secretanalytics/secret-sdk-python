@@ -2,11 +2,26 @@
 # sources: ibc/core/client/v1/client.proto, ibc/core/client/v1/genesis.proto, ibc/core/client/v1/query.proto, ibc/core/client/v1/tx.proto
 # plugin: python-betterproto
 from dataclasses import dataclass
-from typing import Dict, List
+from typing import (
+    TYPE_CHECKING,
+    Dict,
+    List,
+    Optional,
+)
 
 import betterproto
-from betterproto.grpc.grpclib_server import ServiceBase
+import betterproto.lib.google.protobuf as betterproto_lib_google_protobuf
 import grpclib
+from betterproto.grpc.grpclib_server import ServiceBase
+
+from .....cosmos.base.query import v1beta1 as ____cosmos_base_query_v1_beta1__
+from .....cosmos.upgrade import v1beta1 as ____cosmos_upgrade_v1_beta1__
+
+
+if TYPE_CHECKING:
+    import grpclib.server
+    from betterproto.grpc.grpclib_client import MetadataLike
+    from grpclib.metadata import Deadline
 
 
 @dataclass(eq=False, repr=False)
@@ -16,10 +31,11 @@ class IdentifiedClientState(betterproto.Message):
     identifier field.
     """
 
-    # client identifier
     client_id: str = betterproto.string_field(1)
-    # client state
+    """client identifier"""
+
     client_state: "betterproto_lib_google_protobuf.Any" = betterproto.message_field(2)
+    """client state"""
 
 
 @dataclass(eq=False, repr=False)
@@ -29,12 +45,13 @@ class ConsensusStateWithHeight(betterproto.Message):
     height field.
     """
 
-    # consensus state height
     height: "Height" = betterproto.message_field(1)
-    # consensus state
+    """consensus state height"""
+
     consensus_state: "betterproto_lib_google_protobuf.Any" = betterproto.message_field(
         2
     )
+    """consensus state"""
 
 
 @dataclass(eq=False, repr=False)
@@ -44,10 +61,11 @@ class ClientConsensusStates(betterproto.Message):
     client.
     """
 
-    # client identifier
     client_id: str = betterproto.string_field(1)
-    # consensus states and their heights associated with the client
+    """client identifier"""
+
     consensus_states: List["ConsensusStateWithHeight"] = betterproto.message_field(2)
+    """consensus states and their heights associated with the client"""
 
 
 @dataclass(eq=False, repr=False)
@@ -60,15 +78,22 @@ class ClientUpdateProposal(betterproto.Message):
     height, and chain-id).
     """
 
-    # the title of the update proposal
     title: str = betterproto.string_field(1)
-    # the description of the proposal
+    """the title of the update proposal"""
+
     description: str = betterproto.string_field(2)
-    # the client identifier for the client to be updated if the proposal passes
+    """the description of the proposal"""
+
     subject_client_id: str = betterproto.string_field(3)
-    # the substitute client identifier for the client standing in for the subject
-    # client
+    """
+    the client identifier for the client to be updated if the proposal passes
+    """
+
     substitute_client_id: str = betterproto.string_field(4)
+    """
+    the substitute client identifier for the client standing in for the subject
+    client
+    """
 
 
 @dataclass(eq=False, repr=False)
@@ -81,15 +106,17 @@ class UpgradeProposal(betterproto.Message):
     title: str = betterproto.string_field(1)
     description: str = betterproto.string_field(2)
     plan: "____cosmos_upgrade_v1_beta1__.Plan" = betterproto.message_field(3)
-    # An UpgradedClientState must be provided to perform an IBC breaking upgrade.
-    # This will make the chain commit to the correct upgraded (self) client state
-    # before the upgrade occurs, so that connecting chains can verify that the
-    # new upgraded client is valid by verifying a proof on the previous version
-    # of the chain. This will allow IBC connections to persist smoothly across
-    # planned chain upgrades
     upgraded_client_state: "betterproto_lib_google_protobuf.Any" = (
         betterproto.message_field(4)
     )
+    """
+    An UpgradedClientState must be provided to perform an IBC breaking upgrade.
+    This will make the chain commit to the correct upgraded (self) client state
+    before the upgrade occurs, so that connecting chains can verify that the
+    new upgraded client is valid by verifying a proof on the previous version
+    of the chain. This will allow IBC connections to persist smoothly across
+    planned chain upgrades
+    """
 
 
 @dataclass(eq=False, repr=False)
@@ -105,35 +132,40 @@ class Height(betterproto.Message):
     gets reset
     """
 
-    # the revision that the client is currently on
     revision_number: int = betterproto.uint64_field(1)
-    # the height within the given revision
+    """the revision that the client is currently on"""
+
     revision_height: int = betterproto.uint64_field(2)
+    """the height within the given revision"""
 
 
 @dataclass(eq=False, repr=False)
 class Params(betterproto.Message):
     """Params defines the set of IBC light client parameters."""
 
-    # allowed_clients defines the list of allowed client state types.
     allowed_clients: List[str] = betterproto.string_field(1)
+    """allowed_clients defines the list of allowed client state types."""
 
 
 @dataclass(eq=False, repr=False)
 class GenesisState(betterproto.Message):
     """GenesisState defines the ibc client submodule's genesis state."""
 
-    # client states with their corresponding identifiers
     clients: List["IdentifiedClientState"] = betterproto.message_field(1)
-    # consensus states from each client
+    """client states with their corresponding identifiers"""
+
     clients_consensus: List["ClientConsensusStates"] = betterproto.message_field(2)
-    # metadata from each client
+    """consensus states from each client"""
+
     clients_metadata: List["IdentifiedGenesisMetadata"] = betterproto.message_field(3)
+    """metadata from each client"""
+
     params: "Params" = betterproto.message_field(4)
-    # create localhost on initialization
     create_localhost: bool = betterproto.bool_field(5)
-    # the sequence for the next generated client identifier
+    """create localhost on initialization"""
+
     next_client_sequence: int = betterproto.uint64_field(6)
+    """the sequence for the next generated client identifier"""
 
 
 @dataclass(eq=False, repr=False)
@@ -143,10 +175,11 @@ class GenesisMetadata(betterproto.Message):
     return with ExportMetadata
     """
 
-    # store key of metadata without clientID-prefix
     key: bytes = betterproto.bytes_field(1)
-    # metadata value
+    """store key of metadata without clientID-prefix"""
+
     value: bytes = betterproto.bytes_field(2)
+    """metadata value"""
 
 
 @dataclass(eq=False, repr=False)
@@ -164,15 +197,19 @@ class IdentifiedGenesisMetadata(betterproto.Message):
 class MsgCreateClient(betterproto.Message):
     """MsgCreateClient defines a message to create an IBC client"""
 
-    # light client state
     client_state: "betterproto_lib_google_protobuf.Any" = betterproto.message_field(1)
-    # consensus state associated with the client that corresponds to a given
-    # height.
+    """light client state"""
+
     consensus_state: "betterproto_lib_google_protobuf.Any" = betterproto.message_field(
         2
     )
-    # signer address
+    """
+    consensus state associated with the client that corresponds to a given
+    height.
+    """
+
     signer: str = betterproto.string_field(3)
+    """signer address"""
 
 
 @dataclass(eq=False, repr=False)
@@ -189,12 +226,14 @@ class MsgUpdateClient(betterproto.Message):
     given header.
     """
 
-    # client unique identifier
     client_id: str = betterproto.string_field(1)
-    # header to update the light client
+    """client unique identifier"""
+
     header: "betterproto_lib_google_protobuf.Any" = betterproto.message_field(2)
-    # signer address
+    """header to update the light client"""
+
     signer: str = betterproto.string_field(3)
+    """signer address"""
 
 
 @dataclass(eq=False, repr=False)
@@ -211,21 +250,28 @@ class MsgUpgradeClient(betterproto.Message):
     client state
     """
 
-    # client unique identifier
     client_id: str = betterproto.string_field(1)
-    # upgraded client state
+    """client unique identifier"""
+
     client_state: "betterproto_lib_google_protobuf.Any" = betterproto.message_field(2)
-    # upgraded consensus state, only contains enough information to serve as a
-    # basis of trust in update logic
+    """upgraded client state"""
+
     consensus_state: "betterproto_lib_google_protobuf.Any" = betterproto.message_field(
         3
     )
-    # proof that old chain committed to new client
+    """
+    upgraded consensus state, only contains enough information to serve as a
+    basis of trust in update logic
+    """
+
     proof_upgrade_client: bytes = betterproto.bytes_field(4)
-    # proof that old chain committed to new consensus state
+    """proof that old chain committed to new client"""
+
     proof_upgrade_consensus_state: bytes = betterproto.bytes_field(5)
-    # signer address
+    """proof that old chain committed to new consensus state"""
+
     signer: str = betterproto.string_field(6)
+    """signer address"""
 
 
 @dataclass(eq=False, repr=False)
@@ -244,12 +290,14 @@ class MsgSubmitMisbehaviour(betterproto.Message):
     light client misbehaviour.
     """
 
-    # client unique identifier
     client_id: str = betterproto.string_field(1)
-    # misbehaviour used for freezing the light client
+    """client unique identifier"""
+
     misbehaviour: "betterproto_lib_google_protobuf.Any" = betterproto.message_field(2)
-    # signer address
+    """misbehaviour used for freezing the light client"""
+
     signer: str = betterproto.string_field(3)
+    """signer address"""
 
 
 @dataclass(eq=False, repr=False)
@@ -269,8 +317,8 @@ class QueryClientStateRequest(betterproto.Message):
     method
     """
 
-    # client state unique identifier
     client_id: str = betterproto.string_field(1)
+    """client state unique identifier"""
 
 
 @dataclass(eq=False, repr=False)
@@ -281,12 +329,14 @@ class QueryClientStateResponse(betterproto.Message):
     which the proof was retrieved.
     """
 
-    # client state associated with the request identifier
     client_state: "betterproto_lib_google_protobuf.Any" = betterproto.message_field(1)
-    # merkle proof of existence
+    """client state associated with the request identifier"""
+
     proof: bytes = betterproto.bytes_field(2)
-    # height at which the proof was retrieved
+    """merkle proof of existence"""
+
     proof_height: "Height" = betterproto.message_field(3)
+    """height at which the proof was retrieved"""
 
 
 @dataclass(eq=False, repr=False)
@@ -296,10 +346,10 @@ class QueryClientStatesRequest(betterproto.Message):
     method
     """
 
-    # pagination request
     pagination: "____cosmos_base_query_v1_beta1__.PageRequest" = (
         betterproto.message_field(1)
     )
+    """pagination request"""
 
 
 @dataclass(eq=False, repr=False)
@@ -309,12 +359,13 @@ class QueryClientStatesResponse(betterproto.Message):
     RPC method.
     """
 
-    # list of stored ClientStates of the chain.
     client_states: List["IdentifiedClientState"] = betterproto.message_field(1)
-    # pagination response
+    """list of stored ClientStates of the chain."""
+
     pagination: "____cosmos_base_query_v1_beta1__.PageResponse" = (
         betterproto.message_field(2)
     )
+    """pagination response"""
 
 
 @dataclass(eq=False, repr=False)
@@ -325,15 +376,20 @@ class QueryConsensusStateRequest(betterproto.Message):
     from which the proof was retrieved.
     """
 
-    # client identifier
     client_id: str = betterproto.string_field(1)
-    # consensus state revision number
+    """client identifier"""
+
     revision_number: int = betterproto.uint64_field(2)
-    # consensus state revision height
+    """consensus state revision number"""
+
     revision_height: int = betterproto.uint64_field(3)
-    # latest_height overrrides the height field and queries the latest stored
-    # ConsensusState
+    """consensus state revision height"""
+
     latest_height: bool = betterproto.bool_field(4)
+    """
+    latest_height overrrides the height field and queries the latest stored
+    ConsensusState
+    """
 
 
 @dataclass(eq=False, repr=False)
@@ -343,14 +399,18 @@ class QueryConsensusStateResponse(betterproto.Message):
     Query/ConsensusState RPC method
     """
 
-    # consensus state associated with the client identifier at the given height
     consensus_state: "betterproto_lib_google_protobuf.Any" = betterproto.message_field(
         1
     )
-    # merkle proof of existence
+    """
+    consensus state associated with the client identifier at the given height
+    """
+
     proof: bytes = betterproto.bytes_field(2)
-    # height at which the proof was retrieved
+    """merkle proof of existence"""
+
     proof_height: "Height" = betterproto.message_field(3)
+    """height at which the proof was retrieved"""
 
 
 @dataclass(eq=False, repr=False)
@@ -360,12 +420,13 @@ class QueryConsensusStatesRequest(betterproto.Message):
     Query/ConsensusStates RPC method.
     """
 
-    # client identifier
     client_id: str = betterproto.string_field(1)
-    # pagination request
+    """client identifier"""
+
     pagination: "____cosmos_base_query_v1_beta1__.PageRequest" = (
         betterproto.message_field(2)
     )
+    """pagination request"""
 
 
 @dataclass(eq=False, repr=False)
@@ -375,12 +436,13 @@ class QueryConsensusStatesResponse(betterproto.Message):
     Query/ConsensusStates RPC method
     """
 
-    # consensus states associated with the identifier
     consensus_states: List["ConsensusStateWithHeight"] = betterproto.message_field(1)
-    # pagination response
+    """consensus states associated with the identifier"""
+
     pagination: "____cosmos_base_query_v1_beta1__.PageResponse" = (
         betterproto.message_field(2)
     )
+    """pagination response"""
 
 
 @dataclass(eq=False, repr=False)
@@ -390,8 +452,8 @@ class QueryClientStatusRequest(betterproto.Message):
     method
     """
 
-    # client unique identifier
     client_id: str = betterproto.string_field(1)
+    """client unique identifier"""
 
 
 @dataclass(eq=False, repr=False)
@@ -421,8 +483,8 @@ class QueryClientParamsResponse(betterproto.Message):
     RPC method.
     """
 
-    # params defines the parameters of the module.
     params: "Params" = betterproto.message_field(1)
+    """params defines the parameters of the module."""
 
 
 @dataclass(eq=False, repr=False)
@@ -442,10 +504,10 @@ class QueryUpgradedClientStateResponse(betterproto.Message):
     Query/UpgradedClientState RPC method.
     """
 
-    # client state associated with the request identifier
     upgraded_client_state: "betterproto_lib_google_protobuf.Any" = (
         betterproto.message_field(1)
     )
+    """client state associated with the request identifier"""
 
 
 @dataclass(eq=False, repr=False)
@@ -465,279 +527,269 @@ class QueryUpgradedConsensusStateResponse(betterproto.Message):
     Query/UpgradedConsensusState RPC method.
     """
 
-    # Consensus state associated with the request identifier
     upgraded_consensus_state: "betterproto_lib_google_protobuf.Any" = (
         betterproto.message_field(1)
     )
+    """Consensus state associated with the request identifier"""
 
 
 class MsgStub(betterproto.ServiceStub):
     async def create_client(
         self,
+        msg_create_client: "MsgCreateClient",
         *,
-        client_state: "betterproto_lib_google_protobuf.Any" = None,
-        consensus_state: "betterproto_lib_google_protobuf.Any" = None,
-        signer: str = ""
+        timeout: Optional[float] = None,
+        deadline: Optional["Deadline"] = None,
+        metadata: Optional["MetadataLike"] = None
     ) -> "MsgCreateClientResponse":
-
-        request = MsgCreateClient()
-        if client_state is not None:
-            request.client_state = client_state
-        if consensus_state is not None:
-            request.consensus_state = consensus_state
-        request.signer = signer
-
         return await self._unary_unary(
-            "/ibc.core.client.v1.Msg/CreateClient", request, MsgCreateClientResponse
+            "/ibc.core.client.v1.Msg/CreateClient",
+            msg_create_client,
+            MsgCreateClientResponse,
+            timeout=timeout,
+            deadline=deadline,
+            metadata=metadata,
         )
 
     async def update_client(
         self,
+        msg_update_client: "MsgUpdateClient",
         *,
-        client_id: str = "",
-        header: "betterproto_lib_google_protobuf.Any" = None,
-        signer: str = ""
+        timeout: Optional[float] = None,
+        deadline: Optional["Deadline"] = None,
+        metadata: Optional["MetadataLike"] = None
     ) -> "MsgUpdateClientResponse":
-
-        request = MsgUpdateClient()
-        request.client_id = client_id
-        if header is not None:
-            request.header = header
-        request.signer = signer
-
         return await self._unary_unary(
-            "/ibc.core.client.v1.Msg/UpdateClient", request, MsgUpdateClientResponse
+            "/ibc.core.client.v1.Msg/UpdateClient",
+            msg_update_client,
+            MsgUpdateClientResponse,
+            timeout=timeout,
+            deadline=deadline,
+            metadata=metadata,
         )
 
     async def upgrade_client(
         self,
+        msg_upgrade_client: "MsgUpgradeClient",
         *,
-        client_id: str = "",
-        client_state: "betterproto_lib_google_protobuf.Any" = None,
-        consensus_state: "betterproto_lib_google_protobuf.Any" = None,
-        proof_upgrade_client: bytes = b"",
-        proof_upgrade_consensus_state: bytes = b"",
-        signer: str = ""
+        timeout: Optional[float] = None,
+        deadline: Optional["Deadline"] = None,
+        metadata: Optional["MetadataLike"] = None
     ) -> "MsgUpgradeClientResponse":
-
-        request = MsgUpgradeClient()
-        request.client_id = client_id
-        if client_state is not None:
-            request.client_state = client_state
-        if consensus_state is not None:
-            request.consensus_state = consensus_state
-        request.proof_upgrade_client = proof_upgrade_client
-        request.proof_upgrade_consensus_state = proof_upgrade_consensus_state
-        request.signer = signer
-
         return await self._unary_unary(
-            "/ibc.core.client.v1.Msg/UpgradeClient", request, MsgUpgradeClientResponse
+            "/ibc.core.client.v1.Msg/UpgradeClient",
+            msg_upgrade_client,
+            MsgUpgradeClientResponse,
+            timeout=timeout,
+            deadline=deadline,
+            metadata=metadata,
         )
 
     async def submit_misbehaviour(
         self,
+        msg_submit_misbehaviour: "MsgSubmitMisbehaviour",
         *,
-        client_id: str = "",
-        misbehaviour: "betterproto_lib_google_protobuf.Any" = None,
-        signer: str = ""
+        timeout: Optional[float] = None,
+        deadline: Optional["Deadline"] = None,
+        metadata: Optional["MetadataLike"] = None
     ) -> "MsgSubmitMisbehaviourResponse":
-
-        request = MsgSubmitMisbehaviour()
-        request.client_id = client_id
-        if misbehaviour is not None:
-            request.misbehaviour = misbehaviour
-        request.signer = signer
-
         return await self._unary_unary(
             "/ibc.core.client.v1.Msg/SubmitMisbehaviour",
-            request,
+            msg_submit_misbehaviour,
             MsgSubmitMisbehaviourResponse,
+            timeout=timeout,
+            deadline=deadline,
+            metadata=metadata,
         )
 
 
 class QueryStub(betterproto.ServiceStub):
-    async def client_state(self, *, client_id: str = "") -> "QueryClientStateResponse":
-
-        request = QueryClientStateRequest()
-        request.client_id = client_id
-
+    async def client_state(
+        self,
+        query_client_state_request: "QueryClientStateRequest",
+        *,
+        timeout: Optional[float] = None,
+        deadline: Optional["Deadline"] = None,
+        metadata: Optional["MetadataLike"] = None
+    ) -> "QueryClientStateResponse":
         return await self._unary_unary(
-            "/ibc.core.client.v1.Query/ClientState", request, QueryClientStateResponse
+            "/ibc.core.client.v1.Query/ClientState",
+            query_client_state_request,
+            QueryClientStateResponse,
+            timeout=timeout,
+            deadline=deadline,
+            metadata=metadata,
         )
 
     async def client_states(
-        self, *, pagination: "____cosmos_base_query_v1_beta1__.PageRequest" = None
+        self,
+        query_client_states_request: "QueryClientStatesRequest",
+        *,
+        timeout: Optional[float] = None,
+        deadline: Optional["Deadline"] = None,
+        metadata: Optional["MetadataLike"] = None
     ) -> "QueryClientStatesResponse":
-
-        request = QueryClientStatesRequest()
-        if pagination is not None:
-            request.pagination = pagination
-
         return await self._unary_unary(
-            "/ibc.core.client.v1.Query/ClientStates", request, QueryClientStatesResponse
+            "/ibc.core.client.v1.Query/ClientStates",
+            query_client_states_request,
+            QueryClientStatesResponse,
+            timeout=timeout,
+            deadline=deadline,
+            metadata=metadata,
         )
 
     async def consensus_state(
         self,
+        query_consensus_state_request: "QueryConsensusStateRequest",
         *,
-        client_id: str = "",
-        revision_number: int = 0,
-        revision_height: int = 0,
-        latest_height: bool = False
+        timeout: Optional[float] = None,
+        deadline: Optional["Deadline"] = None,
+        metadata: Optional["MetadataLike"] = None
     ) -> "QueryConsensusStateResponse":
-
-        request = QueryConsensusStateRequest()
-        request.client_id = client_id
-        request.revision_number = revision_number
-        request.revision_height = revision_height
-        request.latest_height = latest_height
-
         return await self._unary_unary(
             "/ibc.core.client.v1.Query/ConsensusState",
-            request,
+            query_consensus_state_request,
             QueryConsensusStateResponse,
+            timeout=timeout,
+            deadline=deadline,
+            metadata=metadata,
         )
 
     async def consensus_states(
         self,
+        query_consensus_states_request: "QueryConsensusStatesRequest",
         *,
-        client_id: str = "",
-        pagination: "____cosmos_base_query_v1_beta1__.PageRequest" = None
+        timeout: Optional[float] = None,
+        deadline: Optional["Deadline"] = None,
+        metadata: Optional["MetadataLike"] = None
     ) -> "QueryConsensusStatesResponse":
-
-        request = QueryConsensusStatesRequest()
-        request.client_id = client_id
-        if pagination is not None:
-            request.pagination = pagination
-
         return await self._unary_unary(
             "/ibc.core.client.v1.Query/ConsensusStates",
-            request,
+            query_consensus_states_request,
             QueryConsensusStatesResponse,
+            timeout=timeout,
+            deadline=deadline,
+            metadata=metadata,
         )
 
     async def client_status(
-        self, *, client_id: str = ""
+        self,
+        query_client_status_request: "QueryClientStatusRequest",
+        *,
+        timeout: Optional[float] = None,
+        deadline: Optional["Deadline"] = None,
+        metadata: Optional["MetadataLike"] = None
     ) -> "QueryClientStatusResponse":
-
-        request = QueryClientStatusRequest()
-        request.client_id = client_id
-
         return await self._unary_unary(
-            "/ibc.core.client.v1.Query/ClientStatus", request, QueryClientStatusResponse
+            "/ibc.core.client.v1.Query/ClientStatus",
+            query_client_status_request,
+            QueryClientStatusResponse,
+            timeout=timeout,
+            deadline=deadline,
+            metadata=metadata,
         )
 
-    async def client_params(self) -> "QueryClientParamsResponse":
-
-        request = QueryClientParamsRequest()
-
+    async def client_params(
+        self,
+        query_client_params_request: "QueryClientParamsRequest",
+        *,
+        timeout: Optional[float] = None,
+        deadline: Optional["Deadline"] = None,
+        metadata: Optional["MetadataLike"] = None
+    ) -> "QueryClientParamsResponse":
         return await self._unary_unary(
-            "/ibc.core.client.v1.Query/ClientParams", request, QueryClientParamsResponse
+            "/ibc.core.client.v1.Query/ClientParams",
+            query_client_params_request,
+            QueryClientParamsResponse,
+            timeout=timeout,
+            deadline=deadline,
+            metadata=metadata,
         )
 
-    async def upgraded_client_state(self) -> "QueryUpgradedClientStateResponse":
-
-        request = QueryUpgradedClientStateRequest()
-
+    async def upgraded_client_state(
+        self,
+        query_upgraded_client_state_request: "QueryUpgradedClientStateRequest",
+        *,
+        timeout: Optional[float] = None,
+        deadline: Optional["Deadline"] = None,
+        metadata: Optional["MetadataLike"] = None
+    ) -> "QueryUpgradedClientStateResponse":
         return await self._unary_unary(
             "/ibc.core.client.v1.Query/UpgradedClientState",
-            request,
+            query_upgraded_client_state_request,
             QueryUpgradedClientStateResponse,
+            timeout=timeout,
+            deadline=deadline,
+            metadata=metadata,
         )
 
-    async def upgraded_consensus_state(self) -> "QueryUpgradedConsensusStateResponse":
-
-        request = QueryUpgradedConsensusStateRequest()
-
+    async def upgraded_consensus_state(
+        self,
+        query_upgraded_consensus_state_request: "QueryUpgradedConsensusStateRequest",
+        *,
+        timeout: Optional[float] = None,
+        deadline: Optional["Deadline"] = None,
+        metadata: Optional["MetadataLike"] = None
+    ) -> "QueryUpgradedConsensusStateResponse":
         return await self._unary_unary(
             "/ibc.core.client.v1.Query/UpgradedConsensusState",
-            request,
+            query_upgraded_consensus_state_request,
             QueryUpgradedConsensusStateResponse,
+            timeout=timeout,
+            deadline=deadline,
+            metadata=metadata,
         )
 
 
 class MsgBase(ServiceBase):
     async def create_client(
-        self,
-        client_state: "betterproto_lib_google_protobuf.Any",
-        consensus_state: "betterproto_lib_google_protobuf.Any",
-        signer: str,
+        self, msg_create_client: "MsgCreateClient"
     ) -> "MsgCreateClientResponse":
         raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
 
     async def update_client(
-        self, client_id: str, header: "betterproto_lib_google_protobuf.Any", signer: str
+        self, msg_update_client: "MsgUpdateClient"
     ) -> "MsgUpdateClientResponse":
         raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
 
     async def upgrade_client(
-        self,
-        client_id: str,
-        client_state: "betterproto_lib_google_protobuf.Any",
-        consensus_state: "betterproto_lib_google_protobuf.Any",
-        proof_upgrade_client: bytes,
-        proof_upgrade_consensus_state: bytes,
-        signer: str,
+        self, msg_upgrade_client: "MsgUpgradeClient"
     ) -> "MsgUpgradeClientResponse":
         raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
 
     async def submit_misbehaviour(
-        self,
-        client_id: str,
-        misbehaviour: "betterproto_lib_google_protobuf.Any",
-        signer: str,
+        self, msg_submit_misbehaviour: "MsgSubmitMisbehaviour"
     ) -> "MsgSubmitMisbehaviourResponse":
         raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
 
-    async def __rpc_create_client(self, stream: grpclib.server.Stream) -> None:
+    async def __rpc_create_client(
+        self, stream: "grpclib.server.Stream[MsgCreateClient, MsgCreateClientResponse]"
+    ) -> None:
         request = await stream.recv_message()
-
-        request_kwargs = {
-            "client_state": request.client_state,
-            "consensus_state": request.consensus_state,
-            "signer": request.signer,
-        }
-
-        response = await self.create_client(**request_kwargs)
+        response = await self.create_client(request)
         await stream.send_message(response)
 
-    async def __rpc_update_client(self, stream: grpclib.server.Stream) -> None:
+    async def __rpc_update_client(
+        self, stream: "grpclib.server.Stream[MsgUpdateClient, MsgUpdateClientResponse]"
+    ) -> None:
         request = await stream.recv_message()
-
-        request_kwargs = {
-            "client_id": request.client_id,
-            "header": request.header,
-            "signer": request.signer,
-        }
-
-        response = await self.update_client(**request_kwargs)
+        response = await self.update_client(request)
         await stream.send_message(response)
 
-    async def __rpc_upgrade_client(self, stream: grpclib.server.Stream) -> None:
+    async def __rpc_upgrade_client(
+        self,
+        stream: "grpclib.server.Stream[MsgUpgradeClient, MsgUpgradeClientResponse]",
+    ) -> None:
         request = await stream.recv_message()
-
-        request_kwargs = {
-            "client_id": request.client_id,
-            "client_state": request.client_state,
-            "consensus_state": request.consensus_state,
-            "proof_upgrade_client": request.proof_upgrade_client,
-            "proof_upgrade_consensus_state": request.proof_upgrade_consensus_state,
-            "signer": request.signer,
-        }
-
-        response = await self.upgrade_client(**request_kwargs)
+        response = await self.upgrade_client(request)
         await stream.send_message(response)
 
-    async def __rpc_submit_misbehaviour(self, stream: grpclib.server.Stream) -> None:
+    async def __rpc_submit_misbehaviour(
+        self,
+        stream: "grpclib.server.Stream[MsgSubmitMisbehaviour, MsgSubmitMisbehaviourResponse]",
+    ) -> None:
         request = await stream.recv_message()
-
-        request_kwargs = {
-            "client_id": request.client_id,
-            "misbehaviour": request.misbehaviour,
-            "signer": request.signer,
-        }
-
-        response = await self.submit_misbehaviour(**request_kwargs)
+        response = await self.submit_misbehaviour(request)
         await stream.send_message(response)
 
     def __mapping__(self) -> Dict[str, grpclib.const.Handler]:
@@ -770,118 +822,109 @@ class MsgBase(ServiceBase):
 
 
 class QueryBase(ServiceBase):
-    async def client_state(self, client_id: str) -> "QueryClientStateResponse":
+    async def client_state(
+        self, query_client_state_request: "QueryClientStateRequest"
+    ) -> "QueryClientStateResponse":
         raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
 
     async def client_states(
-        self, pagination: "____cosmos_base_query_v1_beta1__.PageRequest"
+        self, query_client_states_request: "QueryClientStatesRequest"
     ) -> "QueryClientStatesResponse":
         raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
 
     async def consensus_state(
-        self,
-        client_id: str,
-        revision_number: int,
-        revision_height: int,
-        latest_height: bool,
+        self, query_consensus_state_request: "QueryConsensusStateRequest"
     ) -> "QueryConsensusStateResponse":
         raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
 
     async def consensus_states(
-        self, client_id: str, pagination: "____cosmos_base_query_v1_beta1__.PageRequest"
+        self, query_consensus_states_request: "QueryConsensusStatesRequest"
     ) -> "QueryConsensusStatesResponse":
         raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
 
-    async def client_status(self, client_id: str) -> "QueryClientStatusResponse":
+    async def client_status(
+        self, query_client_status_request: "QueryClientStatusRequest"
+    ) -> "QueryClientStatusResponse":
         raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
 
-    async def client_params(self) -> "QueryClientParamsResponse":
+    async def client_params(
+        self, query_client_params_request: "QueryClientParamsRequest"
+    ) -> "QueryClientParamsResponse":
         raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
 
-    async def upgraded_client_state(self) -> "QueryUpgradedClientStateResponse":
+    async def upgraded_client_state(
+        self, query_upgraded_client_state_request: "QueryUpgradedClientStateRequest"
+    ) -> "QueryUpgradedClientStateResponse":
         raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
 
-    async def upgraded_consensus_state(self) -> "QueryUpgradedConsensusStateResponse":
+    async def upgraded_consensus_state(
+        self,
+        query_upgraded_consensus_state_request: "QueryUpgradedConsensusStateRequest",
+    ) -> "QueryUpgradedConsensusStateResponse":
         raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
 
-    async def __rpc_client_state(self, stream: grpclib.server.Stream) -> None:
+    async def __rpc_client_state(
+        self,
+        stream: "grpclib.server.Stream[QueryClientStateRequest, QueryClientStateResponse]",
+    ) -> None:
         request = await stream.recv_message()
-
-        request_kwargs = {
-            "client_id": request.client_id,
-        }
-
-        response = await self.client_state(**request_kwargs)
+        response = await self.client_state(request)
         await stream.send_message(response)
 
-    async def __rpc_client_states(self, stream: grpclib.server.Stream) -> None:
+    async def __rpc_client_states(
+        self,
+        stream: "grpclib.server.Stream[QueryClientStatesRequest, QueryClientStatesResponse]",
+    ) -> None:
         request = await stream.recv_message()
-
-        request_kwargs = {
-            "pagination": request.pagination,
-        }
-
-        response = await self.client_states(**request_kwargs)
+        response = await self.client_states(request)
         await stream.send_message(response)
 
-    async def __rpc_consensus_state(self, stream: grpclib.server.Stream) -> None:
+    async def __rpc_consensus_state(
+        self,
+        stream: "grpclib.server.Stream[QueryConsensusStateRequest, QueryConsensusStateResponse]",
+    ) -> None:
         request = await stream.recv_message()
-
-        request_kwargs = {
-            "client_id": request.client_id,
-            "revision_number": request.revision_number,
-            "revision_height": request.revision_height,
-            "latest_height": request.latest_height,
-        }
-
-        response = await self.consensus_state(**request_kwargs)
+        response = await self.consensus_state(request)
         await stream.send_message(response)
 
-    async def __rpc_consensus_states(self, stream: grpclib.server.Stream) -> None:
+    async def __rpc_consensus_states(
+        self,
+        stream: "grpclib.server.Stream[QueryConsensusStatesRequest, QueryConsensusStatesResponse]",
+    ) -> None:
         request = await stream.recv_message()
-
-        request_kwargs = {
-            "client_id": request.client_id,
-            "pagination": request.pagination,
-        }
-
-        response = await self.consensus_states(**request_kwargs)
+        response = await self.consensus_states(request)
         await stream.send_message(response)
 
-    async def __rpc_client_status(self, stream: grpclib.server.Stream) -> None:
+    async def __rpc_client_status(
+        self,
+        stream: "grpclib.server.Stream[QueryClientStatusRequest, QueryClientStatusResponse]",
+    ) -> None:
         request = await stream.recv_message()
-
-        request_kwargs = {
-            "client_id": request.client_id,
-        }
-
-        response = await self.client_status(**request_kwargs)
+        response = await self.client_status(request)
         await stream.send_message(response)
 
-    async def __rpc_client_params(self, stream: grpclib.server.Stream) -> None:
+    async def __rpc_client_params(
+        self,
+        stream: "grpclib.server.Stream[QueryClientParamsRequest, QueryClientParamsResponse]",
+    ) -> None:
         request = await stream.recv_message()
-
-        request_kwargs = {}
-
-        response = await self.client_params(**request_kwargs)
+        response = await self.client_params(request)
         await stream.send_message(response)
 
-    async def __rpc_upgraded_client_state(self, stream: grpclib.server.Stream) -> None:
+    async def __rpc_upgraded_client_state(
+        self,
+        stream: "grpclib.server.Stream[QueryUpgradedClientStateRequest, QueryUpgradedClientStateResponse]",
+    ) -> None:
         request = await stream.recv_message()
-
-        request_kwargs = {}
-
-        response = await self.upgraded_client_state(**request_kwargs)
+        response = await self.upgraded_client_state(request)
         await stream.send_message(response)
 
     async def __rpc_upgraded_consensus_state(
-        self, stream: grpclib.server.Stream
+        self,
+        stream: "grpclib.server.Stream[QueryUpgradedConsensusStateRequest, QueryUpgradedConsensusStateResponse]",
     ) -> None:
         request = await stream.recv_message()
-
-        request_kwargs = {}
-
-        response = await self.upgraded_consensus_state(**request_kwargs)
+        response = await self.upgraded_consensus_state(request)
         await stream.send_message(response)
 
     def __mapping__(self) -> Dict[str, grpclib.const.Handler]:
@@ -935,8 +978,3 @@ class QueryBase(ServiceBase):
                 QueryUpgradedConsensusStateResponse,
             ),
         }
-
-
-from .....cosmos.base.query import v1beta1 as ____cosmos_base_query_v1_beta1__
-from .....cosmos.upgrade import v1beta1 as ____cosmos_upgrade_v1_beta1__
-import betterproto.lib.google.protobuf as betterproto_lib_google_protobuf

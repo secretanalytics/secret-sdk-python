@@ -3,11 +3,27 @@
 # plugin: python-betterproto
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Dict, List, Optional
+from typing import (
+    TYPE_CHECKING,
+    Dict,
+    List,
+    Optional,
+)
 
 import betterproto
-from betterproto.grpc.grpclib_server import ServiceBase
 import grpclib
+from betterproto.grpc.grpclib_server import ServiceBase
+
+from .. import (
+    crypto as _crypto__,
+    types as _types__,
+)
+
+
+if TYPE_CHECKING:
+    import grpclib.server
+    from betterproto.grpc.grpclib_client import MetadataLike
+    from grpclib.metadata import Deadline
 
 
 class CheckTxType(betterproto.Enum):
@@ -230,8 +246,9 @@ class ResponseSetOption(betterproto.Message):
     """nondeterministic"""
 
     code: int = betterproto.uint32_field(1)
-    # bytes data = 2;
     log: str = betterproto.string_field(3)
+    """bytes data = 2;"""
+
     info: str = betterproto.string_field(4)
 
 
@@ -245,8 +262,9 @@ class ResponseInitChain(betterproto.Message):
 @dataclass(eq=False, repr=False)
 class ResponseQuery(betterproto.Message):
     code: int = betterproto.uint32_field(1)
-    # bytes data = 2; // use "value" instead.
     log: str = betterproto.string_field(3)
+    """bytes data = 2; // use "value" instead."""
+
     info: str = betterproto.string_field(4)
     index: int = betterproto.int64_field(5)
     key: bytes = betterproto.bytes_field(6)
@@ -294,8 +312,9 @@ class ResponseEndBlock(betterproto.Message):
 
 @dataclass(eq=False, repr=False)
 class ResponseCommit(betterproto.Message):
-    # reserve 1
     data: bytes = betterproto.bytes_field(2)
+    """reserve 1"""
+
     retain_height: int = betterproto.int64_field(3)
 
 
@@ -338,10 +357,11 @@ class ConsensusParams(betterproto.Message):
 class BlockParams(betterproto.Message):
     """BlockParams contains limits on the block size."""
 
-    # Note: must be greater than 0
     max_bytes: int = betterproto.int64_field(1)
-    # Note: must be greater or equal to -1
+    """Note: must be greater than 0"""
+
     max_gas: int = betterproto.int64_field(2)
+    """Note: must be greater or equal to -1"""
 
 
 @dataclass(eq=False, repr=False)
@@ -389,8 +409,8 @@ class Validator(betterproto.Message):
     """Validator"""
 
     address: bytes = betterproto.bytes_field(1)
-    # PubKey pub_key = 2 [(gogoproto.nullable)=false];
     power: int = betterproto.int64_field(3)
+    """PubKey pub_key = 2 [(gogoproto.nullable)=false];"""
 
 
 @dataclass(eq=False, repr=False)
@@ -412,16 +432,21 @@ class VoteInfo(betterproto.Message):
 @dataclass(eq=False, repr=False)
 class Evidence(betterproto.Message):
     type: "EvidenceType" = betterproto.enum_field(1)
-    # The offending validator
     validator: "Validator" = betterproto.message_field(2)
-    # The height when the offense occurred
+    """The offending validator"""
+
     height: int = betterproto.int64_field(3)
-    # The corresponding time where the offense occurred
+    """The height when the offense occurred"""
+
     time: datetime = betterproto.message_field(4)
-    # Total voting power of the validator set in case the ABCI application does
-    # not store historical validators.
-    # https://github.com/tendermint/tendermint/issues/4581
+    """The corresponding time where the offense occurred"""
+
     total_voting_power: int = betterproto.int64_field(5)
+    """
+    Total voting power of the validator set in case the ABCI application does
+    not store historical validators.
+    https://github.com/tendermint/tendermint/issues/4581
+    """
 
 
 @dataclass(eq=False, repr=False)
@@ -434,438 +459,433 @@ class Snapshot(betterproto.Message):
 
 
 class AbciApplicationStub(betterproto.ServiceStub):
-    async def echo(self, *, message: str = "") -> "ResponseEcho":
-
-        request = RequestEcho()
-        request.message = message
-
+    async def echo(
+        self,
+        request_echo: "RequestEcho",
+        *,
+        timeout: Optional[float] = None,
+        deadline: Optional["Deadline"] = None,
+        metadata: Optional["MetadataLike"] = None
+    ) -> "ResponseEcho":
         return await self._unary_unary(
-            "/tendermint.abci.ABCIApplication/Echo", request, ResponseEcho
+            "/tendermint.abci.ABCIApplication/Echo",
+            request_echo,
+            ResponseEcho,
+            timeout=timeout,
+            deadline=deadline,
+            metadata=metadata,
         )
 
-    async def flush(self) -> "ResponseFlush":
-
-        request = RequestFlush()
-
+    async def flush(
+        self,
+        request_flush: "RequestFlush",
+        *,
+        timeout: Optional[float] = None,
+        deadline: Optional["Deadline"] = None,
+        metadata: Optional["MetadataLike"] = None
+    ) -> "ResponseFlush":
         return await self._unary_unary(
-            "/tendermint.abci.ABCIApplication/Flush", request, ResponseFlush
+            "/tendermint.abci.ABCIApplication/Flush",
+            request_flush,
+            ResponseFlush,
+            timeout=timeout,
+            deadline=deadline,
+            metadata=metadata,
         )
 
     async def info(
-        self, *, version: str = "", block_version: int = 0, p2_p_version: int = 0
+        self,
+        request_info: "RequestInfo",
+        *,
+        timeout: Optional[float] = None,
+        deadline: Optional["Deadline"] = None,
+        metadata: Optional["MetadataLike"] = None
     ) -> "ResponseInfo":
-
-        request = RequestInfo()
-        request.version = version
-        request.block_version = block_version
-        request.p2_p_version = p2_p_version
-
         return await self._unary_unary(
-            "/tendermint.abci.ABCIApplication/Info", request, ResponseInfo
+            "/tendermint.abci.ABCIApplication/Info",
+            request_info,
+            ResponseInfo,
+            timeout=timeout,
+            deadline=deadline,
+            metadata=metadata,
         )
 
     async def set_option(
-        self, *, key: str = "", value: str = ""
+        self,
+        request_set_option: "RequestSetOption",
+        *,
+        timeout: Optional[float] = None,
+        deadline: Optional["Deadline"] = None,
+        metadata: Optional["MetadataLike"] = None
     ) -> "ResponseSetOption":
-
-        request = RequestSetOption()
-        request.key = key
-        request.value = value
-
         return await self._unary_unary(
-            "/tendermint.abci.ABCIApplication/SetOption", request, ResponseSetOption
+            "/tendermint.abci.ABCIApplication/SetOption",
+            request_set_option,
+            ResponseSetOption,
+            timeout=timeout,
+            deadline=deadline,
+            metadata=metadata,
         )
 
-    async def deliver_tx(self, *, tx: bytes = b"") -> "ResponseDeliverTx":
-
-        request = RequestDeliverTx()
-        request.tx = tx
-
+    async def deliver_tx(
+        self,
+        request_deliver_tx: "RequestDeliverTx",
+        *,
+        timeout: Optional[float] = None,
+        deadline: Optional["Deadline"] = None,
+        metadata: Optional["MetadataLike"] = None
+    ) -> "ResponseDeliverTx":
         return await self._unary_unary(
-            "/tendermint.abci.ABCIApplication/DeliverTx", request, ResponseDeliverTx
+            "/tendermint.abci.ABCIApplication/DeliverTx",
+            request_deliver_tx,
+            ResponseDeliverTx,
+            timeout=timeout,
+            deadline=deadline,
+            metadata=metadata,
         )
 
     async def check_tx(
-        self, *, tx: bytes = b"", type: "CheckTxType" = 0
+        self,
+        request_check_tx: "RequestCheckTx",
+        *,
+        timeout: Optional[float] = None,
+        deadline: Optional["Deadline"] = None,
+        metadata: Optional["MetadataLike"] = None
     ) -> "ResponseCheckTx":
-
-        request = RequestCheckTx()
-        request.tx = tx
-        request.type = type
-
         return await self._unary_unary(
-            "/tendermint.abci.ABCIApplication/CheckTx", request, ResponseCheckTx
+            "/tendermint.abci.ABCIApplication/CheckTx",
+            request_check_tx,
+            ResponseCheckTx,
+            timeout=timeout,
+            deadline=deadline,
+            metadata=metadata,
         )
 
     async def query(
-        self, *, data: bytes = b"", path: str = "", height: int = 0, prove: bool = False
+        self,
+        request_query: "RequestQuery",
+        *,
+        timeout: Optional[float] = None,
+        deadline: Optional["Deadline"] = None,
+        metadata: Optional["MetadataLike"] = None
     ) -> "ResponseQuery":
-
-        request = RequestQuery()
-        request.data = data
-        request.path = path
-        request.height = height
-        request.prove = prove
-
         return await self._unary_unary(
-            "/tendermint.abci.ABCIApplication/Query", request, ResponseQuery
+            "/tendermint.abci.ABCIApplication/Query",
+            request_query,
+            ResponseQuery,
+            timeout=timeout,
+            deadline=deadline,
+            metadata=metadata,
         )
 
-    async def commit(self) -> "ResponseCommit":
-
-        request = RequestCommit()
-
+    async def commit(
+        self,
+        request_commit: "RequestCommit",
+        *,
+        timeout: Optional[float] = None,
+        deadline: Optional["Deadline"] = None,
+        metadata: Optional["MetadataLike"] = None
+    ) -> "ResponseCommit":
         return await self._unary_unary(
-            "/tendermint.abci.ABCIApplication/Commit", request, ResponseCommit
+            "/tendermint.abci.ABCIApplication/Commit",
+            request_commit,
+            ResponseCommit,
+            timeout=timeout,
+            deadline=deadline,
+            metadata=metadata,
         )
 
     async def init_chain(
         self,
+        request_init_chain: "RequestInitChain",
         *,
-        time: datetime = None,
-        chain_id: str = "",
-        consensus_params: "ConsensusParams" = None,
-        validators: Optional[List["ValidatorUpdate"]] = None,
-        app_state_bytes: bytes = b"",
-        initial_height: int = 0
+        timeout: Optional[float] = None,
+        deadline: Optional["Deadline"] = None,
+        metadata: Optional["MetadataLike"] = None
     ) -> "ResponseInitChain":
-        validators = validators or []
-
-        request = RequestInitChain()
-        if time is not None:
-            request.time = time
-        request.chain_id = chain_id
-        if consensus_params is not None:
-            request.consensus_params = consensus_params
-        if validators is not None:
-            request.validators = validators
-        request.app_state_bytes = app_state_bytes
-        request.initial_height = initial_height
-
         return await self._unary_unary(
-            "/tendermint.abci.ABCIApplication/InitChain", request, ResponseInitChain
+            "/tendermint.abci.ABCIApplication/InitChain",
+            request_init_chain,
+            ResponseInitChain,
+            timeout=timeout,
+            deadline=deadline,
+            metadata=metadata,
         )
 
     async def begin_block(
         self,
+        request_begin_block: "RequestBeginBlock",
         *,
-        hash: bytes = b"",
-        header: "_types__.Header" = None,
-        last_commit_info: "LastCommitInfo" = None,
-        byzantine_validators: Optional[List["Evidence"]] = None
+        timeout: Optional[float] = None,
+        deadline: Optional["Deadline"] = None,
+        metadata: Optional["MetadataLike"] = None
     ) -> "ResponseBeginBlock":
-        byzantine_validators = byzantine_validators or []
-
-        request = RequestBeginBlock()
-        request.hash = hash
-        if header is not None:
-            request.header = header
-        if last_commit_info is not None:
-            request.last_commit_info = last_commit_info
-        if byzantine_validators is not None:
-            request.byzantine_validators = byzantine_validators
-
         return await self._unary_unary(
-            "/tendermint.abci.ABCIApplication/BeginBlock", request, ResponseBeginBlock
+            "/tendermint.abci.ABCIApplication/BeginBlock",
+            request_begin_block,
+            ResponseBeginBlock,
+            timeout=timeout,
+            deadline=deadline,
+            metadata=metadata,
         )
 
-    async def end_block(self, *, height: int = 0) -> "ResponseEndBlock":
-
-        request = RequestEndBlock()
-        request.height = height
-
+    async def end_block(
+        self,
+        request_end_block: "RequestEndBlock",
+        *,
+        timeout: Optional[float] = None,
+        deadline: Optional["Deadline"] = None,
+        metadata: Optional["MetadataLike"] = None
+    ) -> "ResponseEndBlock":
         return await self._unary_unary(
-            "/tendermint.abci.ABCIApplication/EndBlock", request, ResponseEndBlock
+            "/tendermint.abci.ABCIApplication/EndBlock",
+            request_end_block,
+            ResponseEndBlock,
+            timeout=timeout,
+            deadline=deadline,
+            metadata=metadata,
         )
 
-    async def list_snapshots(self) -> "ResponseListSnapshots":
-
-        request = RequestListSnapshots()
-
+    async def list_snapshots(
+        self,
+        request_list_snapshots: "RequestListSnapshots",
+        *,
+        timeout: Optional[float] = None,
+        deadline: Optional["Deadline"] = None,
+        metadata: Optional["MetadataLike"] = None
+    ) -> "ResponseListSnapshots":
         return await self._unary_unary(
             "/tendermint.abci.ABCIApplication/ListSnapshots",
-            request,
+            request_list_snapshots,
             ResponseListSnapshots,
+            timeout=timeout,
+            deadline=deadline,
+            metadata=metadata,
         )
 
     async def offer_snapshot(
-        self, *, snapshot: "Snapshot" = None, app_hash: bytes = b""
+        self,
+        request_offer_snapshot: "RequestOfferSnapshot",
+        *,
+        timeout: Optional[float] = None,
+        deadline: Optional["Deadline"] = None,
+        metadata: Optional["MetadataLike"] = None
     ) -> "ResponseOfferSnapshot":
-
-        request = RequestOfferSnapshot()
-        if snapshot is not None:
-            request.snapshot = snapshot
-        request.app_hash = app_hash
-
         return await self._unary_unary(
             "/tendermint.abci.ABCIApplication/OfferSnapshot",
-            request,
+            request_offer_snapshot,
             ResponseOfferSnapshot,
+            timeout=timeout,
+            deadline=deadline,
+            metadata=metadata,
         )
 
     async def load_snapshot_chunk(
-        self, *, height: int = 0, format: int = 0, chunk: int = 0
+        self,
+        request_load_snapshot_chunk: "RequestLoadSnapshotChunk",
+        *,
+        timeout: Optional[float] = None,
+        deadline: Optional["Deadline"] = None,
+        metadata: Optional["MetadataLike"] = None
     ) -> "ResponseLoadSnapshotChunk":
-
-        request = RequestLoadSnapshotChunk()
-        request.height = height
-        request.format = format
-        request.chunk = chunk
-
         return await self._unary_unary(
             "/tendermint.abci.ABCIApplication/LoadSnapshotChunk",
-            request,
+            request_load_snapshot_chunk,
             ResponseLoadSnapshotChunk,
+            timeout=timeout,
+            deadline=deadline,
+            metadata=metadata,
         )
 
     async def apply_snapshot_chunk(
-        self, *, index: int = 0, chunk: bytes = b"", sender: str = ""
+        self,
+        request_apply_snapshot_chunk: "RequestApplySnapshotChunk",
+        *,
+        timeout: Optional[float] = None,
+        deadline: Optional["Deadline"] = None,
+        metadata: Optional["MetadataLike"] = None
     ) -> "ResponseApplySnapshotChunk":
-
-        request = RequestApplySnapshotChunk()
-        request.index = index
-        request.chunk = chunk
-        request.sender = sender
-
         return await self._unary_unary(
             "/tendermint.abci.ABCIApplication/ApplySnapshotChunk",
-            request,
+            request_apply_snapshot_chunk,
             ResponseApplySnapshotChunk,
+            timeout=timeout,
+            deadline=deadline,
+            metadata=metadata,
         )
 
 
 class AbciApplicationBase(ServiceBase):
-    async def echo(self, message: str) -> "ResponseEcho":
+    async def echo(self, request_echo: "RequestEcho") -> "ResponseEcho":
         raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
 
-    async def flush(self) -> "ResponseFlush":
+    async def flush(self, request_flush: "RequestFlush") -> "ResponseFlush":
         raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
 
-    async def info(
-        self, version: str, block_version: int, p2_p_version: int
-    ) -> "ResponseInfo":
+    async def info(self, request_info: "RequestInfo") -> "ResponseInfo":
         raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
 
-    async def set_option(self, key: str, value: str) -> "ResponseSetOption":
+    async def set_option(
+        self, request_set_option: "RequestSetOption"
+    ) -> "ResponseSetOption":
         raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
 
-    async def deliver_tx(self, tx: bytes) -> "ResponseDeliverTx":
+    async def deliver_tx(
+        self, request_deliver_tx: "RequestDeliverTx"
+    ) -> "ResponseDeliverTx":
         raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
 
-    async def check_tx(self, tx: bytes, type: "CheckTxType") -> "ResponseCheckTx":
+    async def check_tx(self, request_check_tx: "RequestCheckTx") -> "ResponseCheckTx":
         raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
 
-    async def query(
-        self, data: bytes, path: str, height: int, prove: bool
-    ) -> "ResponseQuery":
+    async def query(self, request_query: "RequestQuery") -> "ResponseQuery":
         raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
 
-    async def commit(self) -> "ResponseCommit":
+    async def commit(self, request_commit: "RequestCommit") -> "ResponseCommit":
         raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
 
     async def init_chain(
-        self,
-        time: datetime,
-        chain_id: str,
-        consensus_params: "ConsensusParams",
-        validators: Optional[List["ValidatorUpdate"]],
-        app_state_bytes: bytes,
-        initial_height: int,
+        self, request_init_chain: "RequestInitChain"
     ) -> "ResponseInitChain":
         raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
 
     async def begin_block(
-        self,
-        hash: bytes,
-        header: "_types__.Header",
-        last_commit_info: "LastCommitInfo",
-        byzantine_validators: Optional[List["Evidence"]],
+        self, request_begin_block: "RequestBeginBlock"
     ) -> "ResponseBeginBlock":
         raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
 
-    async def end_block(self, height: int) -> "ResponseEndBlock":
+    async def end_block(
+        self, request_end_block: "RequestEndBlock"
+    ) -> "ResponseEndBlock":
         raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
 
-    async def list_snapshots(self) -> "ResponseListSnapshots":
+    async def list_snapshots(
+        self, request_list_snapshots: "RequestListSnapshots"
+    ) -> "ResponseListSnapshots":
         raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
 
     async def offer_snapshot(
-        self, snapshot: "Snapshot", app_hash: bytes
+        self, request_offer_snapshot: "RequestOfferSnapshot"
     ) -> "ResponseOfferSnapshot":
         raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
 
     async def load_snapshot_chunk(
-        self, height: int, format: int, chunk: int
+        self, request_load_snapshot_chunk: "RequestLoadSnapshotChunk"
     ) -> "ResponseLoadSnapshotChunk":
         raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
 
     async def apply_snapshot_chunk(
-        self, index: int, chunk: bytes, sender: str
+        self, request_apply_snapshot_chunk: "RequestApplySnapshotChunk"
     ) -> "ResponseApplySnapshotChunk":
         raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
 
-    async def __rpc_echo(self, stream: grpclib.server.Stream) -> None:
+    async def __rpc_echo(
+        self, stream: "grpclib.server.Stream[RequestEcho, ResponseEcho]"
+    ) -> None:
         request = await stream.recv_message()
-
-        request_kwargs = {
-            "message": request.message,
-        }
-
-        response = await self.echo(**request_kwargs)
+        response = await self.echo(request)
         await stream.send_message(response)
 
-    async def __rpc_flush(self, stream: grpclib.server.Stream) -> None:
+    async def __rpc_flush(
+        self, stream: "grpclib.server.Stream[RequestFlush, ResponseFlush]"
+    ) -> None:
         request = await stream.recv_message()
-
-        request_kwargs = {}
-
-        response = await self.flush(**request_kwargs)
+        response = await self.flush(request)
         await stream.send_message(response)
 
-    async def __rpc_info(self, stream: grpclib.server.Stream) -> None:
+    async def __rpc_info(
+        self, stream: "grpclib.server.Stream[RequestInfo, ResponseInfo]"
+    ) -> None:
         request = await stream.recv_message()
-
-        request_kwargs = {
-            "version": request.version,
-            "block_version": request.block_version,
-            "p2_p_version": request.p2_p_version,
-        }
-
-        response = await self.info(**request_kwargs)
+        response = await self.info(request)
         await stream.send_message(response)
 
-    async def __rpc_set_option(self, stream: grpclib.server.Stream) -> None:
+    async def __rpc_set_option(
+        self, stream: "grpclib.server.Stream[RequestSetOption, ResponseSetOption]"
+    ) -> None:
         request = await stream.recv_message()
-
-        request_kwargs = {
-            "key": request.key,
-            "value": request.value,
-        }
-
-        response = await self.set_option(**request_kwargs)
+        response = await self.set_option(request)
         await stream.send_message(response)
 
-    async def __rpc_deliver_tx(self, stream: grpclib.server.Stream) -> None:
+    async def __rpc_deliver_tx(
+        self, stream: "grpclib.server.Stream[RequestDeliverTx, ResponseDeliverTx]"
+    ) -> None:
         request = await stream.recv_message()
-
-        request_kwargs = {
-            "tx": request.tx,
-        }
-
-        response = await self.deliver_tx(**request_kwargs)
+        response = await self.deliver_tx(request)
         await stream.send_message(response)
 
-    async def __rpc_check_tx(self, stream: grpclib.server.Stream) -> None:
+    async def __rpc_check_tx(
+        self, stream: "grpclib.server.Stream[RequestCheckTx, ResponseCheckTx]"
+    ) -> None:
         request = await stream.recv_message()
-
-        request_kwargs = {
-            "tx": request.tx,
-            "type": request.type,
-        }
-
-        response = await self.check_tx(**request_kwargs)
+        response = await self.check_tx(request)
         await stream.send_message(response)
 
-    async def __rpc_query(self, stream: grpclib.server.Stream) -> None:
+    async def __rpc_query(
+        self, stream: "grpclib.server.Stream[RequestQuery, ResponseQuery]"
+    ) -> None:
         request = await stream.recv_message()
-
-        request_kwargs = {
-            "data": request.data,
-            "path": request.path,
-            "height": request.height,
-            "prove": request.prove,
-        }
-
-        response = await self.query(**request_kwargs)
+        response = await self.query(request)
         await stream.send_message(response)
 
-    async def __rpc_commit(self, stream: grpclib.server.Stream) -> None:
+    async def __rpc_commit(
+        self, stream: "grpclib.server.Stream[RequestCommit, ResponseCommit]"
+    ) -> None:
         request = await stream.recv_message()
-
-        request_kwargs = {}
-
-        response = await self.commit(**request_kwargs)
+        response = await self.commit(request)
         await stream.send_message(response)
 
-    async def __rpc_init_chain(self, stream: grpclib.server.Stream) -> None:
+    async def __rpc_init_chain(
+        self, stream: "grpclib.server.Stream[RequestInitChain, ResponseInitChain]"
+    ) -> None:
         request = await stream.recv_message()
-
-        request_kwargs = {
-            "time": request.time,
-            "chain_id": request.chain_id,
-            "consensus_params": request.consensus_params,
-            "validators": request.validators,
-            "app_state_bytes": request.app_state_bytes,
-            "initial_height": request.initial_height,
-        }
-
-        response = await self.init_chain(**request_kwargs)
+        response = await self.init_chain(request)
         await stream.send_message(response)
 
-    async def __rpc_begin_block(self, stream: grpclib.server.Stream) -> None:
+    async def __rpc_begin_block(
+        self, stream: "grpclib.server.Stream[RequestBeginBlock, ResponseBeginBlock]"
+    ) -> None:
         request = await stream.recv_message()
-
-        request_kwargs = {
-            "hash": request.hash,
-            "header": request.header,
-            "last_commit_info": request.last_commit_info,
-            "byzantine_validators": request.byzantine_validators,
-        }
-
-        response = await self.begin_block(**request_kwargs)
+        response = await self.begin_block(request)
         await stream.send_message(response)
 
-    async def __rpc_end_block(self, stream: grpclib.server.Stream) -> None:
+    async def __rpc_end_block(
+        self, stream: "grpclib.server.Stream[RequestEndBlock, ResponseEndBlock]"
+    ) -> None:
         request = await stream.recv_message()
-
-        request_kwargs = {
-            "height": request.height,
-        }
-
-        response = await self.end_block(**request_kwargs)
+        response = await self.end_block(request)
         await stream.send_message(response)
 
-    async def __rpc_list_snapshots(self, stream: grpclib.server.Stream) -> None:
+    async def __rpc_list_snapshots(
+        self,
+        stream: "grpclib.server.Stream[RequestListSnapshots, ResponseListSnapshots]",
+    ) -> None:
         request = await stream.recv_message()
-
-        request_kwargs = {}
-
-        response = await self.list_snapshots(**request_kwargs)
+        response = await self.list_snapshots(request)
         await stream.send_message(response)
 
-    async def __rpc_offer_snapshot(self, stream: grpclib.server.Stream) -> None:
+    async def __rpc_offer_snapshot(
+        self,
+        stream: "grpclib.server.Stream[RequestOfferSnapshot, ResponseOfferSnapshot]",
+    ) -> None:
         request = await stream.recv_message()
-
-        request_kwargs = {
-            "snapshot": request.snapshot,
-            "app_hash": request.app_hash,
-        }
-
-        response = await self.offer_snapshot(**request_kwargs)
+        response = await self.offer_snapshot(request)
         await stream.send_message(response)
 
-    async def __rpc_load_snapshot_chunk(self, stream: grpclib.server.Stream) -> None:
+    async def __rpc_load_snapshot_chunk(
+        self,
+        stream: "grpclib.server.Stream[RequestLoadSnapshotChunk, ResponseLoadSnapshotChunk]",
+    ) -> None:
         request = await stream.recv_message()
-
-        request_kwargs = {
-            "height": request.height,
-            "format": request.format,
-            "chunk": request.chunk,
-        }
-
-        response = await self.load_snapshot_chunk(**request_kwargs)
+        response = await self.load_snapshot_chunk(request)
         await stream.send_message(response)
 
-    async def __rpc_apply_snapshot_chunk(self, stream: grpclib.server.Stream) -> None:
+    async def __rpc_apply_snapshot_chunk(
+        self,
+        stream: "grpclib.server.Stream[RequestApplySnapshotChunk, ResponseApplySnapshotChunk]",
+    ) -> None:
         request = await stream.recv_message()
-
-        request_kwargs = {
-            "index": request.index,
-            "chunk": request.chunk,
-            "sender": request.sender,
-        }
-
-        response = await self.apply_snapshot_chunk(**request_kwargs)
+        response = await self.apply_snapshot_chunk(request)
         await stream.send_message(response)
 
     def __mapping__(self) -> Dict[str, grpclib.const.Handler]:
@@ -961,7 +981,3 @@ class AbciApplicationBase(ServiceBase):
                 ResponseApplySnapshotChunk,
             ),
         }
-
-
-from .. import crypto as _crypto__
-from .. import types as _types__

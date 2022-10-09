@@ -5,7 +5,8 @@ from dataclasses import dataclass
 from typing import List
 
 import betterproto
-from betterproto.grpc.grpclib_server import ServiceBase
+
+from ..... import ics23 as ____ics23__
 
 
 @dataclass(eq=False, repr=False)
@@ -50,6 +51,3 @@ class MerkleProof(betterproto.Message):
     """
 
     proofs: List["____ics23__.CommitmentProof"] = betterproto.message_field(1)
-
-
-from ..... import ics23 as ____ics23__

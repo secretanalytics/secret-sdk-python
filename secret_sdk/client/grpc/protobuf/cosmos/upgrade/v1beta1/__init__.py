@@ -4,11 +4,23 @@
 import warnings
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Dict, List
+from typing import (
+    TYPE_CHECKING,
+    Dict,
+    List,
+    Optional,
+)
 
 import betterproto
-from betterproto.grpc.grpclib_server import ServiceBase
+import betterproto.lib.google.protobuf as betterproto_lib_google_protobuf
 import grpclib
+from betterproto.grpc.grpclib_server import ServiceBase
+
+
+if TYPE_CHECKING:
+    import grpclib.server
+    from betterproto.grpc.grpclib_client import MetadataLike
+    from grpclib.metadata import Deadline
 
 
 @dataclass(eq=False, repr=False)
@@ -18,36 +30,50 @@ class Plan(betterproto.Message):
     occur.
     """
 
-    # Sets the name for the upgrade. This name will be used by the upgraded
-    # version of the software to apply any special "on-upgrade" commands during
-    # the first BeginBlock method after the upgrade is applied. It is also used
-    # to detect whether a software version can handle a given upgrade. If no
-    # upgrade handler with this name has been set in the software, it will be
-    # assumed that the software is out-of-date when the upgrade Time or Height is
-    # reached and the software will exit.
     name: str = betterproto.string_field(1)
-    # Deprecated: Time based upgrades have been deprecated. Time based upgrade
-    # logic has been removed from the SDK. If this field is not empty, an error
-    # will be thrown.
+    """
+    Sets the name for the upgrade. This name will be used by the upgraded
+    version of the software to apply any special "on-upgrade" commands during
+    the first BeginBlock method after the upgrade is applied. It is also used
+    to detect whether a software version can handle a given upgrade. If no
+    upgrade handler with this name has been set in the software, it will be
+    assumed that the software is out-of-date when the upgrade Time or Height is
+    reached and the software will exit.
+    """
+
     time: datetime = betterproto.message_field(2)
-    # The height at which the upgrade must be performed. Only used if Time is not
-    # set.
+    """
+    Deprecated: Time based upgrades have been deprecated. Time based upgrade
+    logic has been removed from the SDK. If this field is not empty, an error
+    will be thrown.
+    """
+
     height: int = betterproto.int64_field(3)
-    # Any application specific upgrade info to be included on-chain such as a git
-    # commit that validators could automatically upgrade to
+    """
+    The height at which the upgrade must be performed. Only used if Time is not
+    set.
+    """
+
     info: str = betterproto.string_field(4)
-    # Deprecated: UpgradedClientState field has been deprecated. IBC upgrade
-    # logic has been moved to the IBC module in the sub module 02-client. If this
-    # field is not empty, an error will be thrown.
+    """
+    Any application specific upgrade info to be included on-chain such as a git
+    commit that validators could automatically upgrade to
+    """
+
     upgraded_client_state: "betterproto_lib_google_protobuf.Any" = (
         betterproto.message_field(5)
     )
+    """
+    Deprecated: UpgradedClientState field has been deprecated. IBC upgrade
+    logic has been moved to the IBC module in the sub module 02-client. If this
+    field is not empty, an error will be thrown.
+    """
 
     def __post_init__(self) -> None:
         super().__post_init__()
-        if self.time:
+        if self.is_set("time"):
             warnings.warn("Plan.time is deprecated", DeprecationWarning)
-        if self.upgraded_client_state:
+        if self.is_set("upgraded_client_state"):
             warnings.warn(
                 "Plan.upgraded_client_state is deprecated", DeprecationWarning
             )
@@ -83,10 +109,11 @@ class ModuleVersion(betterproto.Message):
     sdk 0.43
     """
 
-    # name of the app module
     name: str = betterproto.string_field(1)
-    # consensus version of the app module
+    """name of the app module"""
+
     version: int = betterproto.uint64_field(2)
+    """consensus version of the app module"""
 
 
 @dataclass(eq=False, repr=False)
@@ -106,8 +133,8 @@ class QueryCurrentPlanResponse(betterproto.Message):
     method.
     """
 
-    # plan is the current upgrade plan.
     plan: "Plan" = betterproto.message_field(1)
+    """plan is the current upgrade plan."""
 
 
 @dataclass(eq=False, repr=False)
@@ -117,8 +144,8 @@ class QueryAppliedPlanRequest(betterproto.Message):
     method.
     """
 
-    # name is the name of the applied plan to query for.
     name: str = betterproto.string_field(1)
+    """name is the name of the applied plan to query for."""
 
 
 @dataclass(eq=False, repr=False)
@@ -128,8 +155,8 @@ class QueryAppliedPlanResponse(betterproto.Message):
     method.
     """
 
-    # height is the block height at which the plan was applied.
     height: int = betterproto.int64_field(1)
+    """height is the block height at which the plan was applied."""
 
 
 @dataclass(eq=False, repr=False)
@@ -139,9 +166,11 @@ class QueryUpgradedConsensusStateRequest(betterproto.Message):
     Query/UpgradedConsensusState RPC method.
     """
 
-    # last height of the current chain must be sent in request as this is the
-    # height under which next consensus state is stored
     last_height: int = betterproto.int64_field(1)
+    """
+    last height of the current chain must be sent in request as this is the
+    height under which next consensus state is stored
+    """
 
     def __post_init__(self) -> None:
         warnings.warn(
@@ -157,8 +186,8 @@ class QueryUpgradedConsensusStateResponse(betterproto.Message):
     Query/UpgradedConsensusState RPC method.
     """
 
-    # Since: cosmos-sdk 0.43
     upgraded_consensus_state: bytes = betterproto.bytes_field(2)
+    """Since: cosmos-sdk 0.43"""
 
     def __post_init__(self) -> None:
         warnings.warn(
@@ -174,10 +203,12 @@ class QueryModuleVersionsRequest(betterproto.Message):
     RPC method. Since: cosmos-sdk 0.43
     """
 
-    # module_name is a field to query a specific module consensus version from
-    # state. Leaving this empty will fetch the full list of module versions from
-    # state
     module_name: str = betterproto.string_field(1)
+    """
+    module_name is a field to query a specific module consensus version from
+    state. Leaving this empty will fetch the full list of module versions from
+    state
+    """
 
 
 @dataclass(eq=False, repr=False)
@@ -187,112 +218,134 @@ class QueryModuleVersionsResponse(betterproto.Message):
     Query/ModuleVersions RPC method. Since: cosmos-sdk 0.43
     """
 
-    # module_versions is a list of module names with their consensus versions.
     module_versions: List["ModuleVersion"] = betterproto.message_field(1)
+    """
+    module_versions is a list of module names with their consensus versions.
+    """
 
 
 class QueryStub(betterproto.ServiceStub):
-    async def current_plan(self) -> "QueryCurrentPlanResponse":
-
-        request = QueryCurrentPlanRequest()
-
+    async def current_plan(
+        self,
+        query_current_plan_request: "QueryCurrentPlanRequest",
+        *,
+        timeout: Optional[float] = None,
+        deadline: Optional["Deadline"] = None,
+        metadata: Optional["MetadataLike"] = None
+    ) -> "QueryCurrentPlanResponse":
         return await self._unary_unary(
             "/cosmos.upgrade.v1beta1.Query/CurrentPlan",
-            request,
+            query_current_plan_request,
             QueryCurrentPlanResponse,
+            timeout=timeout,
+            deadline=deadline,
+            metadata=metadata,
         )
 
-    async def applied_plan(self, *, name: str = "") -> "QueryAppliedPlanResponse":
-
-        request = QueryAppliedPlanRequest()
-        request.name = name
-
+    async def applied_plan(
+        self,
+        query_applied_plan_request: "QueryAppliedPlanRequest",
+        *,
+        timeout: Optional[float] = None,
+        deadline: Optional["Deadline"] = None,
+        metadata: Optional["MetadataLike"] = None
+    ) -> "QueryAppliedPlanResponse":
         return await self._unary_unary(
             "/cosmos.upgrade.v1beta1.Query/AppliedPlan",
-            request,
+            query_applied_plan_request,
             QueryAppliedPlanResponse,
+            timeout=timeout,
+            deadline=deadline,
+            metadata=metadata,
         )
 
     async def upgraded_consensus_state(
-        self, *, last_height: int = 0
+        self,
+        query_upgraded_consensus_state_request: "QueryUpgradedConsensusStateRequest",
+        *,
+        timeout: Optional[float] = None,
+        deadline: Optional["Deadline"] = None,
+        metadata: Optional["MetadataLike"] = None
     ) -> "QueryUpgradedConsensusStateResponse":
-
-        request = QueryUpgradedConsensusStateRequest()
-        request.last_height = last_height
-
         return await self._unary_unary(
             "/cosmos.upgrade.v1beta1.Query/UpgradedConsensusState",
-            request,
+            query_upgraded_consensus_state_request,
             QueryUpgradedConsensusStateResponse,
+            timeout=timeout,
+            deadline=deadline,
+            metadata=metadata,
         )
 
     async def module_versions(
-        self, *, module_name: str = ""
+        self,
+        query_module_versions_request: "QueryModuleVersionsRequest",
+        *,
+        timeout: Optional[float] = None,
+        deadline: Optional["Deadline"] = None,
+        metadata: Optional["MetadataLike"] = None
     ) -> "QueryModuleVersionsResponse":
-
-        request = QueryModuleVersionsRequest()
-        request.module_name = module_name
-
         return await self._unary_unary(
             "/cosmos.upgrade.v1beta1.Query/ModuleVersions",
-            request,
+            query_module_versions_request,
             QueryModuleVersionsResponse,
+            timeout=timeout,
+            deadline=deadline,
+            metadata=metadata,
         )
 
 
 class QueryBase(ServiceBase):
-    async def current_plan(self) -> "QueryCurrentPlanResponse":
+    async def current_plan(
+        self, query_current_plan_request: "QueryCurrentPlanRequest"
+    ) -> "QueryCurrentPlanResponse":
         raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
 
-    async def applied_plan(self, name: str) -> "QueryAppliedPlanResponse":
+    async def applied_plan(
+        self, query_applied_plan_request: "QueryAppliedPlanRequest"
+    ) -> "QueryAppliedPlanResponse":
         raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
 
     async def upgraded_consensus_state(
-        self, last_height: int
+        self,
+        query_upgraded_consensus_state_request: "QueryUpgradedConsensusStateRequest",
     ) -> "QueryUpgradedConsensusStateResponse":
         raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
 
-    async def module_versions(self, module_name: str) -> "QueryModuleVersionsResponse":
+    async def module_versions(
+        self, query_module_versions_request: "QueryModuleVersionsRequest"
+    ) -> "QueryModuleVersionsResponse":
         raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
 
-    async def __rpc_current_plan(self, stream: grpclib.server.Stream) -> None:
+    async def __rpc_current_plan(
+        self,
+        stream: "grpclib.server.Stream[QueryCurrentPlanRequest, QueryCurrentPlanResponse]",
+    ) -> None:
         request = await stream.recv_message()
-
-        request_kwargs = {}
-
-        response = await self.current_plan(**request_kwargs)
+        response = await self.current_plan(request)
         await stream.send_message(response)
 
-    async def __rpc_applied_plan(self, stream: grpclib.server.Stream) -> None:
+    async def __rpc_applied_plan(
+        self,
+        stream: "grpclib.server.Stream[QueryAppliedPlanRequest, QueryAppliedPlanResponse]",
+    ) -> None:
         request = await stream.recv_message()
-
-        request_kwargs = {
-            "name": request.name,
-        }
-
-        response = await self.applied_plan(**request_kwargs)
+        response = await self.applied_plan(request)
         await stream.send_message(response)
 
     async def __rpc_upgraded_consensus_state(
-        self, stream: grpclib.server.Stream
+        self,
+        stream: "grpclib.server.Stream[QueryUpgradedConsensusStateRequest, QueryUpgradedConsensusStateResponse]",
     ) -> None:
         request = await stream.recv_message()
-
-        request_kwargs = {
-            "last_height": request.last_height,
-        }
-
-        response = await self.upgraded_consensus_state(**request_kwargs)
+        response = await self.upgraded_consensus_state(request)
         await stream.send_message(response)
 
-    async def __rpc_module_versions(self, stream: grpclib.server.Stream) -> None:
+    async def __rpc_module_versions(
+        self,
+        stream: "grpclib.server.Stream[QueryModuleVersionsRequest, QueryModuleVersionsResponse]",
+    ) -> None:
         request = await stream.recv_message()
-
-        request_kwargs = {
-            "module_name": request.module_name,
-        }
-
-        response = await self.module_versions(**request_kwargs)
+        response = await self.module_versions(request)
         await stream.send_message(response)
 
     def __mapping__(self) -> Dict[str, grpclib.const.Handler]:
@@ -322,6 +375,3 @@ class QueryBase(ServiceBase):
                 QueryModuleVersionsResponse,
             ),
         }
-
-
-import betterproto.lib.google.protobuf as betterproto_lib_google_protobuf

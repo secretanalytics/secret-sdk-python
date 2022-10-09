@@ -3,11 +3,22 @@
 # plugin: python-betterproto
 import builtins
 from dataclasses import dataclass
-from typing import Dict, List
+from typing import (
+    TYPE_CHECKING,
+    Dict,
+    List,
+    Optional,
+)
 
 import betterproto
-from betterproto.grpc.grpclib_server import ServiceBase
 import grpclib
+from betterproto.grpc.grpclib_server import ServiceBase
+
+
+if TYPE_CHECKING:
+    import grpclib.server
+    from betterproto.grpc.grpclib_client import MetadataLike
+    from grpclib.metadata import Deadline
 
 
 @dataclass(eq=False, repr=False)
@@ -56,70 +67,98 @@ class QueryEncryptedSeedResponse(betterproto.Message):
 
 
 class QueryStub(betterproto.ServiceStub):
-    async def tx_key(self) -> "Key":
-
-        request = betterproto_lib_google_protobuf.Empty()
-
+    async def tx_key(
+        self,
+        betterproto_lib_google_protobuf_empty: "betterproto_lib_google_protobuf.Empty",
+        *,
+        timeout: Optional[float] = None,
+        deadline: Optional["Deadline"] = None,
+        metadata: Optional["MetadataLike"] = None
+    ) -> "Key":
         return await self._unary_unary(
-            "/secret.registration.v1beta1.Query/TxKey", request, Key
+            "/secret.registration.v1beta1.Query/TxKey",
+            betterproto_lib_google_protobuf_empty,
+            Key,
+            timeout=timeout,
+            deadline=deadline,
+            metadata=metadata,
         )
 
-    async def registration_key(self) -> "Key":
-
-        request = betterproto_lib_google_protobuf.Empty()
-
+    async def registration_key(
+        self,
+        betterproto_lib_google_protobuf_empty: "betterproto_lib_google_protobuf.Empty",
+        *,
+        timeout: Optional[float] = None,
+        deadline: Optional["Deadline"] = None,
+        metadata: Optional["MetadataLike"] = None
+    ) -> "Key":
         return await self._unary_unary(
-            "/secret.registration.v1beta1.Query/RegistrationKey", request, Key
+            "/secret.registration.v1beta1.Query/RegistrationKey",
+            betterproto_lib_google_protobuf_empty,
+            Key,
+            timeout=timeout,
+            deadline=deadline,
+            metadata=metadata,
         )
 
     async def encrypted_seed(
-        self, *, pub_key: bytes = b""
+        self,
+        query_encrypted_seed_request: "QueryEncryptedSeedRequest",
+        *,
+        timeout: Optional[float] = None,
+        deadline: Optional["Deadline"] = None,
+        metadata: Optional["MetadataLike"] = None
     ) -> "QueryEncryptedSeedResponse":
-
-        request = QueryEncryptedSeedRequest()
-        request.pub_key = pub_key
-
         return await self._unary_unary(
             "/secret.registration.v1beta1.Query/EncryptedSeed",
-            request,
+            query_encrypted_seed_request,
             QueryEncryptedSeedResponse,
+            timeout=timeout,
+            deadline=deadline,
+            metadata=metadata,
         )
 
 
 class QueryBase(ServiceBase):
-    async def tx_key(self) -> "Key":
+    async def tx_key(
+        self,
+        betterproto_lib_google_protobuf_empty: "betterproto_lib_google_protobuf.Empty",
+    ) -> "Key":
         raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
 
-    async def registration_key(self) -> "Key":
+    async def registration_key(
+        self,
+        betterproto_lib_google_protobuf_empty: "betterproto_lib_google_protobuf.Empty",
+    ) -> "Key":
         raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
 
-    async def encrypted_seed(self, pub_key: bytes) -> "QueryEncryptedSeedResponse":
+    async def encrypted_seed(
+        self, query_encrypted_seed_request: "QueryEncryptedSeedRequest"
+    ) -> "QueryEncryptedSeedResponse":
         raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
 
-    async def __rpc_tx_key(self, stream: grpclib.server.Stream) -> None:
+    async def __rpc_tx_key(
+        self,
+        stream: "grpclib.server.Stream[betterproto_lib_google_protobuf.Empty, Key]",
+    ) -> None:
         request = await stream.recv_message()
-
-        request_kwargs = {}
-
-        response = await self.tx_key(**request_kwargs)
+        response = await self.tx_key(request)
         await stream.send_message(response)
 
-    async def __rpc_registration_key(self, stream: grpclib.server.Stream) -> None:
+    async def __rpc_registration_key(
+        self,
+        stream: "grpclib.server.Stream[betterproto_lib_google_protobuf.Empty, Key]",
+    ) -> None:
         request = await stream.recv_message()
-
-        request_kwargs = {}
-
-        response = await self.registration_key(**request_kwargs)
+        response = await self.registration_key(request)
         await stream.send_message(response)
 
-    async def __rpc_encrypted_seed(self, stream: grpclib.server.Stream) -> None:
+    async def __rpc_encrypted_seed(
+        self,
+        stream: "grpclib.server.Stream[QueryEncryptedSeedRequest, QueryEncryptedSeedResponse]",
+    ) -> None:
         request = await stream.recv_message()
-
-        request_kwargs = {
-            "pub_key": request.pub_key,
-        }
-
-        response = await self.encrypted_seed(**request_kwargs)
+        response = await self.encrypted_seed(request)
         await stream.send_message(response)
 
     def __mapping__(self) -> Dict[str, grpclib.const.Handler]:
@@ -143,6 +182,3 @@ class QueryBase(ServiceBase):
                 QueryEncryptedSeedResponse,
             ),
         }
-
-
-import betterproto.lib.google.protobuf as betterproto_lib_google_protobuf

@@ -4,7 +4,6 @@
 from dataclasses import dataclass
 
 import betterproto
-from betterproto.grpc.grpclib_server import ServiceBase
 
 
 @dataclass(eq=False, repr=False)
@@ -16,11 +15,14 @@ class FungibleTokenPacketData(betterproto.Message):
     transfer#data-structures
     """
 
-    # the token denomination to be transferred
     denom: str = betterproto.string_field(1)
-    # the token amount to be transferred
+    """the token denomination to be transferred"""
+
     amount: str = betterproto.string_field(2)
-    # the sender address
+    """the token amount to be transferred"""
+
     sender: str = betterproto.string_field(3)
-    # the recipient address on the destination chain
+    """the sender address"""
+
     receiver: str = betterproto.string_field(4)
+    """the recipient address on the destination chain"""

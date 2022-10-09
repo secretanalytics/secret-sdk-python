@@ -4,7 +4,10 @@
 from dataclasses import dataclass
 
 import betterproto
-from betterproto.grpc.grpclib_server import ServiceBase
+import betterproto.lib.google.protobuf as betterproto_lib_google_protobuf
+
+from ....core.channel import v1 as ___core_channel_v1__
+from ....core.connection import v1 as ___core_connection_v1__
 
 
 class DataType(betterproto.Enum):
@@ -13,26 +16,35 @@ class DataType(betterproto.Enum):
     to preserve uniqueness of different data sign byte encodings.
     """
 
-    # Default State
     DATA_TYPE_UNINITIALIZED_UNSPECIFIED = 0
-    # Data type for client state verification
+    """Default State"""
+
     DATA_TYPE_CLIENT_STATE = 1
-    # Data type for consensus state verification
+    """Data type for client state verification"""
+
     DATA_TYPE_CONSENSUS_STATE = 2
-    # Data type for connection state verification
+    """Data type for consensus state verification"""
+
     DATA_TYPE_CONNECTION_STATE = 3
-    # Data type for channel state verification
+    """Data type for connection state verification"""
+
     DATA_TYPE_CHANNEL_STATE = 4
-    # Data type for packet commitment verification
+    """Data type for channel state verification"""
+
     DATA_TYPE_PACKET_COMMITMENT = 5
-    # Data type for packet acknowledgement verification
+    """Data type for packet commitment verification"""
+
     DATA_TYPE_PACKET_ACKNOWLEDGEMENT = 6
-    # Data type for packet receipt absence verification
+    """Data type for packet acknowledgement verification"""
+
     DATA_TYPE_PACKET_RECEIPT_ABSENCE = 7
-    # Data type for next sequence recv verification
+    """Data type for packet receipt absence verification"""
+
     DATA_TYPE_NEXT_SEQUENCE_RECV = 8
-    # Data type for header verification
+    """Data type for next sequence recv verification"""
+
     DATA_TYPE_HEADER = 9
+    """Data type for header verification"""
 
 
 @dataclass(eq=False, repr=False)
@@ -42,14 +54,18 @@ class ClientState(betterproto.Message):
     state and if the client is frozen.
     """
 
-    # latest sequence of the client state
     sequence: int = betterproto.uint64_field(1)
-    # frozen sequence of the solo machine
+    """latest sequence of the client state"""
+
     is_frozen: bool = betterproto.bool_field(2)
+    """frozen sequence of the solo machine"""
+
     consensus_state: "ConsensusState" = betterproto.message_field(3)
-    # when set to true, will allow governance to update a solo machine client.
-    # The client will be unfrozen if it is frozen.
     allow_update_after_proposal: bool = betterproto.bool_field(4)
+    """
+    when set to true, will allow governance to update a solo machine client.
+    The client will be unfrozen if it is frozen.
+    """
 
 
 @dataclass(eq=False, repr=False)
@@ -60,12 +76,16 @@ class ConsensusState(betterproto.Message):
     consensus state.
     """
 
-    # public key of the solo machine
     public_key: "betterproto_lib_google_protobuf.Any" = betterproto.message_field(1)
-    # diversifier allows the same public key to be re-used across different solo
-    # machine clients (potentially on different chains) without being considered
-    # misbehaviour.
+    """public key of the solo machine"""
+
     diversifier: str = betterproto.string_field(2)
+    """
+    diversifier allows the same public key to be re-used across different solo
+    machine clients (potentially on different chains) without being considered
+    misbehaviour.
+    """
+
     timestamp: int = betterproto.uint64_field(3)
 
 
@@ -73,8 +93,9 @@ class ConsensusState(betterproto.Message):
 class Header(betterproto.Message):
     """Header defines a solo machine consensus header"""
 
-    # sequence to update solo machine public key at
     sequence: int = betterproto.uint64_field(1)
+    """sequence to update solo machine public key at"""
+
     timestamp: int = betterproto.uint64_field(2)
     signature: bytes = betterproto.bytes_field(3)
     new_public_key: "betterproto_lib_google_protobuf.Any" = betterproto.message_field(4)
@@ -125,20 +146,22 @@ class SignBytes(betterproto.Message):
     sequence: int = betterproto.uint64_field(1)
     timestamp: int = betterproto.uint64_field(2)
     diversifier: str = betterproto.string_field(3)
-    # type of the data used
     data_type: "DataType" = betterproto.enum_field(4)
-    # marshaled data
+    """type of the data used"""
+
     data: bytes = betterproto.bytes_field(5)
+    """marshaled data"""
 
 
 @dataclass(eq=False, repr=False)
 class HeaderData(betterproto.Message):
     """HeaderData returns the SignBytes data for update verification."""
 
-    # header public key
     new_pub_key: "betterproto_lib_google_protobuf.Any" = betterproto.message_field(1)
-    # header diversifier
+    """header public key"""
+
     new_diversifier: str = betterproto.string_field(2)
+    """header diversifier"""
 
 
 @dataclass(eq=False, repr=False)
@@ -226,8 +249,3 @@ class NextSequenceRecvData(betterproto.Message):
 
     path: bytes = betterproto.bytes_field(1)
     next_seq_recv: int = betterproto.uint64_field(2)
-
-
-from ....core.channel import v1 as ___core_channel_v1__
-from ....core.connection import v1 as ___core_connection_v1__
-import betterproto.lib.google.protobuf as betterproto_lib_google_protobuf

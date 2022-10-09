@@ -2,11 +2,23 @@
 # sources: tendermint/rpc/grpc/types.proto
 # plugin: python-betterproto
 from dataclasses import dataclass
-from typing import Dict
+from typing import (
+    TYPE_CHECKING,
+    Dict,
+    Optional,
+)
 
 import betterproto
-from betterproto.grpc.grpclib_server import ServiceBase
 import grpclib
+from betterproto.grpc.grpclib_server import ServiceBase
+
+from ... import abci as __abci__
+
+
+if TYPE_CHECKING:
+    import grpclib.server
+    from betterproto.grpc.grpclib_client import MetadataLike
+    from grpclib.metadata import Deadline
 
 
 @dataclass(eq=False, repr=False)
@@ -31,49 +43,62 @@ class ResponseBroadcastTx(betterproto.Message):
 
 
 class BroadcastApiStub(betterproto.ServiceStub):
-    async def ping(self) -> "ResponsePing":
-
-        request = RequestPing()
-
+    async def ping(
+        self,
+        request_ping: "RequestPing",
+        *,
+        timeout: Optional[float] = None,
+        deadline: Optional["Deadline"] = None,
+        metadata: Optional["MetadataLike"] = None
+    ) -> "ResponsePing":
         return await self._unary_unary(
-            "/tendermint.rpc.grpc.BroadcastAPI/Ping", request, ResponsePing
+            "/tendermint.rpc.grpc.BroadcastAPI/Ping",
+            request_ping,
+            ResponsePing,
+            timeout=timeout,
+            deadline=deadline,
+            metadata=metadata,
         )
 
-    async def broadcast_tx(self, *, tx: bytes = b"") -> "ResponseBroadcastTx":
-
-        request = RequestBroadcastTx()
-        request.tx = tx
-
+    async def broadcast_tx(
+        self,
+        request_broadcast_tx: "RequestBroadcastTx",
+        *,
+        timeout: Optional[float] = None,
+        deadline: Optional["Deadline"] = None,
+        metadata: Optional["MetadataLike"] = None
+    ) -> "ResponseBroadcastTx":
         return await self._unary_unary(
             "/tendermint.rpc.grpc.BroadcastAPI/BroadcastTx",
-            request,
+            request_broadcast_tx,
             ResponseBroadcastTx,
+            timeout=timeout,
+            deadline=deadline,
+            metadata=metadata,
         )
 
 
 class BroadcastApiBase(ServiceBase):
-    async def ping(self) -> "ResponsePing":
+    async def ping(self, request_ping: "RequestPing") -> "ResponsePing":
         raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
 
-    async def broadcast_tx(self, tx: bytes) -> "ResponseBroadcastTx":
+    async def broadcast_tx(
+        self, request_broadcast_tx: "RequestBroadcastTx"
+    ) -> "ResponseBroadcastTx":
         raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
 
-    async def __rpc_ping(self, stream: grpclib.server.Stream) -> None:
+    async def __rpc_ping(
+        self, stream: "grpclib.server.Stream[RequestPing, ResponsePing]"
+    ) -> None:
         request = await stream.recv_message()
-
-        request_kwargs = {}
-
-        response = await self.ping(**request_kwargs)
+        response = await self.ping(request)
         await stream.send_message(response)
 
-    async def __rpc_broadcast_tx(self, stream: grpclib.server.Stream) -> None:
+    async def __rpc_broadcast_tx(
+        self, stream: "grpclib.server.Stream[RequestBroadcastTx, ResponseBroadcastTx]"
+    ) -> None:
         request = await stream.recv_message()
-
-        request_kwargs = {
-            "tx": request.tx,
-        }
-
-        response = await self.broadcast_tx(**request_kwargs)
+        response = await self.broadcast_tx(request)
         await stream.send_message(response)
 
     def __mapping__(self) -> Dict[str, grpclib.const.Handler]:
@@ -91,6 +116,3 @@ class BroadcastApiBase(ServiceBase):
                 ResponseBroadcastTx,
             ),
         }
-
-
-from ... import abci as __abci__

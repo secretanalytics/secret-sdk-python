@@ -2,11 +2,22 @@
 # sources: cosmos/base/reflection/v1beta1/reflection.proto
 # plugin: python-betterproto
 from dataclasses import dataclass
-from typing import Dict, List
+from typing import (
+    TYPE_CHECKING,
+    Dict,
+    List,
+    Optional,
+)
 
 import betterproto
-from betterproto.grpc.grpclib_server import ServiceBase
 import grpclib
+from betterproto.grpc.grpclib_server import ServiceBase
+
+
+if TYPE_CHECKING:
+    import grpclib.server
+    from betterproto.grpc.grpclib_client import MetadataLike
+    from grpclib.metadata import Deadline
 
 
 @dataclass(eq=False, repr=False)
@@ -25,8 +36,8 @@ class ListAllInterfacesResponse(betterproto.Message):
     RPC.
     """
 
-    # interface_names is an array of all the registered interfaces.
     interface_names: List[str] = betterproto.string_field(1)
+    """interface_names is an array of all the registered interfaces."""
 
 
 @dataclass(eq=False, repr=False)
@@ -36,8 +47,10 @@ class ListImplementationsRequest(betterproto.Message):
     RPC.
     """
 
-    # interface_name defines the interface to query the implementations for.
     interface_name: str = betterproto.string_field(1)
+    """
+    interface_name defines the interface to query the implementations for.
+    """
 
 
 @dataclass(eq=False, repr=False)
@@ -51,55 +64,66 @@ class ListImplementationsResponse(betterproto.Message):
 
 
 class ReflectionServiceStub(betterproto.ServiceStub):
-    async def list_all_interfaces(self) -> "ListAllInterfacesResponse":
-
-        request = ListAllInterfacesRequest()
-
+    async def list_all_interfaces(
+        self,
+        list_all_interfaces_request: "ListAllInterfacesRequest",
+        *,
+        timeout: Optional[float] = None,
+        deadline: Optional["Deadline"] = None,
+        metadata: Optional["MetadataLike"] = None
+    ) -> "ListAllInterfacesResponse":
         return await self._unary_unary(
             "/cosmos.base.reflection.v1beta1.ReflectionService/ListAllInterfaces",
-            request,
+            list_all_interfaces_request,
             ListAllInterfacesResponse,
+            timeout=timeout,
+            deadline=deadline,
+            metadata=metadata,
         )
 
     async def list_implementations(
-        self, *, interface_name: str = ""
+        self,
+        list_implementations_request: "ListImplementationsRequest",
+        *,
+        timeout: Optional[float] = None,
+        deadline: Optional["Deadline"] = None,
+        metadata: Optional["MetadataLike"] = None
     ) -> "ListImplementationsResponse":
-
-        request = ListImplementationsRequest()
-        request.interface_name = interface_name
-
         return await self._unary_unary(
             "/cosmos.base.reflection.v1beta1.ReflectionService/ListImplementations",
-            request,
+            list_implementations_request,
             ListImplementationsResponse,
+            timeout=timeout,
+            deadline=deadline,
+            metadata=metadata,
         )
 
 
 class ReflectionServiceBase(ServiceBase):
-    async def list_all_interfaces(self) -> "ListAllInterfacesResponse":
+    async def list_all_interfaces(
+        self, list_all_interfaces_request: "ListAllInterfacesRequest"
+    ) -> "ListAllInterfacesResponse":
         raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
 
     async def list_implementations(
-        self, interface_name: str
+        self, list_implementations_request: "ListImplementationsRequest"
     ) -> "ListImplementationsResponse":
         raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
 
-    async def __rpc_list_all_interfaces(self, stream: grpclib.server.Stream) -> None:
+    async def __rpc_list_all_interfaces(
+        self,
+        stream: "grpclib.server.Stream[ListAllInterfacesRequest, ListAllInterfacesResponse]",
+    ) -> None:
         request = await stream.recv_message()
-
-        request_kwargs = {}
-
-        response = await self.list_all_interfaces(**request_kwargs)
+        response = await self.list_all_interfaces(request)
         await stream.send_message(response)
 
-    async def __rpc_list_implementations(self, stream: grpclib.server.Stream) -> None:
+    async def __rpc_list_implementations(
+        self,
+        stream: "grpclib.server.Stream[ListImplementationsRequest, ListImplementationsResponse]",
+    ) -> None:
         request = await stream.recv_message()
-
-        request_kwargs = {
-            "interface_name": request.interface_name,
-        }
-
-        response = await self.list_implementations(**request_kwargs)
+        response = await self.list_implementations(request)
         await stream.send_message(response)
 
     def __mapping__(self) -> Dict[str, grpclib.const.Handler]:

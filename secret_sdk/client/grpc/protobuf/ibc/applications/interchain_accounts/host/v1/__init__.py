@@ -2,11 +2,22 @@
 # sources: ibc/applications/interchain_accounts/host/v1/host.proto, ibc/applications/interchain_accounts/host/v1/query.proto
 # plugin: python-betterproto
 from dataclasses import dataclass
-from typing import Dict, List
+from typing import (
+    TYPE_CHECKING,
+    Dict,
+    List,
+    Optional,
+)
 
 import betterproto
-from betterproto.grpc.grpclib_server import ServiceBase
 import grpclib
+from betterproto.grpc.grpclib_server import ServiceBase
+
+
+if TYPE_CHECKING:
+    import grpclib.server
+    from betterproto.grpc.grpclib_client import MetadataLike
+    from grpclib.metadata import Deadline
 
 
 @dataclass(eq=False, repr=False)
@@ -16,11 +27,14 @@ class Params(betterproto.Message):
     following parameters may be used to disable the host submodule.
     """
 
-    # host_enabled enables or disables the host submodule.
     host_enabled: bool = betterproto.bool_field(1)
-    # allow_messages defines a list of sdk message typeURLs allowed to be
-    # executed on a host chain.
+    """host_enabled enables or disables the host submodule."""
+
     allow_messages: List[str] = betterproto.string_field(2)
+    """
+    allow_messages defines a list of sdk message typeURLs allowed to be
+    executed on a host chain.
+    """
 
 
 @dataclass(eq=False, repr=False)
@@ -38,32 +52,40 @@ class QueryParamsResponse(betterproto.Message):
     QueryParamsResponse is the response type for the Query/Params RPC method.
     """
 
-    # params defines the parameters of the module.
     params: "Params" = betterproto.message_field(1)
+    """params defines the parameters of the module."""
 
 
 class QueryStub(betterproto.ServiceStub):
-    async def params(self) -> "QueryParamsResponse":
-
-        request = QueryParamsRequest()
-
+    async def params(
+        self,
+        query_params_request: "QueryParamsRequest",
+        *,
+        timeout: Optional[float] = None,
+        deadline: Optional["Deadline"] = None,
+        metadata: Optional["MetadataLike"] = None
+    ) -> "QueryParamsResponse":
         return await self._unary_unary(
             "/ibc.applications.interchain_accounts.host.v1.Query/Params",
-            request,
+            query_params_request,
             QueryParamsResponse,
+            timeout=timeout,
+            deadline=deadline,
+            metadata=metadata,
         )
 
 
 class QueryBase(ServiceBase):
-    async def params(self) -> "QueryParamsResponse":
+    async def params(
+        self, query_params_request: "QueryParamsRequest"
+    ) -> "QueryParamsResponse":
         raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
 
-    async def __rpc_params(self, stream: grpclib.server.Stream) -> None:
+    async def __rpc_params(
+        self, stream: "grpclib.server.Stream[QueryParamsRequest, QueryParamsResponse]"
+    ) -> None:
         request = await stream.recv_message()
-
-        request_kwargs = {}
-
-        response = await self.params(**request_kwargs)
+        response = await self.params(request)
         await stream.send_message(response)
 
     def __mapping__(self) -> Dict[str, grpclib.const.Handler]:

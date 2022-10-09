@@ -4,7 +4,11 @@
 from dataclasses import dataclass
 
 import betterproto
-from betterproto.grpc.grpclib_server import ServiceBase
+
+from .. import (
+    crypto as _crypto__,
+    types as _types__,
+)
 
 
 class Errors(betterproto.Enum):
@@ -105,7 +109,3 @@ class Message(betterproto.Message):
     )
     ping_request: "PingRequest" = betterproto.message_field(7, group="sum")
     ping_response: "PingResponse" = betterproto.message_field(8, group="sum")
-
-
-from .. import crypto as _crypto__
-from .. import types as _types__

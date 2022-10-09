@@ -2,11 +2,23 @@
 # sources: cosmos/crisis/v1beta1/genesis.proto, cosmos/crisis/v1beta1/tx.proto
 # plugin: python-betterproto
 from dataclasses import dataclass
-from typing import Dict
+from typing import (
+    TYPE_CHECKING,
+    Dict,
+    Optional,
+)
 
 import betterproto
-from betterproto.grpc.grpclib_server import ServiceBase
 import grpclib
+from betterproto.grpc.grpclib_server import ServiceBase
+
+from ...base import v1beta1 as __base_v1_beta1__
+
+
+if TYPE_CHECKING:
+    import grpclib.server
+    from betterproto.grpc.grpclib_client import MetadataLike
+    from grpclib.metadata import Deadline
 
 
 @dataclass(eq=False, repr=False)
@@ -33,47 +45,43 @@ class MsgVerifyInvariantResponse(betterproto.Message):
 class GenesisState(betterproto.Message):
     """GenesisState defines the crisis module's genesis state."""
 
-    # constant_fee is the fee used to verify the invariant in the crisis module.
     constant_fee: "__base_v1_beta1__.Coin" = betterproto.message_field(3)
+    """
+    constant_fee is the fee used to verify the invariant in the crisis module.
+    """
 
 
 class MsgStub(betterproto.ServiceStub):
     async def verify_invariant(
         self,
+        msg_verify_invariant: "MsgVerifyInvariant",
         *,
-        sender: str = "",
-        invariant_module_name: str = "",
-        invariant_route: str = ""
+        timeout: Optional[float] = None,
+        deadline: Optional["Deadline"] = None,
+        metadata: Optional["MetadataLike"] = None
     ) -> "MsgVerifyInvariantResponse":
-
-        request = MsgVerifyInvariant()
-        request.sender = sender
-        request.invariant_module_name = invariant_module_name
-        request.invariant_route = invariant_route
-
         return await self._unary_unary(
             "/cosmos.crisis.v1beta1.Msg/VerifyInvariant",
-            request,
+            msg_verify_invariant,
             MsgVerifyInvariantResponse,
+            timeout=timeout,
+            deadline=deadline,
+            metadata=metadata,
         )
 
 
 class MsgBase(ServiceBase):
     async def verify_invariant(
-        self, sender: str, invariant_module_name: str, invariant_route: str
+        self, msg_verify_invariant: "MsgVerifyInvariant"
     ) -> "MsgVerifyInvariantResponse":
         raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
 
-    async def __rpc_verify_invariant(self, stream: grpclib.server.Stream) -> None:
+    async def __rpc_verify_invariant(
+        self,
+        stream: "grpclib.server.Stream[MsgVerifyInvariant, MsgVerifyInvariantResponse]",
+    ) -> None:
         request = await stream.recv_message()
-
-        request_kwargs = {
-            "sender": request.sender,
-            "invariant_module_name": request.invariant_module_name,
-            "invariant_route": request.invariant_route,
-        }
-
-        response = await self.verify_invariant(**request_kwargs)
+        response = await self.verify_invariant(request)
         await stream.send_message(response)
 
     def __mapping__(self) -> Dict[str, grpclib.const.Handler]:
@@ -85,6 +93,3 @@ class MsgBase(ServiceBase):
                 MsgVerifyInvariantResponse,
             ),
         }
-
-
-from ...base import v1beta1 as __base_v1_beta1__

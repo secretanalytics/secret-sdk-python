@@ -2,46 +2,73 @@
 # sources: cosmos/base/reflection/v2alpha1/reflection.proto
 # plugin: python-betterproto
 from dataclasses import dataclass
-from typing import Dict, List
+from typing import (
+    TYPE_CHECKING,
+    Dict,
+    List,
+    Optional,
+)
 
 import betterproto
-from betterproto.grpc.grpclib_server import ServiceBase
 import grpclib
+from betterproto.grpc.grpclib_server import ServiceBase
+
+
+if TYPE_CHECKING:
+    import grpclib.server
+    from betterproto.grpc.grpclib_client import MetadataLike
+    from grpclib.metadata import Deadline
 
 
 @dataclass(eq=False, repr=False)
 class AppDescriptor(betterproto.Message):
     """AppDescriptor describes a cosmos-sdk based application"""
 
-    # AuthnDescriptor provides information on how to authenticate transactions on
-    # the application NOTE: experimental and subject to change in future
-    # releases.
     authn: "AuthnDescriptor" = betterproto.message_field(1)
-    # chain provides the chain descriptor
+    """
+    AuthnDescriptor provides information on how to authenticate transactions on
+    the application NOTE: experimental and subject to change in future
+    releases.
+    """
+
     chain: "ChainDescriptor" = betterproto.message_field(2)
-    # codec provides metadata information regarding codec related types
+    """chain provides the chain descriptor"""
+
     codec: "CodecDescriptor" = betterproto.message_field(3)
-    # configuration provides metadata information regarding the sdk.Config type
+    """codec provides metadata information regarding codec related types"""
+
     configuration: "ConfigurationDescriptor" = betterproto.message_field(4)
-    # query_services provides metadata information regarding the available
-    # queriable endpoints
+    """
+    configuration provides metadata information regarding the sdk.Config type
+    """
+
     query_services: "QueryServicesDescriptor" = betterproto.message_field(5)
-    # tx provides metadata information regarding how to send transactions to the
-    # given application
+    """
+    query_services provides metadata information regarding the available
+    queriable endpoints
+    """
+
     tx: "TxDescriptor" = betterproto.message_field(6)
+    """
+    tx provides metadata information regarding how to send transactions to the
+    given application
+    """
 
 
 @dataclass(eq=False, repr=False)
 class TxDescriptor(betterproto.Message):
     """TxDescriptor describes the accepted transaction type"""
 
-    # fullname is the protobuf fullname of the raw transaction type (for instance
-    # the tx.Tx type) it is not meant to support polymorphism of transaction
-    # types, it is supposed to be used by reflection clients to understand if
-    # they can handle a specific transaction type in an application.
     fullname: str = betterproto.string_field(1)
-    # msgs lists the accepted application messages (sdk.Msg)
+    """
+    fullname is the protobuf fullname of the raw transaction type (for instance
+    the tx.Tx type) it is not meant to support polymorphism of transaction
+    types, it is supposed to be used by reflection clients to understand if
+    they can handle a specific transaction type in an application.
+    """
+
     msgs: List["MsgDescriptor"] = betterproto.message_field(2)
+    """msgs lists the accepted application messages (sdk.Msg)"""
 
 
 @dataclass(eq=False, repr=False)
@@ -51,8 +78,8 @@ class AuthnDescriptor(betterproto.Message):
     relying on the online RPCs GetTxMetadata and CombineUnsignedTxAndSignatures
     """
 
-    # sign_modes defines the supported signature algorithm
     sign_modes: List["SigningModeDescriptor"] = betterproto.message_field(1)
+    """sign_modes defines the supported signature algorithm"""
 
 
 @dataclass(eq=False, repr=False)
@@ -64,22 +91,26 @@ class SigningModeDescriptor(betterproto.Message):
     better to think about this another time
     """
 
-    # name defines the unique name of the signing mode
     name: str = betterproto.string_field(1)
-    # number is the unique int32 identifier for the sign_mode enum
+    """name defines the unique name of the signing mode"""
+
     number: int = betterproto.int32_field(2)
-    # authn_info_provider_method_fullname defines the fullname of the method to
-    # call to get the metadata required to authenticate using the provided
-    # sign_modes
+    """number is the unique int32 identifier for the sign_mode enum"""
+
     authn_info_provider_method_fullname: str = betterproto.string_field(3)
+    """
+    authn_info_provider_method_fullname defines the fullname of the method to
+    call to get the metadata required to authenticate using the provided
+    sign_modes
+    """
 
 
 @dataclass(eq=False, repr=False)
 class ChainDescriptor(betterproto.Message):
     """ChainDescriptor describes chain information of the application"""
 
-    # id is the chain id
     id: str = betterproto.string_field(1)
+    """id is the chain id"""
 
 
 @dataclass(eq=False, repr=False)
@@ -89,39 +120,48 @@ class CodecDescriptor(betterproto.Message):
     information on the types
     """
 
-    # interfaces is a list of the registerted interfaces descriptors
     interfaces: List["InterfaceDescriptor"] = betterproto.message_field(1)
+    """interfaces is a list of the registerted interfaces descriptors"""
 
 
 @dataclass(eq=False, repr=False)
 class InterfaceDescriptor(betterproto.Message):
     """InterfaceDescriptor describes the implementation of an interface"""
 
-    # fullname is the name of the interface
     fullname: str = betterproto.string_field(1)
-    # interface_accepting_messages contains information regarding the proto
-    # messages which contain the interface as google.protobuf.Any field
+    """fullname is the name of the interface"""
+
     interface_accepting_messages: List[
         "InterfaceAcceptingMessageDescriptor"
     ] = betterproto.message_field(2)
-    # interface_implementers is a list of the descriptors of the interface
-    # implementers
+    """
+    interface_accepting_messages contains information regarding the proto
+    messages which contain the interface as google.protobuf.Any field
+    """
+
     interface_implementers: List[
         "InterfaceImplementerDescriptor"
     ] = betterproto.message_field(3)
+    """
+    interface_implementers is a list of the descriptors of the interface
+    implementers
+    """
 
 
 @dataclass(eq=False, repr=False)
 class InterfaceImplementerDescriptor(betterproto.Message):
     """InterfaceImplementerDescriptor describes an interface implementer"""
 
-    # fullname is the protobuf queryable name of the interface implementer
     fullname: str = betterproto.string_field(1)
-    # type_url defines the type URL used when marshalling the type as any this is
-    # required so we can provide type safe google.protobuf.Any marshalling and
-    # unmarshalling, making sure that we don't accept just 'any' type in our
-    # interface fields
+    """fullname is the protobuf queryable name of the interface implementer"""
+
     type_url: str = betterproto.string_field(2)
+    """
+    type_url defines the type URL used when marshalling the type as any this is
+    required so we can provide type safe google.protobuf.Any marshalling and
+    unmarshalling, making sure that we don't accept just 'any' type in our
+    interface fields
+    """
 
 
 @dataclass(eq=False, repr=False)
@@ -131,12 +171,17 @@ class InterfaceAcceptingMessageDescriptor(betterproto.Message):
     contains an interface represented as a google.protobuf.Any
     """
 
-    # fullname is the protobuf fullname of the type containing the interface
     fullname: str = betterproto.string_field(1)
-    # field_descriptor_names is a list of the protobuf name (not fullname) of the
-    # field which contains the interface as google.protobuf.Any (the interface is
-    # the same, but it can be in multiple fields of the same proto message)
+    """
+    fullname is the protobuf fullname of the type containing the interface
+    """
+
     field_descriptor_names: List[str] = betterproto.string_field(2)
+    """
+    field_descriptor_names is a list of the protobuf name (not fullname) of the
+    field which contains the interface as google.protobuf.Any (the interface is
+    the same, but it can be in multiple fields of the same proto message)
+    """
 
 
 @dataclass(eq=False, repr=False)
@@ -145,8 +190,8 @@ class ConfigurationDescriptor(betterproto.Message):
     ConfigurationDescriptor contains metadata information on the sdk.Config
     """
 
-    # bech32_account_address_prefix is the account address prefix
     bech32_account_address_prefix: str = betterproto.string_field(1)
+    """bech32_account_address_prefix is the account address prefix"""
 
 
 @dataclass(eq=False, repr=False)
@@ -156,8 +201,8 @@ class MsgDescriptor(betterproto.Message):
     transaction
     """
 
-    # msg_type_url contains the TypeURL of a sdk.Msg.
     msg_type_url: str = betterproto.string_field(1)
+    """msg_type_url contains the TypeURL of a sdk.Msg."""
 
 
 @dataclass(eq=False, repr=False)
@@ -177,9 +222,11 @@ class GetAuthnDescriptorResponse(betterproto.Message):
     GetAuthnDescriptor RPC
     """
 
-    # authn describes how to authenticate to the application when sending
-    # transactions
     authn: "AuthnDescriptor" = betterproto.message_field(1)
+    """
+    authn describes how to authenticate to the application when sending
+    transactions
+    """
 
 
 @dataclass(eq=False, repr=False)
@@ -199,8 +246,8 @@ class GetChainDescriptorResponse(betterproto.Message):
     GetChainDescriptor RPC
     """
 
-    # chain describes application chain information
     chain: "ChainDescriptor" = betterproto.message_field(1)
+    """chain describes application chain information"""
 
 
 @dataclass(eq=False, repr=False)
@@ -220,9 +267,11 @@ class GetCodecDescriptorResponse(betterproto.Message):
     GetCodecDescriptor RPC
     """
 
-    # codec describes the application codec such as registered interfaces and
-    # implementations
     codec: "CodecDescriptor" = betterproto.message_field(1)
+    """
+    codec describes the application codec such as registered interfaces and
+    implementations
+    """
 
 
 @dataclass(eq=False, repr=False)
@@ -242,8 +291,8 @@ class GetConfigurationDescriptorResponse(betterproto.Message):
     GetConfigurationDescriptor RPC
     """
 
-    # config describes the application's sdk.Config
     config: "ConfigurationDescriptor" = betterproto.message_field(1)
+    """config describes the application's sdk.Config"""
 
 
 @dataclass(eq=False, repr=False)
@@ -263,8 +312,8 @@ class GetQueryServicesDescriptorResponse(betterproto.Message):
     GetQueryServicesDescriptor RPC
     """
 
-    # queries provides information on the available queryable services
     queries: "QueryServicesDescriptor" = betterproto.message_field(1)
+    """queries provides information on the available queryable services"""
 
 
 @dataclass(eq=False, repr=False)
@@ -282,9 +331,11 @@ class GetTxDescriptorResponse(betterproto.Message):
     GetTxDescriptorResponse is the response returned by the GetTxDescriptor RPC
     """
 
-    # tx provides information on msgs that can be forwarded to the application
-    # alongside the accepted transaction protobuf type
     tx: "TxDescriptor" = betterproto.message_field(1)
+    """
+    tx provides information on msgs that can be forwarded to the application
+    alongside the accepted transaction protobuf type
+    """
 
 
 @dataclass(eq=False, repr=False)
@@ -293,21 +344,25 @@ class QueryServicesDescriptor(betterproto.Message):
     QueryServicesDescriptor contains the list of cosmos-sdk queriable services
     """
 
-    # query_services is a list of cosmos-sdk QueryServiceDescriptor
     query_services: List["QueryServiceDescriptor"] = betterproto.message_field(1)
+    """query_services is a list of cosmos-sdk QueryServiceDescriptor"""
 
 
 @dataclass(eq=False, repr=False)
 class QueryServiceDescriptor(betterproto.Message):
     """QueryServiceDescriptor describes a cosmos-sdk queryable service"""
 
-    # fullname is the protobuf fullname of the service descriptor
     fullname: str = betterproto.string_field(1)
-    # is_module describes if this service is actually exposed by an application's
-    # module
+    """fullname is the protobuf fullname of the service descriptor"""
+
     is_module: bool = betterproto.bool_field(2)
-    # methods provides a list of query service methods
+    """
+    is_module describes if this service is actually exposed by an application's
+    module
+    """
+
     methods: List["QueryMethodDescriptor"] = betterproto.message_field(3)
+    """methods provides a list of query service methods"""
 
 
 @dataclass(eq=False, repr=False)
@@ -318,152 +373,197 @@ class QueryMethodDescriptor(betterproto.Message):
     because it would be redundant with the grpc reflection service
     """
 
-    # name is the protobuf name (not fullname) of the method
     name: str = betterproto.string_field(1)
-    # full_query_path is the path that can be used to query this method via
-    # tendermint abci.Query
+    """name is the protobuf name (not fullname) of the method"""
+
     full_query_path: str = betterproto.string_field(2)
+    """
+    full_query_path is the path that can be used to query this method via
+    tendermint abci.Query
+    """
 
 
 class ReflectionServiceStub(betterproto.ServiceStub):
-    async def get_authn_descriptor(self) -> "GetAuthnDescriptorResponse":
-
-        request = GetAuthnDescriptorRequest()
-
+    async def get_authn_descriptor(
+        self,
+        get_authn_descriptor_request: "GetAuthnDescriptorRequest",
+        *,
+        timeout: Optional[float] = None,
+        deadline: Optional["Deadline"] = None,
+        metadata: Optional["MetadataLike"] = None
+    ) -> "GetAuthnDescriptorResponse":
         return await self._unary_unary(
             "/cosmos.base.reflection.v2alpha1.ReflectionService/GetAuthnDescriptor",
-            request,
+            get_authn_descriptor_request,
             GetAuthnDescriptorResponse,
+            timeout=timeout,
+            deadline=deadline,
+            metadata=metadata,
         )
 
-    async def get_chain_descriptor(self) -> "GetChainDescriptorResponse":
-
-        request = GetChainDescriptorRequest()
-
+    async def get_chain_descriptor(
+        self,
+        get_chain_descriptor_request: "GetChainDescriptorRequest",
+        *,
+        timeout: Optional[float] = None,
+        deadline: Optional["Deadline"] = None,
+        metadata: Optional["MetadataLike"] = None
+    ) -> "GetChainDescriptorResponse":
         return await self._unary_unary(
             "/cosmos.base.reflection.v2alpha1.ReflectionService/GetChainDescriptor",
-            request,
+            get_chain_descriptor_request,
             GetChainDescriptorResponse,
+            timeout=timeout,
+            deadline=deadline,
+            metadata=metadata,
         )
 
-    async def get_codec_descriptor(self) -> "GetCodecDescriptorResponse":
-
-        request = GetCodecDescriptorRequest()
-
+    async def get_codec_descriptor(
+        self,
+        get_codec_descriptor_request: "GetCodecDescriptorRequest",
+        *,
+        timeout: Optional[float] = None,
+        deadline: Optional["Deadline"] = None,
+        metadata: Optional["MetadataLike"] = None
+    ) -> "GetCodecDescriptorResponse":
         return await self._unary_unary(
             "/cosmos.base.reflection.v2alpha1.ReflectionService/GetCodecDescriptor",
-            request,
+            get_codec_descriptor_request,
             GetCodecDescriptorResponse,
+            timeout=timeout,
+            deadline=deadline,
+            metadata=metadata,
         )
 
     async def get_configuration_descriptor(
         self,
+        get_configuration_descriptor_request: "GetConfigurationDescriptorRequest",
+        *,
+        timeout: Optional[float] = None,
+        deadline: Optional["Deadline"] = None,
+        metadata: Optional["MetadataLike"] = None
     ) -> "GetConfigurationDescriptorResponse":
-
-        request = GetConfigurationDescriptorRequest()
-
         return await self._unary_unary(
             "/cosmos.base.reflection.v2alpha1.ReflectionService/GetConfigurationDescriptor",
-            request,
+            get_configuration_descriptor_request,
             GetConfigurationDescriptorResponse,
+            timeout=timeout,
+            deadline=deadline,
+            metadata=metadata,
         )
 
     async def get_query_services_descriptor(
         self,
+        get_query_services_descriptor_request: "GetQueryServicesDescriptorRequest",
+        *,
+        timeout: Optional[float] = None,
+        deadline: Optional["Deadline"] = None,
+        metadata: Optional["MetadataLike"] = None
     ) -> "GetQueryServicesDescriptorResponse":
-
-        request = GetQueryServicesDescriptorRequest()
-
         return await self._unary_unary(
             "/cosmos.base.reflection.v2alpha1.ReflectionService/GetQueryServicesDescriptor",
-            request,
+            get_query_services_descriptor_request,
             GetQueryServicesDescriptorResponse,
+            timeout=timeout,
+            deadline=deadline,
+            metadata=metadata,
         )
 
-    async def get_tx_descriptor(self) -> "GetTxDescriptorResponse":
-
-        request = GetTxDescriptorRequest()
-
+    async def get_tx_descriptor(
+        self,
+        get_tx_descriptor_request: "GetTxDescriptorRequest",
+        *,
+        timeout: Optional[float] = None,
+        deadline: Optional["Deadline"] = None,
+        metadata: Optional["MetadataLike"] = None
+    ) -> "GetTxDescriptorResponse":
         return await self._unary_unary(
             "/cosmos.base.reflection.v2alpha1.ReflectionService/GetTxDescriptor",
-            request,
+            get_tx_descriptor_request,
             GetTxDescriptorResponse,
+            timeout=timeout,
+            deadline=deadline,
+            metadata=metadata,
         )
 
 
 class ReflectionServiceBase(ServiceBase):
-    async def get_authn_descriptor(self) -> "GetAuthnDescriptorResponse":
+    async def get_authn_descriptor(
+        self, get_authn_descriptor_request: "GetAuthnDescriptorRequest"
+    ) -> "GetAuthnDescriptorResponse":
         raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
 
-    async def get_chain_descriptor(self) -> "GetChainDescriptorResponse":
+    async def get_chain_descriptor(
+        self, get_chain_descriptor_request: "GetChainDescriptorRequest"
+    ) -> "GetChainDescriptorResponse":
         raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
 
-    async def get_codec_descriptor(self) -> "GetCodecDescriptorResponse":
+    async def get_codec_descriptor(
+        self, get_codec_descriptor_request: "GetCodecDescriptorRequest"
+    ) -> "GetCodecDescriptorResponse":
         raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
 
     async def get_configuration_descriptor(
-        self,
+        self, get_configuration_descriptor_request: "GetConfigurationDescriptorRequest"
     ) -> "GetConfigurationDescriptorResponse":
         raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
 
     async def get_query_services_descriptor(
-        self,
+        self, get_query_services_descriptor_request: "GetQueryServicesDescriptorRequest"
     ) -> "GetQueryServicesDescriptorResponse":
         raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
 
-    async def get_tx_descriptor(self) -> "GetTxDescriptorResponse":
+    async def get_tx_descriptor(
+        self, get_tx_descriptor_request: "GetTxDescriptorRequest"
+    ) -> "GetTxDescriptorResponse":
         raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
 
-    async def __rpc_get_authn_descriptor(self, stream: grpclib.server.Stream) -> None:
+    async def __rpc_get_authn_descriptor(
+        self,
+        stream: "grpclib.server.Stream[GetAuthnDescriptorRequest, GetAuthnDescriptorResponse]",
+    ) -> None:
         request = await stream.recv_message()
-
-        request_kwargs = {}
-
-        response = await self.get_authn_descriptor(**request_kwargs)
+        response = await self.get_authn_descriptor(request)
         await stream.send_message(response)
 
-    async def __rpc_get_chain_descriptor(self, stream: grpclib.server.Stream) -> None:
+    async def __rpc_get_chain_descriptor(
+        self,
+        stream: "grpclib.server.Stream[GetChainDescriptorRequest, GetChainDescriptorResponse]",
+    ) -> None:
         request = await stream.recv_message()
-
-        request_kwargs = {}
-
-        response = await self.get_chain_descriptor(**request_kwargs)
+        response = await self.get_chain_descriptor(request)
         await stream.send_message(response)
 
-    async def __rpc_get_codec_descriptor(self, stream: grpclib.server.Stream) -> None:
+    async def __rpc_get_codec_descriptor(
+        self,
+        stream: "grpclib.server.Stream[GetCodecDescriptorRequest, GetCodecDescriptorResponse]",
+    ) -> None:
         request = await stream.recv_message()
-
-        request_kwargs = {}
-
-        response = await self.get_codec_descriptor(**request_kwargs)
+        response = await self.get_codec_descriptor(request)
         await stream.send_message(response)
 
     async def __rpc_get_configuration_descriptor(
-        self, stream: grpclib.server.Stream
+        self,
+        stream: "grpclib.server.Stream[GetConfigurationDescriptorRequest, GetConfigurationDescriptorResponse]",
     ) -> None:
         request = await stream.recv_message()
-
-        request_kwargs = {}
-
-        response = await self.get_configuration_descriptor(**request_kwargs)
+        response = await self.get_configuration_descriptor(request)
         await stream.send_message(response)
 
     async def __rpc_get_query_services_descriptor(
-        self, stream: grpclib.server.Stream
+        self,
+        stream: "grpclib.server.Stream[GetQueryServicesDescriptorRequest, GetQueryServicesDescriptorResponse]",
     ) -> None:
         request = await stream.recv_message()
-
-        request_kwargs = {}
-
-        response = await self.get_query_services_descriptor(**request_kwargs)
+        response = await self.get_query_services_descriptor(request)
         await stream.send_message(response)
 
-    async def __rpc_get_tx_descriptor(self, stream: grpclib.server.Stream) -> None:
+    async def __rpc_get_tx_descriptor(
+        self,
+        stream: "grpclib.server.Stream[GetTxDescriptorRequest, GetTxDescriptorResponse]",
+    ) -> None:
         request = await stream.recv_message()
-
-        request_kwargs = {}
-
-        response = await self.get_tx_descriptor(**request_kwargs)
+        response = await self.get_tx_descriptor(request)
         await stream.send_message(response)
 
     def __mapping__(self) -> Dict[str, grpclib.const.Handler]:

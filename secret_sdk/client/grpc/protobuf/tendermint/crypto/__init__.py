@@ -5,7 +5,6 @@ from dataclasses import dataclass
 from typing import List
 
 import betterproto
-from betterproto.grpc.grpclib_server import ServiceBase
 
 
 @dataclass(eq=False, repr=False)
@@ -18,10 +17,11 @@ class Proof(betterproto.Message):
 
 @dataclass(eq=False, repr=False)
 class ValueOp(betterproto.Message):
-    # Encoded in ProofOp.Key.
     key: bytes = betterproto.bytes_field(1)
-    # To encode in ProofOp.Data
+    """Encoded in ProofOp.Key."""
+
     proof: "Proof" = betterproto.message_field(2)
+    """To encode in ProofOp.Data"""
 
 
 @dataclass(eq=False, repr=False)

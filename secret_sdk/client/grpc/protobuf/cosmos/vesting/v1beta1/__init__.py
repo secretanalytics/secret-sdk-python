@@ -2,11 +2,25 @@
 # sources: cosmos/vesting/v1beta1/tx.proto, cosmos/vesting/v1beta1/vesting.proto
 # plugin: python-betterproto
 from dataclasses import dataclass
-from typing import Dict, List, Optional
+from typing import (
+    TYPE_CHECKING,
+    Dict,
+    List,
+    Optional,
+)
 
 import betterproto
-from betterproto.grpc.grpclib_server import ServiceBase
 import grpclib
+from betterproto.grpc.grpclib_server import ServiceBase
+
+from ...auth import v1beta1 as __auth_v1_beta1__
+from ...base import v1beta1 as __base_v1_beta1__
+
+
+if TYPE_CHECKING:
+    import grpclib.server
+    from betterproto.grpc.grpclib_client import MetadataLike
+    from grpclib.metadata import Deadline
 
 
 @dataclass(eq=False, repr=False)
@@ -104,53 +118,34 @@ class PermanentLockedAccount(betterproto.Message):
 class MsgStub(betterproto.ServiceStub):
     async def create_vesting_account(
         self,
+        msg_create_vesting_account: "MsgCreateVestingAccount",
         *,
-        from_address: str = "",
-        to_address: str = "",
-        amount: Optional[List["__base_v1_beta1__.Coin"]] = None,
-        end_time: int = 0,
-        delayed: bool = False
+        timeout: Optional[float] = None,
+        deadline: Optional["Deadline"] = None,
+        metadata: Optional["MetadataLike"] = None
     ) -> "MsgCreateVestingAccountResponse":
-        amount = amount or []
-
-        request = MsgCreateVestingAccount()
-        request.from_address = from_address
-        request.to_address = to_address
-        if amount is not None:
-            request.amount = amount
-        request.end_time = end_time
-        request.delayed = delayed
-
         return await self._unary_unary(
             "/cosmos.vesting.v1beta1.Msg/CreateVestingAccount",
-            request,
+            msg_create_vesting_account,
             MsgCreateVestingAccountResponse,
+            timeout=timeout,
+            deadline=deadline,
+            metadata=metadata,
         )
 
 
 class MsgBase(ServiceBase):
     async def create_vesting_account(
-        self,
-        from_address: str,
-        to_address: str,
-        amount: Optional[List["__base_v1_beta1__.Coin"]],
-        end_time: int,
-        delayed: bool,
+        self, msg_create_vesting_account: "MsgCreateVestingAccount"
     ) -> "MsgCreateVestingAccountResponse":
         raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
 
-    async def __rpc_create_vesting_account(self, stream: grpclib.server.Stream) -> None:
+    async def __rpc_create_vesting_account(
+        self,
+        stream: "grpclib.server.Stream[MsgCreateVestingAccount, MsgCreateVestingAccountResponse]",
+    ) -> None:
         request = await stream.recv_message()
-
-        request_kwargs = {
-            "from_address": request.from_address,
-            "to_address": request.to_address,
-            "amount": request.amount,
-            "end_time": request.end_time,
-            "delayed": request.delayed,
-        }
-
-        response = await self.create_vesting_account(**request_kwargs)
+        response = await self.create_vesting_account(request)
         await stream.send_message(response)
 
     def __mapping__(self) -> Dict[str, grpclib.const.Handler]:
@@ -162,7 +157,3 @@ class MsgBase(ServiceBase):
                 MsgCreateVestingAccountResponse,
             ),
         }
-
-
-from ...auth import v1beta1 as __auth_v1_beta1__
-from ...base import v1beta1 as __base_v1_beta1__

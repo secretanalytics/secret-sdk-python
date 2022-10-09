@@ -2,11 +2,25 @@
 # sources: cosmos/bank/v1beta1/authz.proto, cosmos/bank/v1beta1/bank.proto, cosmos/bank/v1beta1/genesis.proto, cosmos/bank/v1beta1/query.proto, cosmos/bank/v1beta1/tx.proto
 # plugin: python-betterproto
 from dataclasses import dataclass
-from typing import Dict, List, Optional
+from typing import (
+    TYPE_CHECKING,
+    Dict,
+    List,
+    Optional,
+)
 
 import betterproto
-from betterproto.grpc.grpclib_server import ServiceBase
 import grpclib
+from betterproto.grpc.grpclib_server import ServiceBase
+
+from ...base import v1beta1 as __base_v1_beta1__
+from ...base.query import v1beta1 as __base_query_v1_beta1__
+
+
+if TYPE_CHECKING:
+    import grpclib.server
+    from betterproto.grpc.grpclib_client import MetadataLike
+    from grpclib.metadata import Deadline
 
 
 @dataclass(eq=False, repr=False)
@@ -66,15 +80,21 @@ class DenomUnit(betterproto.Message):
     the basic token.
     """
 
-    # denom represents the string name of the given denom unit (e.g uatom).
     denom: str = betterproto.string_field(1)
-    # exponent represents power of 10 exponent that one must raise the base_denom
-    # to in order to equal the given DenomUnit's denom 1 denom = 1^exponent
-    # base_denom (e.g. with a base_denom of uatom, one can create a DenomUnit of
-    # 'atom' with exponent = 6, thus: 1 atom = 10^6 uatom).
+    """
+    denom represents the string name of the given denom unit (e.g uatom).
+    """
+
     exponent: int = betterproto.uint32_field(2)
-    # aliases is a list of string aliases for the given denom
+    """
+    exponent represents power of 10 exponent that one must raise the base_denom
+    to in order to equal the given DenomUnit's denom 1 denom = 1^exponent
+    base_denom (e.g. with a base_denom of uatom, one can create a DenomUnit of
+    'atom' with exponent = 6, thus: 1 atom = 10^6 uatom).
+    """
+
     aliases: List[str] = betterproto.string_field(3)
+    """aliases is a list of string aliases for the given denom"""
 
 
 @dataclass(eq=False, repr=False)
@@ -82,17 +102,29 @@ class Metadata(betterproto.Message):
     """Metadata represents a struct that describes a basic token."""
 
     description: str = betterproto.string_field(1)
-    # denom_units represents the list of DenomUnit's for a given coin
     denom_units: List["DenomUnit"] = betterproto.message_field(2)
-    # base represents the base denom (should be the DenomUnit with exponent = 0).
+    """denom_units represents the list of DenomUnit's for a given coin"""
+
     base: str = betterproto.string_field(3)
-    # display indicates the suggested denom that should be displayed in clients.
+    """
+    base represents the base denom (should be the DenomUnit with exponent = 0).
+    """
+
     display: str = betterproto.string_field(4)
-    # name defines the name of the token (eg: Cosmos Atom) Since: cosmos-sdk 0.43
+    """
+    display indicates the suggested denom that should be displayed in clients.
+    """
+
     name: str = betterproto.string_field(5)
-    # symbol is the token symbol usually shown on exchanges (eg: ATOM). This can
-    # be the same as the display. Since: cosmos-sdk 0.43
+    """
+    name defines the name of the token (eg: Cosmos Atom) Since: cosmos-sdk 0.43
+    """
+
     symbol: str = betterproto.string_field(6)
+    """
+    symbol is the token symbol usually shown on exchanges (eg: ATOM). This can
+    be the same as the display. Since: cosmos-sdk 0.43
+    """
 
 
 @dataclass(eq=False, repr=False)
@@ -136,10 +168,11 @@ class QueryBalanceRequest(betterproto.Message):
     QueryBalanceRequest is the request type for the Query/Balance RPC method.
     """
 
-    # address is the address to query balances for.
     address: str = betterproto.string_field(1)
-    # denom is the coin denom to query balances for.
+    """address is the address to query balances for."""
+
     denom: str = betterproto.string_field(2)
+    """denom is the coin denom to query balances for."""
 
 
 @dataclass(eq=False, repr=False)
@@ -148,8 +181,8 @@ class QueryBalanceResponse(betterproto.Message):
     QueryBalanceResponse is the response type for the Query/Balance RPC method.
     """
 
-    # balance is the balance of the coin.
     balance: "__base_v1_beta1__.Coin" = betterproto.message_field(1)
+    """balance is the balance of the coin."""
 
 
 @dataclass(eq=False, repr=False)
@@ -159,10 +192,11 @@ class QueryAllBalancesRequest(betterproto.Message):
     method.
     """
 
-    # address is the address to query balances for.
     address: str = betterproto.string_field(1)
-    # pagination defines an optional pagination for the request.
+    """address is the address to query balances for."""
+
     pagination: "__base_query_v1_beta1__.PageRequest" = betterproto.message_field(2)
+    """pagination defines an optional pagination for the request."""
 
 
 @dataclass(eq=False, repr=False)
@@ -172,10 +206,11 @@ class QueryAllBalancesResponse(betterproto.Message):
     method.
     """
 
-    # balances is the balances of all the coins.
     balances: List["__base_v1_beta1__.Coin"] = betterproto.message_field(1)
-    # pagination defines the pagination in the response.
+    """balances is the balances of all the coins."""
+
     pagination: "__base_query_v1_beta1__.PageResponse" = betterproto.message_field(2)
+    """pagination defines the pagination in the response."""
 
 
 @dataclass(eq=False, repr=False)
@@ -185,10 +220,11 @@ class QuerySpendableBalancesRequest(betterproto.Message):
     querying an account's spendable balances.
     """
 
-    # address is the address to query spendable balances for.
     address: str = betterproto.string_field(1)
-    # pagination defines an optional pagination for the request.
+    """address is the address to query spendable balances for."""
+
     pagination: "__base_query_v1_beta1__.PageRequest" = betterproto.message_field(2)
+    """pagination defines an optional pagination for the request."""
 
 
 @dataclass(eq=False, repr=False)
@@ -198,10 +234,11 @@ class QuerySpendableBalancesResponse(betterproto.Message):
     querying an account's spendable balances.
     """
 
-    # balances is the spendable balances of all the coins.
     balances: List["__base_v1_beta1__.Coin"] = betterproto.message_field(1)
-    # pagination defines the pagination in the response.
+    """balances is the spendable balances of all the coins."""
+
     pagination: "__base_query_v1_beta1__.PageResponse" = betterproto.message_field(2)
+    """pagination defines the pagination in the response."""
 
 
 @dataclass(eq=False, repr=False)
@@ -211,9 +248,11 @@ class QueryTotalSupplyRequest(betterproto.Message):
     method.
     """
 
-    # pagination defines an optional pagination for the request. Since: cosmos-
-    # sdk 0.43
     pagination: "__base_query_v1_beta1__.PageRequest" = betterproto.message_field(1)
+    """
+    pagination defines an optional pagination for the request. Since: cosmos-
+    sdk 0.43
+    """
 
 
 @dataclass(eq=False, repr=False)
@@ -223,10 +262,13 @@ class QueryTotalSupplyResponse(betterproto.Message):
     method
     """
 
-    # supply is the supply of the coins
     supply: List["__base_v1_beta1__.Coin"] = betterproto.message_field(1)
-    # pagination defines the pagination in the response. Since: cosmos-sdk 0.43
+    """supply is the supply of the coins"""
+
     pagination: "__base_query_v1_beta1__.PageResponse" = betterproto.message_field(2)
+    """
+    pagination defines the pagination in the response. Since: cosmos-sdk 0.43
+    """
 
 
 @dataclass(eq=False, repr=False)
@@ -235,8 +277,8 @@ class QuerySupplyOfRequest(betterproto.Message):
     QuerySupplyOfRequest is the request type for the Query/SupplyOf RPC method.
     """
 
-    # denom is the coin denom to query balances for.
     denom: str = betterproto.string_field(1)
+    """denom is the coin denom to query balances for."""
 
 
 @dataclass(eq=False, repr=False)
@@ -246,8 +288,8 @@ class QuerySupplyOfResponse(betterproto.Message):
     method.
     """
 
-    # amount is the supply of the coin.
     amount: "__base_v1_beta1__.Coin" = betterproto.message_field(1)
+    """amount is the supply of the coin."""
 
 
 @dataclass(eq=False, repr=False)
@@ -276,8 +318,8 @@ class QueryDenomsMetadataRequest(betterproto.Message):
     RPC method.
     """
 
-    # pagination defines an optional pagination for the request.
     pagination: "__base_query_v1_beta1__.PageRequest" = betterproto.message_field(1)
+    """pagination defines an optional pagination for the request."""
 
 
 @dataclass(eq=False, repr=False)
@@ -287,10 +329,13 @@ class QueryDenomsMetadataResponse(betterproto.Message):
     Query/DenomsMetadata RPC method.
     """
 
-    # metadata provides the client information for all the registered tokens.
     metadatas: List["Metadata"] = betterproto.message_field(1)
-    # pagination defines the pagination in the response.
+    """
+    metadata provides the client information for all the registered tokens.
+    """
+
     pagination: "__base_query_v1_beta1__.PageResponse" = betterproto.message_field(2)
+    """pagination defines the pagination in the response."""
 
 
 @dataclass(eq=False, repr=False)
@@ -300,8 +345,8 @@ class QueryDenomMetadataRequest(betterproto.Message):
     RPC method.
     """
 
-    # denom is the coin denom to query the metadata for.
     denom: str = betterproto.string_field(1)
+    """denom is the coin denom to query the metadata for."""
 
 
 @dataclass(eq=False, repr=False)
@@ -311,9 +356,11 @@ class QueryDenomMetadataResponse(betterproto.Message):
     RPC method.
     """
 
-    # metadata describes and provides all the client information for the
-    # requested token.
     metadata: "Metadata" = betterproto.message_field(1)
+    """
+    metadata describes and provides all the client information for the
+    requested token.
+    """
 
 
 @dataclass(eq=False, repr=False)
@@ -330,16 +377,21 @@ class SendAuthorization(betterproto.Message):
 class GenesisState(betterproto.Message):
     """GenesisState defines the bank module's genesis state."""
 
-    # params defines all the paramaters of the module.
     params: "Params" = betterproto.message_field(1)
-    # balances is an array containing the balances of all the accounts.
+    """params defines all the paramaters of the module."""
+
     balances: List["Balance"] = betterproto.message_field(2)
-    # supply represents the total supply. If it is left empty, then supply will
-    # be calculated based on the provided balances. Otherwise, it will be used to
-    # validate that the sum of the balances equals this amount.
+    """balances is an array containing the balances of all the accounts."""
+
     supply: List["__base_v1_beta1__.Coin"] = betterproto.message_field(3)
-    # denom_metadata defines the metadata of the differents coins.
+    """
+    supply represents the total supply. If it is left empty, then supply will
+    be calculated based on the provided balances. Otherwise, it will be used to
+    validate that the sum of the balances equals this amount.
+    """
+
     denom_metadata: List["Metadata"] = betterproto.message_field(4)
+    """denom_metadata defines the metadata of the differents coins."""
 
 
 @dataclass(eq=False, repr=False)
@@ -349,189 +401,208 @@ class Balance(betterproto.Message):
     module's genesis state.
     """
 
-    # address is the address of the balance holder.
     address: str = betterproto.string_field(1)
-    # coins defines the different coins this balance holds.
+    """address is the address of the balance holder."""
+
     coins: List["__base_v1_beta1__.Coin"] = betterproto.message_field(2)
+    """coins defines the different coins this balance holds."""
 
 
 class MsgStub(betterproto.ServiceStub):
     async def send(
         self,
+        msg_send: "MsgSend",
         *,
-        from_address: str = "",
-        to_address: str = "",
-        amount: Optional[List["__base_v1_beta1__.Coin"]] = None
+        timeout: Optional[float] = None,
+        deadline: Optional["Deadline"] = None,
+        metadata: Optional["MetadataLike"] = None
     ) -> "MsgSendResponse":
-        amount = amount or []
-
-        request = MsgSend()
-        request.from_address = from_address
-        request.to_address = to_address
-        if amount is not None:
-            request.amount = amount
-
         return await self._unary_unary(
-            "/cosmos.bank.v1beta1.Msg/Send", request, MsgSendResponse
+            "/cosmos.bank.v1beta1.Msg/Send",
+            msg_send,
+            MsgSendResponse,
+            timeout=timeout,
+            deadline=deadline,
+            metadata=metadata,
         )
 
     async def multi_send(
         self,
+        msg_multi_send: "MsgMultiSend",
         *,
-        inputs: Optional[List["Input"]] = None,
-        outputs: Optional[List["Output"]] = None
+        timeout: Optional[float] = None,
+        deadline: Optional["Deadline"] = None,
+        metadata: Optional["MetadataLike"] = None
     ) -> "MsgMultiSendResponse":
-        inputs = inputs or []
-        outputs = outputs or []
-
-        request = MsgMultiSend()
-        if inputs is not None:
-            request.inputs = inputs
-        if outputs is not None:
-            request.outputs = outputs
-
         return await self._unary_unary(
-            "/cosmos.bank.v1beta1.Msg/MultiSend", request, MsgMultiSendResponse
+            "/cosmos.bank.v1beta1.Msg/MultiSend",
+            msg_multi_send,
+            MsgMultiSendResponse,
+            timeout=timeout,
+            deadline=deadline,
+            metadata=metadata,
         )
 
 
 class QueryStub(betterproto.ServiceStub):
     async def balance(
-        self, *, address: str = "", denom: str = ""
+        self,
+        query_balance_request: "QueryBalanceRequest",
+        *,
+        timeout: Optional[float] = None,
+        deadline: Optional["Deadline"] = None,
+        metadata: Optional["MetadataLike"] = None
     ) -> "QueryBalanceResponse":
-
-        request = QueryBalanceRequest()
-        request.address = address
-        request.denom = denom
-
         return await self._unary_unary(
-            "/cosmos.bank.v1beta1.Query/Balance", request, QueryBalanceResponse
+            "/cosmos.bank.v1beta1.Query/Balance",
+            query_balance_request,
+            QueryBalanceResponse,
+            timeout=timeout,
+            deadline=deadline,
+            metadata=metadata,
         )
 
     async def all_balances(
         self,
+        query_all_balances_request: "QueryAllBalancesRequest",
         *,
-        address: str = "",
-        pagination: "__base_query_v1_beta1__.PageRequest" = None
+        timeout: Optional[float] = None,
+        deadline: Optional["Deadline"] = None,
+        metadata: Optional["MetadataLike"] = None
     ) -> "QueryAllBalancesResponse":
-
-        request = QueryAllBalancesRequest()
-        request.address = address
-        if pagination is not None:
-            request.pagination = pagination
-
         return await self._unary_unary(
-            "/cosmos.bank.v1beta1.Query/AllBalances", request, QueryAllBalancesResponse
+            "/cosmos.bank.v1beta1.Query/AllBalances",
+            query_all_balances_request,
+            QueryAllBalancesResponse,
+            timeout=timeout,
+            deadline=deadline,
+            metadata=metadata,
         )
 
     async def spendable_balances(
         self,
+        query_spendable_balances_request: "QuerySpendableBalancesRequest",
         *,
-        address: str = "",
-        pagination: "__base_query_v1_beta1__.PageRequest" = None
+        timeout: Optional[float] = None,
+        deadline: Optional["Deadline"] = None,
+        metadata: Optional["MetadataLike"] = None
     ) -> "QuerySpendableBalancesResponse":
-
-        request = QuerySpendableBalancesRequest()
-        request.address = address
-        if pagination is not None:
-            request.pagination = pagination
-
         return await self._unary_unary(
             "/cosmos.bank.v1beta1.Query/SpendableBalances",
-            request,
+            query_spendable_balances_request,
             QuerySpendableBalancesResponse,
+            timeout=timeout,
+            deadline=deadline,
+            metadata=metadata,
         )
 
     async def total_supply(
-        self, *, pagination: "__base_query_v1_beta1__.PageRequest" = None
+        self,
+        query_total_supply_request: "QueryTotalSupplyRequest",
+        *,
+        timeout: Optional[float] = None,
+        deadline: Optional["Deadline"] = None,
+        metadata: Optional["MetadataLike"] = None
     ) -> "QueryTotalSupplyResponse":
-
-        request = QueryTotalSupplyRequest()
-        if pagination is not None:
-            request.pagination = pagination
-
         return await self._unary_unary(
-            "/cosmos.bank.v1beta1.Query/TotalSupply", request, QueryTotalSupplyResponse
+            "/cosmos.bank.v1beta1.Query/TotalSupply",
+            query_total_supply_request,
+            QueryTotalSupplyResponse,
+            timeout=timeout,
+            deadline=deadline,
+            metadata=metadata,
         )
 
-    async def supply_of(self, *, denom: str = "") -> "QuerySupplyOfResponse":
-
-        request = QuerySupplyOfRequest()
-        request.denom = denom
-
+    async def supply_of(
+        self,
+        query_supply_of_request: "QuerySupplyOfRequest",
+        *,
+        timeout: Optional[float] = None,
+        deadline: Optional["Deadline"] = None,
+        metadata: Optional["MetadataLike"] = None
+    ) -> "QuerySupplyOfResponse":
         return await self._unary_unary(
-            "/cosmos.bank.v1beta1.Query/SupplyOf", request, QuerySupplyOfResponse
+            "/cosmos.bank.v1beta1.Query/SupplyOf",
+            query_supply_of_request,
+            QuerySupplyOfResponse,
+            timeout=timeout,
+            deadline=deadline,
+            metadata=metadata,
         )
 
-    async def params(self) -> "QueryParamsResponse":
-
-        request = QueryParamsRequest()
-
+    async def params(
+        self,
+        query_params_request: "QueryParamsRequest",
+        *,
+        timeout: Optional[float] = None,
+        deadline: Optional["Deadline"] = None,
+        metadata: Optional["MetadataLike"] = None
+    ) -> "QueryParamsResponse":
         return await self._unary_unary(
-            "/cosmos.bank.v1beta1.Query/Params", request, QueryParamsResponse
+            "/cosmos.bank.v1beta1.Query/Params",
+            query_params_request,
+            QueryParamsResponse,
+            timeout=timeout,
+            deadline=deadline,
+            metadata=metadata,
         )
 
-    async def denom_metadata(self, *, denom: str = "") -> "QueryDenomMetadataResponse":
-
-        request = QueryDenomMetadataRequest()
-        request.denom = denom
-
+    async def denom_metadata(
+        self,
+        query_denom_metadata_request: "QueryDenomMetadataRequest",
+        *,
+        timeout: Optional[float] = None,
+        deadline: Optional["Deadline"] = None,
+        metadata: Optional["MetadataLike"] = None
+    ) -> "QueryDenomMetadataResponse":
         return await self._unary_unary(
             "/cosmos.bank.v1beta1.Query/DenomMetadata",
-            request,
+            query_denom_metadata_request,
             QueryDenomMetadataResponse,
+            timeout=timeout,
+            deadline=deadline,
+            metadata=metadata,
         )
 
     async def denoms_metadata(
-        self, *, pagination: "__base_query_v1_beta1__.PageRequest" = None
+        self,
+        query_denoms_metadata_request: "QueryDenomsMetadataRequest",
+        *,
+        timeout: Optional[float] = None,
+        deadline: Optional["Deadline"] = None,
+        metadata: Optional["MetadataLike"] = None
     ) -> "QueryDenomsMetadataResponse":
-
-        request = QueryDenomsMetadataRequest()
-        if pagination is not None:
-            request.pagination = pagination
-
         return await self._unary_unary(
             "/cosmos.bank.v1beta1.Query/DenomsMetadata",
-            request,
+            query_denoms_metadata_request,
             QueryDenomsMetadataResponse,
+            timeout=timeout,
+            deadline=deadline,
+            metadata=metadata,
         )
 
 
 class MsgBase(ServiceBase):
-    async def send(
-        self,
-        from_address: str,
-        to_address: str,
-        amount: Optional[List["__base_v1_beta1__.Coin"]],
-    ) -> "MsgSendResponse":
+    async def send(self, msg_send: "MsgSend") -> "MsgSendResponse":
         raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
 
     async def multi_send(
-        self, inputs: Optional[List["Input"]], outputs: Optional[List["Output"]]
+        self, msg_multi_send: "MsgMultiSend"
     ) -> "MsgMultiSendResponse":
         raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
 
-    async def __rpc_send(self, stream: grpclib.server.Stream) -> None:
+    async def __rpc_send(
+        self, stream: "grpclib.server.Stream[MsgSend, MsgSendResponse]"
+    ) -> None:
         request = await stream.recv_message()
-
-        request_kwargs = {
-            "from_address": request.from_address,
-            "to_address": request.to_address,
-            "amount": request.amount,
-        }
-
-        response = await self.send(**request_kwargs)
+        response = await self.send(request)
         await stream.send_message(response)
 
-    async def __rpc_multi_send(self, stream: grpclib.server.Stream) -> None:
+    async def __rpc_multi_send(
+        self, stream: "grpclib.server.Stream[MsgMultiSend, MsgMultiSendResponse]"
+    ) -> None:
         request = await stream.recv_message()
-
-        request_kwargs = {
-            "inputs": request.inputs,
-            "outputs": request.outputs,
-        }
-
-        response = await self.multi_send(**request_kwargs)
+        response = await self.multi_send(request)
         await stream.send_message(response)
 
     def __mapping__(self) -> Dict[str, grpclib.const.Handler]:
@@ -552,117 +623,106 @@ class MsgBase(ServiceBase):
 
 
 class QueryBase(ServiceBase):
-    async def balance(self, address: str, denom: str) -> "QueryBalanceResponse":
+    async def balance(
+        self, query_balance_request: "QueryBalanceRequest"
+    ) -> "QueryBalanceResponse":
         raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
 
     async def all_balances(
-        self, address: str, pagination: "__base_query_v1_beta1__.PageRequest"
+        self, query_all_balances_request: "QueryAllBalancesRequest"
     ) -> "QueryAllBalancesResponse":
         raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
 
     async def spendable_balances(
-        self, address: str, pagination: "__base_query_v1_beta1__.PageRequest"
+        self, query_spendable_balances_request: "QuerySpendableBalancesRequest"
     ) -> "QuerySpendableBalancesResponse":
         raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
 
     async def total_supply(
-        self, pagination: "__base_query_v1_beta1__.PageRequest"
+        self, query_total_supply_request: "QueryTotalSupplyRequest"
     ) -> "QueryTotalSupplyResponse":
         raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
 
-    async def supply_of(self, denom: str) -> "QuerySupplyOfResponse":
+    async def supply_of(
+        self, query_supply_of_request: "QuerySupplyOfRequest"
+    ) -> "QuerySupplyOfResponse":
         raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
 
-    async def params(self) -> "QueryParamsResponse":
+    async def params(
+        self, query_params_request: "QueryParamsRequest"
+    ) -> "QueryParamsResponse":
         raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
 
-    async def denom_metadata(self, denom: str) -> "QueryDenomMetadataResponse":
+    async def denom_metadata(
+        self, query_denom_metadata_request: "QueryDenomMetadataRequest"
+    ) -> "QueryDenomMetadataResponse":
         raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
 
     async def denoms_metadata(
-        self, pagination: "__base_query_v1_beta1__.PageRequest"
+        self, query_denoms_metadata_request: "QueryDenomsMetadataRequest"
     ) -> "QueryDenomsMetadataResponse":
         raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
 
-    async def __rpc_balance(self, stream: grpclib.server.Stream) -> None:
+    async def __rpc_balance(
+        self, stream: "grpclib.server.Stream[QueryBalanceRequest, QueryBalanceResponse]"
+    ) -> None:
         request = await stream.recv_message()
-
-        request_kwargs = {
-            "address": request.address,
-            "denom": request.denom,
-        }
-
-        response = await self.balance(**request_kwargs)
+        response = await self.balance(request)
         await stream.send_message(response)
 
-    async def __rpc_all_balances(self, stream: grpclib.server.Stream) -> None:
+    async def __rpc_all_balances(
+        self,
+        stream: "grpclib.server.Stream[QueryAllBalancesRequest, QueryAllBalancesResponse]",
+    ) -> None:
         request = await stream.recv_message()
-
-        request_kwargs = {
-            "address": request.address,
-            "pagination": request.pagination,
-        }
-
-        response = await self.all_balances(**request_kwargs)
+        response = await self.all_balances(request)
         await stream.send_message(response)
 
-    async def __rpc_spendable_balances(self, stream: grpclib.server.Stream) -> None:
+    async def __rpc_spendable_balances(
+        self,
+        stream: "grpclib.server.Stream[QuerySpendableBalancesRequest, QuerySpendableBalancesResponse]",
+    ) -> None:
         request = await stream.recv_message()
-
-        request_kwargs = {
-            "address": request.address,
-            "pagination": request.pagination,
-        }
-
-        response = await self.spendable_balances(**request_kwargs)
+        response = await self.spendable_balances(request)
         await stream.send_message(response)
 
-    async def __rpc_total_supply(self, stream: grpclib.server.Stream) -> None:
+    async def __rpc_total_supply(
+        self,
+        stream: "grpclib.server.Stream[QueryTotalSupplyRequest, QueryTotalSupplyResponse]",
+    ) -> None:
         request = await stream.recv_message()
-
-        request_kwargs = {
-            "pagination": request.pagination,
-        }
-
-        response = await self.total_supply(**request_kwargs)
+        response = await self.total_supply(request)
         await stream.send_message(response)
 
-    async def __rpc_supply_of(self, stream: grpclib.server.Stream) -> None:
+    async def __rpc_supply_of(
+        self,
+        stream: "grpclib.server.Stream[QuerySupplyOfRequest, QuerySupplyOfResponse]",
+    ) -> None:
         request = await stream.recv_message()
-
-        request_kwargs = {
-            "denom": request.denom,
-        }
-
-        response = await self.supply_of(**request_kwargs)
+        response = await self.supply_of(request)
         await stream.send_message(response)
 
-    async def __rpc_params(self, stream: grpclib.server.Stream) -> None:
+    async def __rpc_params(
+        self, stream: "grpclib.server.Stream[QueryParamsRequest, QueryParamsResponse]"
+    ) -> None:
         request = await stream.recv_message()
-
-        request_kwargs = {}
-
-        response = await self.params(**request_kwargs)
+        response = await self.params(request)
         await stream.send_message(response)
 
-    async def __rpc_denom_metadata(self, stream: grpclib.server.Stream) -> None:
+    async def __rpc_denom_metadata(
+        self,
+        stream: "grpclib.server.Stream[QueryDenomMetadataRequest, QueryDenomMetadataResponse]",
+    ) -> None:
         request = await stream.recv_message()
-
-        request_kwargs = {
-            "denom": request.denom,
-        }
-
-        response = await self.denom_metadata(**request_kwargs)
+        response = await self.denom_metadata(request)
         await stream.send_message(response)
 
-    async def __rpc_denoms_metadata(self, stream: grpclib.server.Stream) -> None:
+    async def __rpc_denoms_metadata(
+        self,
+        stream: "grpclib.server.Stream[QueryDenomsMetadataRequest, QueryDenomsMetadataResponse]",
+    ) -> None:
         request = await stream.recv_message()
-
-        request_kwargs = {
-            "pagination": request.pagination,
-        }
-
-        response = await self.denoms_metadata(**request_kwargs)
+        response = await self.denoms_metadata(request)
         await stream.send_message(response)
 
     def __mapping__(self) -> Dict[str, grpclib.const.Handler]:
@@ -716,7 +776,3 @@ class QueryBase(ServiceBase):
                 QueryDenomsMetadataResponse,
             ),
         }
-
-
-from ...base import v1beta1 as __base_v1_beta1__
-from ...base.query import v1beta1 as __base_query_v1_beta1__

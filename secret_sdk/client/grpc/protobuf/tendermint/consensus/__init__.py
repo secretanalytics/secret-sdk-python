@@ -2,10 +2,15 @@
 # sources: tendermint/consensus/types.proto, tendermint/consensus/wal.proto
 # plugin: python-betterproto
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import (
+    datetime,
+    timedelta,
+)
 
 import betterproto
-from betterproto.grpc.grpclib_server import ServiceBase
+
+from .. import types as _types__
+from ..libs import bits as _libs_bits__
 
 
 @dataclass(eq=False, repr=False)
@@ -167,7 +172,3 @@ class TimedWalMessage(betterproto.Message):
 
     time: datetime = betterproto.message_field(1)
     msg: "WalMessage" = betterproto.message_field(2)
-
-
-from .. import types as _types__
-from ..libs import bits as _libs_bits__

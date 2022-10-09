@@ -4,22 +4,23 @@
 from dataclasses import dataclass
 
 import betterproto
-from betterproto.grpc.grpclib_server import ServiceBase
 
 
 @dataclass(eq=False, repr=False)
 class PubKey(betterproto.Message):
     """PubKey defines a secp256r1 ECDSA public key."""
 
-    # Point on secp256r1 curve in a compressed representation as specified in
-    # section 4.3.6 of ANSI X9.62:
-    # https://webstore.ansi.org/standards/ascx9/ansix9621998
     key: bytes = betterproto.bytes_field(1)
+    """
+    Point on secp256r1 curve in a compressed representation as specified in
+    section 4.3.6 of ANSI X9.62:
+    https://webstore.ansi.org/standards/ascx9/ansix9621998
+    """
 
 
 @dataclass(eq=False, repr=False)
 class PrivKey(betterproto.Message):
     """PrivKey defines a secp256r1 ECDSA private key."""
 
-    # secret number serialized using big-endian encoding
     secret: bytes = betterproto.bytes_field(1)
+    """secret number serialized using big-endian encoding"""

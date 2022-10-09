@@ -3,12 +3,30 @@
 # plugin: python-betterproto
 import warnings
 from dataclasses import dataclass
-from datetime import datetime, timedelta
-from typing import Dict, List, Optional
+from datetime import (
+    datetime,
+    timedelta,
+)
+from typing import (
+    TYPE_CHECKING,
+    Dict,
+    List,
+    Optional,
+)
 
 import betterproto
-from betterproto.grpc.grpclib_server import ServiceBase
+import betterproto.lib.google.protobuf as betterproto_lib_google_protobuf
 import grpclib
+from betterproto.grpc.grpclib_server import ServiceBase
+
+from ...base import v1beta1 as __base_v1_beta1__
+from ...base.query import v1beta1 as __base_query_v1_beta1__
+
+
+if TYPE_CHECKING:
+    import grpclib.server
+    from betterproto.grpc.grpclib_client import MetadataLike
+    from grpclib.metadata import Deadline
 
 
 class VoteOption(betterproto.Enum):
@@ -17,38 +35,57 @@ class VoteOption(betterproto.Enum):
     proposal.
     """
 
-    # VOTE_OPTION_UNSPECIFIED defines a no-op vote option.
     VOTE_OPTION_UNSPECIFIED = 0
-    # VOTE_OPTION_YES defines a yes vote option.
+    """VOTE_OPTION_UNSPECIFIED defines a no-op vote option."""
+
     VOTE_OPTION_YES = 1
-    # VOTE_OPTION_ABSTAIN defines an abstain vote option.
+    """VOTE_OPTION_YES defines a yes vote option."""
+
     VOTE_OPTION_ABSTAIN = 2
-    # VOTE_OPTION_NO defines a no vote option.
+    """VOTE_OPTION_ABSTAIN defines an abstain vote option."""
+
     VOTE_OPTION_NO = 3
-    # VOTE_OPTION_NO_WITH_VETO defines a no with veto vote option.
+    """VOTE_OPTION_NO defines a no vote option."""
+
     VOTE_OPTION_NO_WITH_VETO = 4
+    """VOTE_OPTION_NO_WITH_VETO defines a no with veto vote option."""
 
 
 class ProposalStatus(betterproto.Enum):
     """ProposalStatus enumerates the valid statuses of a proposal."""
 
-    # PROPOSAL_STATUS_UNSPECIFIED defines the default propopsal status.
     PROPOSAL_STATUS_UNSPECIFIED = 0
-    # PROPOSAL_STATUS_DEPOSIT_PERIOD defines a proposal status during the deposit
-    # period.
+    """PROPOSAL_STATUS_UNSPECIFIED defines the default propopsal status."""
+
     PROPOSAL_STATUS_DEPOSIT_PERIOD = 1
-    # PROPOSAL_STATUS_VOTING_PERIOD defines a proposal status during the voting
-    # period.
+    """
+    PROPOSAL_STATUS_DEPOSIT_PERIOD defines a proposal status during the deposit
+    period.
+    """
+
     PROPOSAL_STATUS_VOTING_PERIOD = 2
-    # PROPOSAL_STATUS_PASSED defines a proposal status of a proposal that has
-    # passed.
+    """
+    PROPOSAL_STATUS_VOTING_PERIOD defines a proposal status during the voting
+    period.
+    """
+
     PROPOSAL_STATUS_PASSED = 3
-    # PROPOSAL_STATUS_REJECTED defines a proposal status of a proposal that has
-    # been rejected.
+    """
+    PROPOSAL_STATUS_PASSED defines a proposal status of a proposal that has
+    passed.
+    """
+
     PROPOSAL_STATUS_REJECTED = 4
-    # PROPOSAL_STATUS_FAILED defines a proposal status of a proposal that has
-    # failed.
+    """
+    PROPOSAL_STATUS_REJECTED defines a proposal status of a proposal that has
+    been rejected.
+    """
+
     PROPOSAL_STATUS_FAILED = 5
+    """
+    PROPOSAL_STATUS_FAILED defines a proposal status of a proposal that has
+    failed.
+    """
 
 
 @dataclass(eq=False, repr=False)
@@ -119,16 +156,19 @@ class Vote(betterproto.Message):
 
     proposal_id: int = betterproto.uint64_field(1)
     voter: str = betterproto.string_field(2)
-    # Deprecated: Prefer to use `options` instead. This field is set in queries
-    # if and only if `len(options) == 1` and that option has weight 1. In all
-    # other cases, this field will default to VOTE_OPTION_UNSPECIFIED.
     option: "VoteOption" = betterproto.enum_field(3)
-    # Since: cosmos-sdk 0.43
+    """
+    Deprecated: Prefer to use `options` instead. This field is set in queries
+    if and only if `len(options) == 1` and that option has weight 1. In all
+    other cases, this field will default to VOTE_OPTION_UNSPECIFIED.
+    """
+
     options: List["WeightedVoteOption"] = betterproto.message_field(4)
+    """Since: cosmos-sdk 0.43"""
 
     def __post_init__(self) -> None:
         super().__post_init__()
-        if self.option:
+        if self.is_set("option"):
             warnings.warn("Vote.option is deprecated", DeprecationWarning)
 
 
@@ -138,19 +178,22 @@ class DepositParams(betterproto.Message):
     DepositParams defines the params for deposits on governance proposals.
     """
 
-    # Minimum deposit for a proposal to enter voting period.
     min_deposit: List["__base_v1_beta1__.Coin"] = betterproto.message_field(1)
-    # Maximum period for Atom holders to deposit on a proposal. Initial value: 2
-    # months.
+    """Minimum deposit for a proposal to enter voting period."""
+
     max_deposit_period: timedelta = betterproto.message_field(2)
+    """
+    Maximum period for Atom holders to deposit on a proposal. Initial value: 2
+    months.
+    """
 
 
 @dataclass(eq=False, repr=False)
 class VotingParams(betterproto.Message):
     """VotingParams defines the params for voting on governance proposals."""
 
-    # Length of the voting period.
     voting_period: timedelta = betterproto.message_field(1)
+    """Length of the voting period."""
 
 
 @dataclass(eq=False, repr=False)
@@ -159,14 +202,22 @@ class TallyParams(betterproto.Message):
     TallyParams defines the params for tallying votes on governance proposals.
     """
 
-    # Minimum percentage of total stake needed to vote for a result to be
-    # considered valid.
     quorum: bytes = betterproto.bytes_field(1)
-    # Minimum proportion of Yes votes for proposal to pass. Default value: 0.5.
+    """
+    Minimum percentage of total stake needed to vote for a result to be
+    considered valid.
+    """
+
     threshold: bytes = betterproto.bytes_field(2)
-    # Minimum value of Veto votes to Total votes ratio for proposal to be
-    # vetoed. Default value: 1/3.
+    """
+    Minimum proportion of Yes votes for proposal to pass. Default value: 0.5.
+    """
+
     veto_threshold: bytes = betterproto.bytes_field(3)
+    """
+    Minimum value of Veto votes to Total votes ratio for proposal to be
+    vetoed. Default value: 1/3.
+    """
 
 
 @dataclass(eq=False, repr=False)
@@ -251,8 +302,8 @@ class QueryProposalRequest(betterproto.Message):
     QueryProposalRequest is the request type for the Query/Proposal RPC method.
     """
 
-    # proposal_id defines the unique id of the proposal.
     proposal_id: int = betterproto.uint64_field(1)
+    """proposal_id defines the unique id of the proposal."""
 
 
 @dataclass(eq=False, repr=False)
@@ -272,14 +323,17 @@ class QueryProposalsRequest(betterproto.Message):
     method.
     """
 
-    # proposal_status defines the status of the proposals.
     proposal_status: "ProposalStatus" = betterproto.enum_field(1)
-    # voter defines the voter address for the proposals.
+    """proposal_status defines the status of the proposals."""
+
     voter: str = betterproto.string_field(2)
-    # depositor defines the deposit addresses from the proposals.
+    """voter defines the voter address for the proposals."""
+
     depositor: str = betterproto.string_field(3)
-    # pagination defines an optional pagination for the request.
+    """depositor defines the deposit addresses from the proposals."""
+
     pagination: "__base_query_v1_beta1__.PageRequest" = betterproto.message_field(4)
+    """pagination defines an optional pagination for the request."""
 
 
 @dataclass(eq=False, repr=False)
@@ -290,18 +344,19 @@ class QueryProposalsResponse(betterproto.Message):
     """
 
     proposals: List["Proposal"] = betterproto.message_field(1)
-    # pagination defines the pagination in the response.
     pagination: "__base_query_v1_beta1__.PageResponse" = betterproto.message_field(2)
+    """pagination defines the pagination in the response."""
 
 
 @dataclass(eq=False, repr=False)
 class QueryVoteRequest(betterproto.Message):
     """QueryVoteRequest is the request type for the Query/Vote RPC method."""
 
-    # proposal_id defines the unique id of the proposal.
     proposal_id: int = betterproto.uint64_field(1)
-    # voter defines the oter address for the proposals.
+    """proposal_id defines the unique id of the proposal."""
+
     voter: str = betterproto.string_field(2)
+    """voter defines the oter address for the proposals."""
 
 
 @dataclass(eq=False, repr=False)
@@ -310,8 +365,8 @@ class QueryVoteResponse(betterproto.Message):
     QueryVoteResponse is the response type for the Query/Vote RPC method.
     """
 
-    # vote defined the queried vote.
     vote: "Vote" = betterproto.message_field(1)
+    """vote defined the queried vote."""
 
 
 @dataclass(eq=False, repr=False)
@@ -320,10 +375,11 @@ class QueryVotesRequest(betterproto.Message):
     QueryVotesRequest is the request type for the Query/Votes RPC method.
     """
 
-    # proposal_id defines the unique id of the proposal.
     proposal_id: int = betterproto.uint64_field(1)
-    # pagination defines an optional pagination for the request.
+    """proposal_id defines the unique id of the proposal."""
+
     pagination: "__base_query_v1_beta1__.PageRequest" = betterproto.message_field(2)
+    """pagination defines an optional pagination for the request."""
 
 
 @dataclass(eq=False, repr=False)
@@ -332,10 +388,11 @@ class QueryVotesResponse(betterproto.Message):
     QueryVotesResponse is the response type for the Query/Votes RPC method.
     """
 
-    # votes defined the queried votes.
     votes: List["Vote"] = betterproto.message_field(1)
-    # pagination defines the pagination in the response.
+    """votes defined the queried votes."""
+
     pagination: "__base_query_v1_beta1__.PageResponse" = betterproto.message_field(2)
+    """pagination defines the pagination in the response."""
 
 
 @dataclass(eq=False, repr=False)
@@ -344,9 +401,11 @@ class QueryParamsRequest(betterproto.Message):
     QueryParamsRequest is the request type for the Query/Params RPC method.
     """
 
-    # params_type defines which parameters to query for, can be one of "voting",
-    # "tallying" or "deposit".
     params_type: str = betterproto.string_field(1)
+    """
+    params_type defines which parameters to query for, can be one of "voting",
+    "tallying" or "deposit".
+    """
 
 
 @dataclass(eq=False, repr=False)
@@ -355,12 +414,14 @@ class QueryParamsResponse(betterproto.Message):
     QueryParamsResponse is the response type for the Query/Params RPC method.
     """
 
-    # voting_params defines the parameters related to voting.
     voting_params: "VotingParams" = betterproto.message_field(1)
-    # deposit_params defines the parameters related to deposit.
+    """voting_params defines the parameters related to voting."""
+
     deposit_params: "DepositParams" = betterproto.message_field(2)
-    # tally_params defines the parameters related to tally.
+    """deposit_params defines the parameters related to deposit."""
+
     tally_params: "TallyParams" = betterproto.message_field(3)
+    """tally_params defines the parameters related to tally."""
 
 
 @dataclass(eq=False, repr=False)
@@ -369,10 +430,11 @@ class QueryDepositRequest(betterproto.Message):
     QueryDepositRequest is the request type for the Query/Deposit RPC method.
     """
 
-    # proposal_id defines the unique id of the proposal.
     proposal_id: int = betterproto.uint64_field(1)
-    # depositor defines the deposit addresses from the proposals.
+    """proposal_id defines the unique id of the proposal."""
+
     depositor: str = betterproto.string_field(2)
+    """depositor defines the deposit addresses from the proposals."""
 
 
 @dataclass(eq=False, repr=False)
@@ -381,8 +443,8 @@ class QueryDepositResponse(betterproto.Message):
     QueryDepositResponse is the response type for the Query/Deposit RPC method.
     """
 
-    # deposit defines the requested deposit.
     deposit: "Deposit" = betterproto.message_field(1)
+    """deposit defines the requested deposit."""
 
 
 @dataclass(eq=False, repr=False)
@@ -391,10 +453,11 @@ class QueryDepositsRequest(betterproto.Message):
     QueryDepositsRequest is the request type for the Query/Deposits RPC method.
     """
 
-    # proposal_id defines the unique id of the proposal.
     proposal_id: int = betterproto.uint64_field(1)
-    # pagination defines an optional pagination for the request.
+    """proposal_id defines the unique id of the proposal."""
+
     pagination: "__base_query_v1_beta1__.PageRequest" = betterproto.message_field(2)
+    """pagination defines an optional pagination for the request."""
 
 
 @dataclass(eq=False, repr=False)
@@ -405,8 +468,8 @@ class QueryDepositsResponse(betterproto.Message):
     """
 
     deposits: List["Deposit"] = betterproto.message_field(1)
-    # pagination defines the pagination in the response.
     pagination: "__base_query_v1_beta1__.PageResponse" = betterproto.message_field(2)
+    """pagination defines the pagination in the response."""
 
 
 @dataclass(eq=False, repr=False)
@@ -415,8 +478,8 @@ class QueryTallyResultRequest(betterproto.Message):
     QueryTallyResultRequest is the request type for the Query/Tally RPC method.
     """
 
-    # proposal_id defines the unique id of the proposal.
     proposal_id: int = betterproto.uint64_field(1)
+    """proposal_id defines the unique id of the proposal."""
 
 
 @dataclass(eq=False, repr=False)
@@ -426,284 +489,288 @@ class QueryTallyResultResponse(betterproto.Message):
     method.
     """
 
-    # tally defines the requested tally.
     tally: "TallyResult" = betterproto.message_field(1)
+    """tally defines the requested tally."""
 
 
 @dataclass(eq=False, repr=False)
 class GenesisState(betterproto.Message):
     """GenesisState defines the gov module's genesis state."""
 
-    # starting_proposal_id is the ID of the starting proposal.
     starting_proposal_id: int = betterproto.uint64_field(1)
-    # deposits defines all the deposits present at genesis.
+    """starting_proposal_id is the ID of the starting proposal."""
+
     deposits: List["Deposit"] = betterproto.message_field(2)
-    # votes defines all the votes present at genesis.
+    """deposits defines all the deposits present at genesis."""
+
     votes: List["Vote"] = betterproto.message_field(3)
-    # proposals defines all the proposals present at genesis.
+    """votes defines all the votes present at genesis."""
+
     proposals: List["Proposal"] = betterproto.message_field(4)
-    # params defines all the paramaters of related to deposit.
+    """proposals defines all the proposals present at genesis."""
+
     deposit_params: "DepositParams" = betterproto.message_field(5)
-    # params defines all the paramaters of related to voting.
+    """params defines all the paramaters of related to deposit."""
+
     voting_params: "VotingParams" = betterproto.message_field(6)
-    # params defines all the paramaters of related to tally.
+    """params defines all the paramaters of related to voting."""
+
     tally_params: "TallyParams" = betterproto.message_field(7)
+    """params defines all the paramaters of related to tally."""
 
 
 class MsgStub(betterproto.ServiceStub):
     async def submit_proposal(
         self,
+        msg_submit_proposal: "MsgSubmitProposal",
         *,
-        content: "betterproto_lib_google_protobuf.Any" = None,
-        initial_deposit: Optional[List["__base_v1_beta1__.Coin"]] = None,
-        proposer: str = ""
+        timeout: Optional[float] = None,
+        deadline: Optional["Deadline"] = None,
+        metadata: Optional["MetadataLike"] = None
     ) -> "MsgSubmitProposalResponse":
-        initial_deposit = initial_deposit or []
-
-        request = MsgSubmitProposal()
-        if content is not None:
-            request.content = content
-        if initial_deposit is not None:
-            request.initial_deposit = initial_deposit
-        request.proposer = proposer
-
         return await self._unary_unary(
-            "/cosmos.gov.v1beta1.Msg/SubmitProposal", request, MsgSubmitProposalResponse
+            "/cosmos.gov.v1beta1.Msg/SubmitProposal",
+            msg_submit_proposal,
+            MsgSubmitProposalResponse,
+            timeout=timeout,
+            deadline=deadline,
+            metadata=metadata,
         )
 
     async def vote(
-        self, *, proposal_id: int = 0, voter: str = "", option: "VoteOption" = 0
+        self,
+        msg_vote: "MsgVote",
+        *,
+        timeout: Optional[float] = None,
+        deadline: Optional["Deadline"] = None,
+        metadata: Optional["MetadataLike"] = None
     ) -> "MsgVoteResponse":
-
-        request = MsgVote()
-        request.proposal_id = proposal_id
-        request.voter = voter
-        request.option = option
-
         return await self._unary_unary(
-            "/cosmos.gov.v1beta1.Msg/Vote", request, MsgVoteResponse
+            "/cosmos.gov.v1beta1.Msg/Vote",
+            msg_vote,
+            MsgVoteResponse,
+            timeout=timeout,
+            deadline=deadline,
+            metadata=metadata,
         )
 
     async def vote_weighted(
         self,
+        msg_vote_weighted: "MsgVoteWeighted",
         *,
-        proposal_id: int = 0,
-        voter: str = "",
-        options: Optional[List["WeightedVoteOption"]] = None
+        timeout: Optional[float] = None,
+        deadline: Optional["Deadline"] = None,
+        metadata: Optional["MetadataLike"] = None
     ) -> "MsgVoteWeightedResponse":
-        options = options or []
-
-        request = MsgVoteWeighted()
-        request.proposal_id = proposal_id
-        request.voter = voter
-        if options is not None:
-            request.options = options
-
         return await self._unary_unary(
-            "/cosmos.gov.v1beta1.Msg/VoteWeighted", request, MsgVoteWeightedResponse
+            "/cosmos.gov.v1beta1.Msg/VoteWeighted",
+            msg_vote_weighted,
+            MsgVoteWeightedResponse,
+            timeout=timeout,
+            deadline=deadline,
+            metadata=metadata,
         )
 
     async def deposit(
         self,
+        msg_deposit: "MsgDeposit",
         *,
-        proposal_id: int = 0,
-        depositor: str = "",
-        amount: Optional[List["__base_v1_beta1__.Coin"]] = None
+        timeout: Optional[float] = None,
+        deadline: Optional["Deadline"] = None,
+        metadata: Optional["MetadataLike"] = None
     ) -> "MsgDepositResponse":
-        amount = amount or []
-
-        request = MsgDeposit()
-        request.proposal_id = proposal_id
-        request.depositor = depositor
-        if amount is not None:
-            request.amount = amount
-
         return await self._unary_unary(
-            "/cosmos.gov.v1beta1.Msg/Deposit", request, MsgDepositResponse
+            "/cosmos.gov.v1beta1.Msg/Deposit",
+            msg_deposit,
+            MsgDepositResponse,
+            timeout=timeout,
+            deadline=deadline,
+            metadata=metadata,
         )
 
 
 class QueryStub(betterproto.ServiceStub):
-    async def proposal(self, *, proposal_id: int = 0) -> "QueryProposalResponse":
-
-        request = QueryProposalRequest()
-        request.proposal_id = proposal_id
-
+    async def proposal(
+        self,
+        query_proposal_request: "QueryProposalRequest",
+        *,
+        timeout: Optional[float] = None,
+        deadline: Optional["Deadline"] = None,
+        metadata: Optional["MetadataLike"] = None
+    ) -> "QueryProposalResponse":
         return await self._unary_unary(
-            "/cosmos.gov.v1beta1.Query/Proposal", request, QueryProposalResponse
+            "/cosmos.gov.v1beta1.Query/Proposal",
+            query_proposal_request,
+            QueryProposalResponse,
+            timeout=timeout,
+            deadline=deadline,
+            metadata=metadata,
         )
 
     async def proposals(
         self,
+        query_proposals_request: "QueryProposalsRequest",
         *,
-        proposal_status: "ProposalStatus" = 0,
-        voter: str = "",
-        depositor: str = "",
-        pagination: "__base_query_v1_beta1__.PageRequest" = None
+        timeout: Optional[float] = None,
+        deadline: Optional["Deadline"] = None,
+        metadata: Optional["MetadataLike"] = None
     ) -> "QueryProposalsResponse":
-
-        request = QueryProposalsRequest()
-        request.proposal_status = proposal_status
-        request.voter = voter
-        request.depositor = depositor
-        if pagination is not None:
-            request.pagination = pagination
-
         return await self._unary_unary(
-            "/cosmos.gov.v1beta1.Query/Proposals", request, QueryProposalsResponse
+            "/cosmos.gov.v1beta1.Query/Proposals",
+            query_proposals_request,
+            QueryProposalsResponse,
+            timeout=timeout,
+            deadline=deadline,
+            metadata=metadata,
         )
 
     async def vote(
-        self, *, proposal_id: int = 0, voter: str = ""
+        self,
+        query_vote_request: "QueryVoteRequest",
+        *,
+        timeout: Optional[float] = None,
+        deadline: Optional["Deadline"] = None,
+        metadata: Optional["MetadataLike"] = None
     ) -> "QueryVoteResponse":
-
-        request = QueryVoteRequest()
-        request.proposal_id = proposal_id
-        request.voter = voter
-
         return await self._unary_unary(
-            "/cosmos.gov.v1beta1.Query/Vote", request, QueryVoteResponse
+            "/cosmos.gov.v1beta1.Query/Vote",
+            query_vote_request,
+            QueryVoteResponse,
+            timeout=timeout,
+            deadline=deadline,
+            metadata=metadata,
         )
 
     async def votes(
         self,
+        query_votes_request: "QueryVotesRequest",
         *,
-        proposal_id: int = 0,
-        pagination: "__base_query_v1_beta1__.PageRequest" = None
+        timeout: Optional[float] = None,
+        deadline: Optional["Deadline"] = None,
+        metadata: Optional["MetadataLike"] = None
     ) -> "QueryVotesResponse":
-
-        request = QueryVotesRequest()
-        request.proposal_id = proposal_id
-        if pagination is not None:
-            request.pagination = pagination
-
         return await self._unary_unary(
-            "/cosmos.gov.v1beta1.Query/Votes", request, QueryVotesResponse
+            "/cosmos.gov.v1beta1.Query/Votes",
+            query_votes_request,
+            QueryVotesResponse,
+            timeout=timeout,
+            deadline=deadline,
+            metadata=metadata,
         )
 
-    async def params(self, *, params_type: str = "") -> "QueryParamsResponse":
-
-        request = QueryParamsRequest()
-        request.params_type = params_type
-
+    async def params(
+        self,
+        query_params_request: "QueryParamsRequest",
+        *,
+        timeout: Optional[float] = None,
+        deadline: Optional["Deadline"] = None,
+        metadata: Optional["MetadataLike"] = None
+    ) -> "QueryParamsResponse":
         return await self._unary_unary(
-            "/cosmos.gov.v1beta1.Query/Params", request, QueryParamsResponse
+            "/cosmos.gov.v1beta1.Query/Params",
+            query_params_request,
+            QueryParamsResponse,
+            timeout=timeout,
+            deadline=deadline,
+            metadata=metadata,
         )
 
     async def deposit(
-        self, *, proposal_id: int = 0, depositor: str = ""
+        self,
+        query_deposit_request: "QueryDepositRequest",
+        *,
+        timeout: Optional[float] = None,
+        deadline: Optional["Deadline"] = None,
+        metadata: Optional["MetadataLike"] = None
     ) -> "QueryDepositResponse":
-
-        request = QueryDepositRequest()
-        request.proposal_id = proposal_id
-        request.depositor = depositor
-
         return await self._unary_unary(
-            "/cosmos.gov.v1beta1.Query/Deposit", request, QueryDepositResponse
+            "/cosmos.gov.v1beta1.Query/Deposit",
+            query_deposit_request,
+            QueryDepositResponse,
+            timeout=timeout,
+            deadline=deadline,
+            metadata=metadata,
         )
 
     async def deposits(
         self,
+        query_deposits_request: "QueryDepositsRequest",
         *,
-        proposal_id: int = 0,
-        pagination: "__base_query_v1_beta1__.PageRequest" = None
+        timeout: Optional[float] = None,
+        deadline: Optional["Deadline"] = None,
+        metadata: Optional["MetadataLike"] = None
     ) -> "QueryDepositsResponse":
-
-        request = QueryDepositsRequest()
-        request.proposal_id = proposal_id
-        if pagination is not None:
-            request.pagination = pagination
-
         return await self._unary_unary(
-            "/cosmos.gov.v1beta1.Query/Deposits", request, QueryDepositsResponse
+            "/cosmos.gov.v1beta1.Query/Deposits",
+            query_deposits_request,
+            QueryDepositsResponse,
+            timeout=timeout,
+            deadline=deadline,
+            metadata=metadata,
         )
 
-    async def tally_result(self, *, proposal_id: int = 0) -> "QueryTallyResultResponse":
-
-        request = QueryTallyResultRequest()
-        request.proposal_id = proposal_id
-
+    async def tally_result(
+        self,
+        query_tally_result_request: "QueryTallyResultRequest",
+        *,
+        timeout: Optional[float] = None,
+        deadline: Optional["Deadline"] = None,
+        metadata: Optional["MetadataLike"] = None
+    ) -> "QueryTallyResultResponse":
         return await self._unary_unary(
-            "/cosmos.gov.v1beta1.Query/TallyResult", request, QueryTallyResultResponse
+            "/cosmos.gov.v1beta1.Query/TallyResult",
+            query_tally_result_request,
+            QueryTallyResultResponse,
+            timeout=timeout,
+            deadline=deadline,
+            metadata=metadata,
         )
 
 
 class MsgBase(ServiceBase):
     async def submit_proposal(
-        self,
-        content: "betterproto_lib_google_protobuf.Any",
-        initial_deposit: Optional[List["__base_v1_beta1__.Coin"]],
-        proposer: str,
+        self, msg_submit_proposal: "MsgSubmitProposal"
     ) -> "MsgSubmitProposalResponse":
         raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
 
-    async def vote(
-        self, proposal_id: int, voter: str, option: "VoteOption"
-    ) -> "MsgVoteResponse":
+    async def vote(self, msg_vote: "MsgVote") -> "MsgVoteResponse":
         raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
 
     async def vote_weighted(
-        self,
-        proposal_id: int,
-        voter: str,
-        options: Optional[List["WeightedVoteOption"]],
+        self, msg_vote_weighted: "MsgVoteWeighted"
     ) -> "MsgVoteWeightedResponse":
         raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
 
-    async def deposit(
-        self,
-        proposal_id: int,
-        depositor: str,
-        amount: Optional[List["__base_v1_beta1__.Coin"]],
-    ) -> "MsgDepositResponse":
+    async def deposit(self, msg_deposit: "MsgDeposit") -> "MsgDepositResponse":
         raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
 
-    async def __rpc_submit_proposal(self, stream: grpclib.server.Stream) -> None:
+    async def __rpc_submit_proposal(
+        self,
+        stream: "grpclib.server.Stream[MsgSubmitProposal, MsgSubmitProposalResponse]",
+    ) -> None:
         request = await stream.recv_message()
-
-        request_kwargs = {
-            "content": request.content,
-            "initial_deposit": request.initial_deposit,
-            "proposer": request.proposer,
-        }
-
-        response = await self.submit_proposal(**request_kwargs)
+        response = await self.submit_proposal(request)
         await stream.send_message(response)
 
-    async def __rpc_vote(self, stream: grpclib.server.Stream) -> None:
+    async def __rpc_vote(
+        self, stream: "grpclib.server.Stream[MsgVote, MsgVoteResponse]"
+    ) -> None:
         request = await stream.recv_message()
-
-        request_kwargs = {
-            "proposal_id": request.proposal_id,
-            "voter": request.voter,
-            "option": request.option,
-        }
-
-        response = await self.vote(**request_kwargs)
+        response = await self.vote(request)
         await stream.send_message(response)
 
-    async def __rpc_vote_weighted(self, stream: grpclib.server.Stream) -> None:
+    async def __rpc_vote_weighted(
+        self, stream: "grpclib.server.Stream[MsgVoteWeighted, MsgVoteWeightedResponse]"
+    ) -> None:
         request = await stream.recv_message()
-
-        request_kwargs = {
-            "proposal_id": request.proposal_id,
-            "voter": request.voter,
-            "options": request.options,
-        }
-
-        response = await self.vote_weighted(**request_kwargs)
+        response = await self.vote_weighted(request)
         await stream.send_message(response)
 
-    async def __rpc_deposit(self, stream: grpclib.server.Stream) -> None:
+    async def __rpc_deposit(
+        self, stream: "grpclib.server.Stream[MsgDeposit, MsgDepositResponse]"
+    ) -> None:
         request = await stream.recv_message()
-
-        request_kwargs = {
-            "proposal_id": request.proposal_id,
-            "depositor": request.depositor,
-            "amount": request.amount,
-        }
-
-        response = await self.deposit(**request_kwargs)
+        response = await self.deposit(request)
         await stream.send_message(response)
 
     def __mapping__(self) -> Dict[str, grpclib.const.Handler]:
@@ -736,125 +803,102 @@ class MsgBase(ServiceBase):
 
 
 class QueryBase(ServiceBase):
-    async def proposal(self, proposal_id: int) -> "QueryProposalResponse":
+    async def proposal(
+        self, query_proposal_request: "QueryProposalRequest"
+    ) -> "QueryProposalResponse":
         raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
 
     async def proposals(
-        self,
-        proposal_status: "ProposalStatus",
-        voter: str,
-        depositor: str,
-        pagination: "__base_query_v1_beta1__.PageRequest",
+        self, query_proposals_request: "QueryProposalsRequest"
     ) -> "QueryProposalsResponse":
         raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
 
-    async def vote(self, proposal_id: int, voter: str) -> "QueryVoteResponse":
+    async def vote(self, query_vote_request: "QueryVoteRequest") -> "QueryVoteResponse":
         raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
 
     async def votes(
-        self, proposal_id: int, pagination: "__base_query_v1_beta1__.PageRequest"
+        self, query_votes_request: "QueryVotesRequest"
     ) -> "QueryVotesResponse":
         raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
 
-    async def params(self, params_type: str) -> "QueryParamsResponse":
+    async def params(
+        self, query_params_request: "QueryParamsRequest"
+    ) -> "QueryParamsResponse":
         raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
 
-    async def deposit(self, proposal_id: int, depositor: str) -> "QueryDepositResponse":
+    async def deposit(
+        self, query_deposit_request: "QueryDepositRequest"
+    ) -> "QueryDepositResponse":
         raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
 
     async def deposits(
-        self, proposal_id: int, pagination: "__base_query_v1_beta1__.PageRequest"
+        self, query_deposits_request: "QueryDepositsRequest"
     ) -> "QueryDepositsResponse":
         raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
 
-    async def tally_result(self, proposal_id: int) -> "QueryTallyResultResponse":
+    async def tally_result(
+        self, query_tally_result_request: "QueryTallyResultRequest"
+    ) -> "QueryTallyResultResponse":
         raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
 
-    async def __rpc_proposal(self, stream: grpclib.server.Stream) -> None:
+    async def __rpc_proposal(
+        self,
+        stream: "grpclib.server.Stream[QueryProposalRequest, QueryProposalResponse]",
+    ) -> None:
         request = await stream.recv_message()
-
-        request_kwargs = {
-            "proposal_id": request.proposal_id,
-        }
-
-        response = await self.proposal(**request_kwargs)
+        response = await self.proposal(request)
         await stream.send_message(response)
 
-    async def __rpc_proposals(self, stream: grpclib.server.Stream) -> None:
+    async def __rpc_proposals(
+        self,
+        stream: "grpclib.server.Stream[QueryProposalsRequest, QueryProposalsResponse]",
+    ) -> None:
         request = await stream.recv_message()
-
-        request_kwargs = {
-            "proposal_status": request.proposal_status,
-            "voter": request.voter,
-            "depositor": request.depositor,
-            "pagination": request.pagination,
-        }
-
-        response = await self.proposals(**request_kwargs)
+        response = await self.proposals(request)
         await stream.send_message(response)
 
-    async def __rpc_vote(self, stream: grpclib.server.Stream) -> None:
+    async def __rpc_vote(
+        self, stream: "grpclib.server.Stream[QueryVoteRequest, QueryVoteResponse]"
+    ) -> None:
         request = await stream.recv_message()
-
-        request_kwargs = {
-            "proposal_id": request.proposal_id,
-            "voter": request.voter,
-        }
-
-        response = await self.vote(**request_kwargs)
+        response = await self.vote(request)
         await stream.send_message(response)
 
-    async def __rpc_votes(self, stream: grpclib.server.Stream) -> None:
+    async def __rpc_votes(
+        self, stream: "grpclib.server.Stream[QueryVotesRequest, QueryVotesResponse]"
+    ) -> None:
         request = await stream.recv_message()
-
-        request_kwargs = {
-            "proposal_id": request.proposal_id,
-            "pagination": request.pagination,
-        }
-
-        response = await self.votes(**request_kwargs)
+        response = await self.votes(request)
         await stream.send_message(response)
 
-    async def __rpc_params(self, stream: grpclib.server.Stream) -> None:
+    async def __rpc_params(
+        self, stream: "grpclib.server.Stream[QueryParamsRequest, QueryParamsResponse]"
+    ) -> None:
         request = await stream.recv_message()
-
-        request_kwargs = {
-            "params_type": request.params_type,
-        }
-
-        response = await self.params(**request_kwargs)
+        response = await self.params(request)
         await stream.send_message(response)
 
-    async def __rpc_deposit(self, stream: grpclib.server.Stream) -> None:
+    async def __rpc_deposit(
+        self, stream: "grpclib.server.Stream[QueryDepositRequest, QueryDepositResponse]"
+    ) -> None:
         request = await stream.recv_message()
-
-        request_kwargs = {
-            "proposal_id": request.proposal_id,
-            "depositor": request.depositor,
-        }
-
-        response = await self.deposit(**request_kwargs)
+        response = await self.deposit(request)
         await stream.send_message(response)
 
-    async def __rpc_deposits(self, stream: grpclib.server.Stream) -> None:
+    async def __rpc_deposits(
+        self,
+        stream: "grpclib.server.Stream[QueryDepositsRequest, QueryDepositsResponse]",
+    ) -> None:
         request = await stream.recv_message()
-
-        request_kwargs = {
-            "proposal_id": request.proposal_id,
-            "pagination": request.pagination,
-        }
-
-        response = await self.deposits(**request_kwargs)
+        response = await self.deposits(request)
         await stream.send_message(response)
 
-    async def __rpc_tally_result(self, stream: grpclib.server.Stream) -> None:
+    async def __rpc_tally_result(
+        self,
+        stream: "grpclib.server.Stream[QueryTallyResultRequest, QueryTallyResultResponse]",
+    ) -> None:
         request = await stream.recv_message()
-
-        request_kwargs = {
-            "proposal_id": request.proposal_id,
-        }
-
-        response = await self.tally_result(**request_kwargs)
+        response = await self.tally_result(request)
         await stream.send_message(response)
 
     def __mapping__(self) -> Dict[str, grpclib.const.Handler]:
@@ -908,8 +952,3 @@ class QueryBase(ServiceBase):
                 QueryTallyResultResponse,
             ),
         }
-
-
-from ...base import v1beta1 as __base_v1_beta1__
-from ...base.query import v1beta1 as __base_query_v1_beta1__
-import betterproto.lib.google.protobuf as betterproto_lib_google_protobuf

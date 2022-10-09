@@ -5,41 +5,57 @@ from dataclasses import dataclass
 from typing import List
 
 import betterproto
-from betterproto.grpc.grpclib_server import ServiceBase
+import betterproto.lib.google.protobuf as betterproto_lib_google_protobuf
+
+from ....crypto.multisig import v1beta1 as ___crypto_multisig_v1_beta1__
 
 
 class SignMode(betterproto.Enum):
     """SignMode represents a signing mode with its own security guarantees."""
 
-    # SIGN_MODE_UNSPECIFIED specifies an unknown signing mode and will be
-    # rejected
     SIGN_MODE_UNSPECIFIED = 0
-    # SIGN_MODE_DIRECT specifies a signing mode which uses SignDoc and is
-    # verified with raw bytes from Tx
+    """
+    SIGN_MODE_UNSPECIFIED specifies an unknown signing mode and will be
+    rejected
+    """
+
     SIGN_MODE_DIRECT = 1
-    # SIGN_MODE_TEXTUAL is a future signing mode that will verify some human-
-    # readable textual representation on top of the binary representation from
-    # SIGN_MODE_DIRECT
+    """
+    SIGN_MODE_DIRECT specifies a signing mode which uses SignDoc and is
+    verified with raw bytes from Tx
+    """
+
     SIGN_MODE_TEXTUAL = 2
-    # SIGN_MODE_LEGACY_AMINO_JSON is a backwards compatibility mode which uses
-    # Amino JSON and will be removed in the future
+    """
+    SIGN_MODE_TEXTUAL is a future signing mode that will verify some human-
+    readable textual representation on top of the binary representation from
+    SIGN_MODE_DIRECT
+    """
+
     SIGN_MODE_LEGACY_AMINO_JSON = 127
-    # SIGN_MODE_EIP_191 specifies the sign mode for EIP 191 signing on the Cosmos
-    # SDK. Ref: https://eips.ethereum.org/EIPS/eip-191  Currently,
-    # SIGN_MODE_EIP_191 is registered as a SignMode enum variant, but is not
-    # implemented on the SDK by default. To enable EIP-191, you need to pass a
-    # custom `TxConfig` that has an implementation of `SignModeHandler` for
-    # EIP-191. The SDK may decide to fully support EIP-191 in the future. Since:
-    # cosmos-sdk 0.45.2
+    """
+    SIGN_MODE_LEGACY_AMINO_JSON is a backwards compatibility mode which uses
+    Amino JSON and will be removed in the future
+    """
+
     SIGN_MODE_EIP_191 = 191
+    """
+    SIGN_MODE_EIP_191 specifies the sign mode for EIP 191 signing on the Cosmos
+    SDK. Ref: https://eips.ethereum.org/EIPS/eip-191  Currently,
+    SIGN_MODE_EIP_191 is registered as a SignMode enum variant, but is not
+    implemented on the SDK by default. To enable EIP-191, you need to pass a
+    custom `TxConfig` that has an implementation of `SignModeHandler` for
+    EIP-191. The SDK may decide to fully support EIP-191 in the future. Since:
+    cosmos-sdk 0.45.2
+    """
 
 
 @dataclass(eq=False, repr=False)
 class SignatureDescriptors(betterproto.Message):
     """SignatureDescriptors wraps multiple SignatureDescriptor's."""
 
-    # signatures are the signature descriptors
     signatures: List["SignatureDescriptor"] = betterproto.message_field(1)
+    """signatures are the signature descriptors"""
 
 
 @dataclass(eq=False, repr=False)
@@ -51,46 +67,48 @@ class SignatureDescriptor(betterproto.Message):
     between clients.
     """
 
-    # public_key is the public key of the signer
     public_key: "betterproto_lib_google_protobuf.Any" = betterproto.message_field(1)
+    """public_key is the public key of the signer"""
+
     data: "SignatureDescriptorData" = betterproto.message_field(2)
-    # sequence is the sequence of the account, which describes the number of
-    # committed transactions signed by a given address. It is used to prevent
-    # replay attacks.
     sequence: int = betterproto.uint64_field(3)
+    """
+    sequence is the sequence of the account, which describes the number of
+    committed transactions signed by a given address. It is used to prevent
+    replay attacks.
+    """
 
 
 @dataclass(eq=False, repr=False)
 class SignatureDescriptorData(betterproto.Message):
     """Data represents signature data"""
 
-    # single represents a single signer
     single: "SignatureDescriptorDataSingle" = betterproto.message_field(1, group="sum")
-    # multi represents a multisig signer
+    """single represents a single signer"""
+
     multi: "SignatureDescriptorDataMulti" = betterproto.message_field(2, group="sum")
+    """multi represents a multisig signer"""
 
 
 @dataclass(eq=False, repr=False)
 class SignatureDescriptorDataSingle(betterproto.Message):
     """Single is the signature data for a single signer"""
 
-    # mode is the signing mode of the single signer
     mode: "SignMode" = betterproto.enum_field(1)
-    # signature is the raw signature bytes
+    """mode is the signing mode of the single signer"""
+
     signature: bytes = betterproto.bytes_field(2)
+    """signature is the raw signature bytes"""
 
 
 @dataclass(eq=False, repr=False)
 class SignatureDescriptorDataMulti(betterproto.Message):
     """Multi is the signature data for a multisig public key"""
 
-    # bitarray specifies which keys within the multisig are signing
     bitarray: "___crypto_multisig_v1_beta1__.CompactBitArray" = (
         betterproto.message_field(1)
     )
-    # signatures is the signatures of the multi-signature
+    """bitarray specifies which keys within the multisig are signing"""
+
     signatures: List["SignatureDescriptorData"] = betterproto.message_field(2)
-
-
-from ....crypto.multisig import v1beta1 as ___crypto_multisig_v1_beta1__
-import betterproto.lib.google.protobuf as betterproto_lib_google_protobuf
+    """signatures is the signatures of the multi-signature"""

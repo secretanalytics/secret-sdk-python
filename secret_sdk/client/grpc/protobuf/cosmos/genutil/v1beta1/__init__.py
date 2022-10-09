@@ -5,12 +5,11 @@ from dataclasses import dataclass
 from typing import List
 
 import betterproto
-from betterproto.grpc.grpclib_server import ServiceBase
 
 
 @dataclass(eq=False, repr=False)
 class GenesisState(betterproto.Message):
     """GenesisState defines the raw genesis transaction in JSON."""
 
-    # gen_txs defines the genesis transactions.
     gen_txs: List[bytes] = betterproto.bytes_field(1)
+    """gen_txs defines the genesis transactions."""

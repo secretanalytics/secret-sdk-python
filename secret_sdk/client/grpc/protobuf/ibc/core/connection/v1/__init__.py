@@ -2,11 +2,27 @@
 # sources: ibc/core/connection/v1/connection.proto, ibc/core/connection/v1/genesis.proto, ibc/core/connection/v1/query.proto, ibc/core/connection/v1/tx.proto
 # plugin: python-betterproto
 from dataclasses import dataclass
-from typing import Dict, List, Optional
+from typing import (
+    TYPE_CHECKING,
+    Dict,
+    List,
+    Optional,
+)
 
 import betterproto
-from betterproto.grpc.grpclib_server import ServiceBase
+import betterproto.lib.google.protobuf as betterproto_lib_google_protobuf
 import grpclib
+from betterproto.grpc.grpclib_server import ServiceBase
+
+from .....cosmos.base.query import v1beta1 as ____cosmos_base_query_v1_beta1__
+from ...client import v1 as __client_v1__
+from ...commitment import v1 as __commitment_v1__
+
+
+if TYPE_CHECKING:
+    import grpclib.server
+    from betterproto.grpc.grpclib_client import MetadataLike
+    from grpclib.metadata import Deadline
 
 
 class State(betterproto.Enum):
@@ -15,15 +31,20 @@ class State(betterproto.Enum):
     TRYOPEN, OPEN or UNINITIALIZED.
     """
 
-    # Default State
     STATE_UNINITIALIZED_UNSPECIFIED = 0
-    # A connection end has just started the opening handshake.
+    """Default State"""
+
     STATE_INIT = 1
-    # A connection end has acknowledged the handshake step on the counterparty
-    # chain.
+    """A connection end has just started the opening handshake."""
+
     STATE_TRYOPEN = 2
-    # A connection end has completed the handshake.
+    """
+    A connection end has acknowledged the handshake step on the counterparty
+    chain.
+    """
+
     STATE_OPEN = 3
+    """A connection end has completed the handshake."""
 
 
 @dataclass(eq=False, repr=False)
@@ -34,19 +55,27 @@ class ConnectionEnd(betterproto.Message):
     establish a connection between two chains.
     """
 
-    # client associated with this connection.
     client_id: str = betterproto.string_field(1)
-    # IBC version which can be utilised to determine encodings or protocols for
-    # channels or packets utilising this connection.
+    """client associated with this connection."""
+
     versions: List["Version"] = betterproto.message_field(2)
-    # current state of the connection end.
+    """
+    IBC version which can be utilised to determine encodings or protocols for
+    channels or packets utilising this connection.
+    """
+
     state: "State" = betterproto.enum_field(3)
-    # counterparty chain associated with this connection.
+    """current state of the connection end."""
+
     counterparty: "Counterparty" = betterproto.message_field(4)
-    # delay period that must pass before a consensus state can be used for
-    # packet-verification NOTE: delay period logic is only implemented by some
-    # clients.
+    """counterparty chain associated with this connection."""
+
     delay_period: int = betterproto.uint64_field(5)
+    """
+    delay period that must pass before a consensus state can be used for
+    packet-verification NOTE: delay period logic is only implemented by some
+    clients.
+    """
 
 
 @dataclass(eq=False, repr=False)
@@ -56,19 +85,26 @@ class IdentifiedConnection(betterproto.Message):
     identifier field.
     """
 
-    # connection identifier.
     id: str = betterproto.string_field(1)
-    # client associated with this connection.
+    """connection identifier."""
+
     client_id: str = betterproto.string_field(2)
-    # IBC version which can be utilised to determine encodings or protocols for
-    # channels or packets utilising this connection
+    """client associated with this connection."""
+
     versions: List["Version"] = betterproto.message_field(3)
-    # current state of the connection end.
+    """
+    IBC version which can be utilised to determine encodings or protocols for
+    channels or packets utilising this connection
+    """
+
     state: "State" = betterproto.enum_field(4)
-    # counterparty chain associated with this connection.
+    """current state of the connection end."""
+
     counterparty: "Counterparty" = betterproto.message_field(5)
-    # delay period associated with this connection.
+    """counterparty chain associated with this connection."""
+
     delay_period: int = betterproto.uint64_field(6)
+    """delay period associated with this connection."""
 
 
 @dataclass(eq=False, repr=False)
@@ -78,22 +114,28 @@ class Counterparty(betterproto.Message):
     end.
     """
 
-    # identifies the client on the counterparty chain associated with a given
-    # connection.
     client_id: str = betterproto.string_field(1)
-    # identifies the connection end on the counterparty chain associated with a
-    # given connection.
+    """
+    identifies the client on the counterparty chain associated with a given
+    connection.
+    """
+
     connection_id: str = betterproto.string_field(2)
-    # commitment merkle prefix of the counterparty chain.
+    """
+    identifies the connection end on the counterparty chain associated with a
+    given connection.
+    """
+
     prefix: "__commitment_v1__.MerklePrefix" = betterproto.message_field(3)
+    """commitment merkle prefix of the counterparty chain."""
 
 
 @dataclass(eq=False, repr=False)
 class ClientPaths(betterproto.Message):
     """ClientPaths define all the connection paths for a client state."""
 
-    # list of connection paths
     paths: List[str] = betterproto.string_field(1)
+    """list of connection paths"""
 
 
 @dataclass(eq=False, repr=False)
@@ -102,10 +144,11 @@ class ConnectionPaths(betterproto.Message):
     ConnectionPaths define all the connection paths for a given client state.
     """
 
-    # client state unique identifier
     client_id: str = betterproto.string_field(1)
-    # list of connection paths
+    """client state unique identifier"""
+
     paths: List[str] = betterproto.string_field(2)
+    """list of connection paths"""
 
 
 @dataclass(eq=False, repr=False)
@@ -115,21 +158,24 @@ class Version(betterproto.Message):
     the connection handshake.
     """
 
-    # unique version identifier
     identifier: str = betterproto.string_field(1)
-    # list of features compatible with the specified identifier
+    """unique version identifier"""
+
     features: List[str] = betterproto.string_field(2)
+    """list of features compatible with the specified identifier"""
 
 
 @dataclass(eq=False, repr=False)
 class Params(betterproto.Message):
     """Params defines the set of Connection parameters."""
 
-    # maximum expected time per block (in nanoseconds), used to enforce block
-    # delay. This parameter should reflect the largest amount of time that the
-    # chain might reasonably take to produce the next block under normal
-    # operating conditions. A safe choice is 3-5x the expected time per block.
     max_expected_time_per_block: int = betterproto.uint64_field(1)
+    """
+    maximum expected time per block (in nanoseconds), used to enforce block
+    delay. This parameter should reflect the largest amount of time that the
+    chain might reasonably take to produce the next block under normal
+    operating conditions. A safe choice is 3-5x the expected time per block.
+    """
 
 
 @dataclass(eq=False, repr=False)
@@ -138,8 +184,9 @@ class GenesisState(betterproto.Message):
 
     connections: List["IdentifiedConnection"] = betterproto.message_field(1)
     client_connection_paths: List["ConnectionPaths"] = betterproto.message_field(2)
-    # the sequence for the next generated connection identifier
     next_connection_sequence: int = betterproto.uint64_field(3)
+    """the sequence for the next generated connection identifier"""
+
     params: "Params" = betterproto.message_field(4)
 
 
@@ -175,21 +222,29 @@ class MsgConnectionOpenTry(betterproto.Message):
     """
 
     client_id: str = betterproto.string_field(1)
-    # in the case of crossing hello's, when both chains call OpenInit, we need
-    # the connection identifier of the previous connection in state INIT
     previous_connection_id: str = betterproto.string_field(2)
+    """
+    in the case of crossing hello's, when both chains call OpenInit, we need
+    the connection identifier of the previous connection in state INIT
+    """
+
     client_state: "betterproto_lib_google_protobuf.Any" = betterproto.message_field(3)
     counterparty: "Counterparty" = betterproto.message_field(4)
     delay_period: int = betterproto.uint64_field(5)
     counterparty_versions: List["Version"] = betterproto.message_field(6)
     proof_height: "__client_v1__.Height" = betterproto.message_field(7)
-    # proof of the initialization the connection on Chain A: `UNITIALIZED ->
-    # INIT`
     proof_init: bytes = betterproto.bytes_field(8)
-    # proof of client state included in message
+    """
+    proof of the initialization the connection on Chain A: `UNITIALIZED ->
+    INIT`
+    """
+
     proof_client: bytes = betterproto.bytes_field(9)
-    # proof of client consensus state
+    """proof of client state included in message"""
+
     proof_consensus: bytes = betterproto.bytes_field(10)
+    """proof of client consensus state"""
+
     consensus_height: "__client_v1__.Height" = betterproto.message_field(11)
     signer: str = betterproto.string_field(12)
 
@@ -216,13 +271,18 @@ class MsgConnectionOpenAck(betterproto.Message):
     version: "Version" = betterproto.message_field(3)
     client_state: "betterproto_lib_google_protobuf.Any" = betterproto.message_field(4)
     proof_height: "__client_v1__.Height" = betterproto.message_field(5)
-    # proof of the initialization the connection on Chain B: `UNITIALIZED ->
-    # TRYOPEN`
     proof_try: bytes = betterproto.bytes_field(6)
-    # proof of client state included in message
+    """
+    proof of the initialization the connection on Chain B: `UNITIALIZED ->
+    TRYOPEN`
+    """
+
     proof_client: bytes = betterproto.bytes_field(7)
-    # proof of client consensus state
+    """proof of client state included in message"""
+
     proof_consensus: bytes = betterproto.bytes_field(8)
+    """proof of client consensus state"""
+
     consensus_height: "__client_v1__.Height" = betterproto.message_field(9)
     signer: str = betterproto.string_field(10)
 
@@ -245,8 +305,11 @@ class MsgConnectionOpenConfirm(betterproto.Message):
     """
 
     connection_id: str = betterproto.string_field(1)
-    # proof for the change of the connection state on Chain A: `INIT -> OPEN`
     proof_ack: bytes = betterproto.bytes_field(2)
+    """
+    proof for the change of the connection state on Chain A: `INIT -> OPEN`
+    """
+
     proof_height: "__client_v1__.Height" = betterproto.message_field(3)
     signer: str = betterproto.string_field(4)
 
@@ -268,8 +331,8 @@ class QueryConnectionRequest(betterproto.Message):
     method
     """
 
-    # connection unique identifier
     connection_id: str = betterproto.string_field(1)
+    """connection unique identifier"""
 
 
 @dataclass(eq=False, repr=False)
@@ -280,12 +343,14 @@ class QueryConnectionResponse(betterproto.Message):
     which the proof was retrieved.
     """
 
-    # connection associated with the request identifier
     connection: "ConnectionEnd" = betterproto.message_field(1)
-    # merkle proof of existence
+    """connection associated with the request identifier"""
+
     proof: bytes = betterproto.bytes_field(2)
-    # height at which the proof was retrieved
+    """merkle proof of existence"""
+
     proof_height: "__client_v1__.Height" = betterproto.message_field(3)
+    """height at which the proof was retrieved"""
 
 
 @dataclass(eq=False, repr=False)
@@ -307,14 +372,16 @@ class QueryConnectionsResponse(betterproto.Message):
     method.
     """
 
-    # list of stored connections of the chain.
     connections: List["IdentifiedConnection"] = betterproto.message_field(1)
-    # pagination response
+    """list of stored connections of the chain."""
+
     pagination: "____cosmos_base_query_v1_beta1__.PageResponse" = (
         betterproto.message_field(2)
     )
-    # query block height
+    """pagination response"""
+
     height: "__client_v1__.Height" = betterproto.message_field(3)
+    """query block height"""
 
 
 @dataclass(eq=False, repr=False)
@@ -324,8 +391,8 @@ class QueryClientConnectionsRequest(betterproto.Message):
     Query/ClientConnections RPC method
     """
 
-    # client identifier associated with a connection
     client_id: str = betterproto.string_field(1)
+    """client identifier associated with a connection"""
 
 
 @dataclass(eq=False, repr=False)
@@ -335,12 +402,14 @@ class QueryClientConnectionsResponse(betterproto.Message):
     Query/ClientConnections RPC method
     """
 
-    # slice of all the connection paths associated with a client.
     connection_paths: List[str] = betterproto.string_field(1)
-    # merkle proof of existence
+    """slice of all the connection paths associated with a client."""
+
     proof: bytes = betterproto.bytes_field(2)
-    # height at which the proof was generated
+    """merkle proof of existence"""
+
     proof_height: "__client_v1__.Height" = betterproto.message_field(3)
+    """height at which the proof was generated"""
 
 
 @dataclass(eq=False, repr=False)
@@ -350,8 +419,8 @@ class QueryConnectionClientStateRequest(betterproto.Message):
     Query/ConnectionClientState RPC method
     """
 
-    # connection identifier
     connection_id: str = betterproto.string_field(1)
+    """connection identifier"""
 
 
 @dataclass(eq=False, repr=False)
@@ -361,14 +430,16 @@ class QueryConnectionClientStateResponse(betterproto.Message):
     Query/ConnectionClientState RPC method
     """
 
-    # client state associated with the channel
     identified_client_state: "__client_v1__.IdentifiedClientState" = (
         betterproto.message_field(1)
     )
-    # merkle proof of existence
+    """client state associated with the channel"""
+
     proof: bytes = betterproto.bytes_field(2)
-    # height at which the proof was retrieved
+    """merkle proof of existence"""
+
     proof_height: "__client_v1__.Height" = betterproto.message_field(3)
+    """height at which the proof was retrieved"""
 
 
 @dataclass(eq=False, repr=False)
@@ -378,8 +449,9 @@ class QueryConnectionConsensusStateRequest(betterproto.Message):
     Query/ConnectionConsensusState RPC method
     """
 
-    # connection identifier
     connection_id: str = betterproto.string_field(1)
+    """connection identifier"""
+
     revision_number: int = betterproto.uint64_field(2)
     revision_height: int = betterproto.uint64_field(3)
 
@@ -391,336 +463,229 @@ class QueryConnectionConsensusStateResponse(betterproto.Message):
     Query/ConnectionConsensusState RPC method
     """
 
-    # consensus state associated with the channel
     consensus_state: "betterproto_lib_google_protobuf.Any" = betterproto.message_field(
         1
     )
-    # client ID associated with the consensus state
+    """consensus state associated with the channel"""
+
     client_id: str = betterproto.string_field(2)
-    # merkle proof of existence
+    """client ID associated with the consensus state"""
+
     proof: bytes = betterproto.bytes_field(3)
-    # height at which the proof was retrieved
+    """merkle proof of existence"""
+
     proof_height: "__client_v1__.Height" = betterproto.message_field(4)
+    """height at which the proof was retrieved"""
 
 
 class MsgStub(betterproto.ServiceStub):
     async def connection_open_init(
         self,
+        msg_connection_open_init: "MsgConnectionOpenInit",
         *,
-        client_id: str = "",
-        counterparty: "Counterparty" = None,
-        version: "Version" = None,
-        delay_period: int = 0,
-        signer: str = ""
+        timeout: Optional[float] = None,
+        deadline: Optional["Deadline"] = None,
+        metadata: Optional["MetadataLike"] = None
     ) -> "MsgConnectionOpenInitResponse":
-
-        request = MsgConnectionOpenInit()
-        request.client_id = client_id
-        if counterparty is not None:
-            request.counterparty = counterparty
-        if version is not None:
-            request.version = version
-        request.delay_period = delay_period
-        request.signer = signer
-
         return await self._unary_unary(
             "/ibc.core.connection.v1.Msg/ConnectionOpenInit",
-            request,
+            msg_connection_open_init,
             MsgConnectionOpenInitResponse,
+            timeout=timeout,
+            deadline=deadline,
+            metadata=metadata,
         )
 
     async def connection_open_try(
         self,
+        msg_connection_open_try: "MsgConnectionOpenTry",
         *,
-        client_id: str = "",
-        previous_connection_id: str = "",
-        client_state: "betterproto_lib_google_protobuf.Any" = None,
-        counterparty: "Counterparty" = None,
-        delay_period: int = 0,
-        counterparty_versions: Optional[List["Version"]] = None,
-        proof_height: "__client_v1__.Height" = None,
-        proof_init: bytes = b"",
-        proof_client: bytes = b"",
-        proof_consensus: bytes = b"",
-        consensus_height: "__client_v1__.Height" = None,
-        signer: str = ""
+        timeout: Optional[float] = None,
+        deadline: Optional["Deadline"] = None,
+        metadata: Optional["MetadataLike"] = None
     ) -> "MsgConnectionOpenTryResponse":
-        counterparty_versions = counterparty_versions or []
-
-        request = MsgConnectionOpenTry()
-        request.client_id = client_id
-        request.previous_connection_id = previous_connection_id
-        if client_state is not None:
-            request.client_state = client_state
-        if counterparty is not None:
-            request.counterparty = counterparty
-        request.delay_period = delay_period
-        if counterparty_versions is not None:
-            request.counterparty_versions = counterparty_versions
-        if proof_height is not None:
-            request.proof_height = proof_height
-        request.proof_init = proof_init
-        request.proof_client = proof_client
-        request.proof_consensus = proof_consensus
-        if consensus_height is not None:
-            request.consensus_height = consensus_height
-        request.signer = signer
-
         return await self._unary_unary(
             "/ibc.core.connection.v1.Msg/ConnectionOpenTry",
-            request,
+            msg_connection_open_try,
             MsgConnectionOpenTryResponse,
+            timeout=timeout,
+            deadline=deadline,
+            metadata=metadata,
         )
 
     async def connection_open_ack(
         self,
+        msg_connection_open_ack: "MsgConnectionOpenAck",
         *,
-        connection_id: str = "",
-        counterparty_connection_id: str = "",
-        version: "Version" = None,
-        client_state: "betterproto_lib_google_protobuf.Any" = None,
-        proof_height: "__client_v1__.Height" = None,
-        proof_try: bytes = b"",
-        proof_client: bytes = b"",
-        proof_consensus: bytes = b"",
-        consensus_height: "__client_v1__.Height" = None,
-        signer: str = ""
+        timeout: Optional[float] = None,
+        deadline: Optional["Deadline"] = None,
+        metadata: Optional["MetadataLike"] = None
     ) -> "MsgConnectionOpenAckResponse":
-
-        request = MsgConnectionOpenAck()
-        request.connection_id = connection_id
-        request.counterparty_connection_id = counterparty_connection_id
-        if version is not None:
-            request.version = version
-        if client_state is not None:
-            request.client_state = client_state
-        if proof_height is not None:
-            request.proof_height = proof_height
-        request.proof_try = proof_try
-        request.proof_client = proof_client
-        request.proof_consensus = proof_consensus
-        if consensus_height is not None:
-            request.consensus_height = consensus_height
-        request.signer = signer
-
         return await self._unary_unary(
             "/ibc.core.connection.v1.Msg/ConnectionOpenAck",
-            request,
+            msg_connection_open_ack,
             MsgConnectionOpenAckResponse,
+            timeout=timeout,
+            deadline=deadline,
+            metadata=metadata,
         )
 
     async def connection_open_confirm(
         self,
+        msg_connection_open_confirm: "MsgConnectionOpenConfirm",
         *,
-        connection_id: str = "",
-        proof_ack: bytes = b"",
-        proof_height: "__client_v1__.Height" = None,
-        signer: str = ""
+        timeout: Optional[float] = None,
+        deadline: Optional["Deadline"] = None,
+        metadata: Optional["MetadataLike"] = None
     ) -> "MsgConnectionOpenConfirmResponse":
-
-        request = MsgConnectionOpenConfirm()
-        request.connection_id = connection_id
-        request.proof_ack = proof_ack
-        if proof_height is not None:
-            request.proof_height = proof_height
-        request.signer = signer
-
         return await self._unary_unary(
             "/ibc.core.connection.v1.Msg/ConnectionOpenConfirm",
-            request,
+            msg_connection_open_confirm,
             MsgConnectionOpenConfirmResponse,
+            timeout=timeout,
+            deadline=deadline,
+            metadata=metadata,
         )
 
 
 class QueryStub(betterproto.ServiceStub):
-    async def connection(self, *, connection_id: str = "") -> "QueryConnectionResponse":
-
-        request = QueryConnectionRequest()
-        request.connection_id = connection_id
-
+    async def connection(
+        self,
+        query_connection_request: "QueryConnectionRequest",
+        *,
+        timeout: Optional[float] = None,
+        deadline: Optional["Deadline"] = None,
+        metadata: Optional["MetadataLike"] = None
+    ) -> "QueryConnectionResponse":
         return await self._unary_unary(
-            "/ibc.core.connection.v1.Query/Connection", request, QueryConnectionResponse
+            "/ibc.core.connection.v1.Query/Connection",
+            query_connection_request,
+            QueryConnectionResponse,
+            timeout=timeout,
+            deadline=deadline,
+            metadata=metadata,
         )
 
     async def connections(
-        self, *, pagination: "____cosmos_base_query_v1_beta1__.PageRequest" = None
+        self,
+        query_connections_request: "QueryConnectionsRequest",
+        *,
+        timeout: Optional[float] = None,
+        deadline: Optional["Deadline"] = None,
+        metadata: Optional["MetadataLike"] = None
     ) -> "QueryConnectionsResponse":
-
-        request = QueryConnectionsRequest()
-        if pagination is not None:
-            request.pagination = pagination
-
         return await self._unary_unary(
             "/ibc.core.connection.v1.Query/Connections",
-            request,
+            query_connections_request,
             QueryConnectionsResponse,
+            timeout=timeout,
+            deadline=deadline,
+            metadata=metadata,
         )
 
     async def client_connections(
-        self, *, client_id: str = ""
+        self,
+        query_client_connections_request: "QueryClientConnectionsRequest",
+        *,
+        timeout: Optional[float] = None,
+        deadline: Optional["Deadline"] = None,
+        metadata: Optional["MetadataLike"] = None
     ) -> "QueryClientConnectionsResponse":
-
-        request = QueryClientConnectionsRequest()
-        request.client_id = client_id
-
         return await self._unary_unary(
             "/ibc.core.connection.v1.Query/ClientConnections",
-            request,
+            query_client_connections_request,
             QueryClientConnectionsResponse,
+            timeout=timeout,
+            deadline=deadline,
+            metadata=metadata,
         )
 
     async def connection_client_state(
-        self, *, connection_id: str = ""
+        self,
+        query_connection_client_state_request: "QueryConnectionClientStateRequest",
+        *,
+        timeout: Optional[float] = None,
+        deadline: Optional["Deadline"] = None,
+        metadata: Optional["MetadataLike"] = None
     ) -> "QueryConnectionClientStateResponse":
-
-        request = QueryConnectionClientStateRequest()
-        request.connection_id = connection_id
-
         return await self._unary_unary(
             "/ibc.core.connection.v1.Query/ConnectionClientState",
-            request,
+            query_connection_client_state_request,
             QueryConnectionClientStateResponse,
+            timeout=timeout,
+            deadline=deadline,
+            metadata=metadata,
         )
 
     async def connection_consensus_state(
         self,
+        query_connection_consensus_state_request: "QueryConnectionConsensusStateRequest",
         *,
-        connection_id: str = "",
-        revision_number: int = 0,
-        revision_height: int = 0
+        timeout: Optional[float] = None,
+        deadline: Optional["Deadline"] = None,
+        metadata: Optional["MetadataLike"] = None
     ) -> "QueryConnectionConsensusStateResponse":
-
-        request = QueryConnectionConsensusStateRequest()
-        request.connection_id = connection_id
-        request.revision_number = revision_number
-        request.revision_height = revision_height
-
         return await self._unary_unary(
             "/ibc.core.connection.v1.Query/ConnectionConsensusState",
-            request,
+            query_connection_consensus_state_request,
             QueryConnectionConsensusStateResponse,
+            timeout=timeout,
+            deadline=deadline,
+            metadata=metadata,
         )
 
 
 class MsgBase(ServiceBase):
     async def connection_open_init(
-        self,
-        client_id: str,
-        counterparty: "Counterparty",
-        version: "Version",
-        delay_period: int,
-        signer: str,
+        self, msg_connection_open_init: "MsgConnectionOpenInit"
     ) -> "MsgConnectionOpenInitResponse":
         raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
 
     async def connection_open_try(
-        self,
-        client_id: str,
-        previous_connection_id: str,
-        client_state: "betterproto_lib_google_protobuf.Any",
-        counterparty: "Counterparty",
-        delay_period: int,
-        counterparty_versions: Optional[List["Version"]],
-        proof_height: "__client_v1__.Height",
-        proof_init: bytes,
-        proof_client: bytes,
-        proof_consensus: bytes,
-        consensus_height: "__client_v1__.Height",
-        signer: str,
+        self, msg_connection_open_try: "MsgConnectionOpenTry"
     ) -> "MsgConnectionOpenTryResponse":
         raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
 
     async def connection_open_ack(
-        self,
-        connection_id: str,
-        counterparty_connection_id: str,
-        version: "Version",
-        client_state: "betterproto_lib_google_protobuf.Any",
-        proof_height: "__client_v1__.Height",
-        proof_try: bytes,
-        proof_client: bytes,
-        proof_consensus: bytes,
-        consensus_height: "__client_v1__.Height",
-        signer: str,
+        self, msg_connection_open_ack: "MsgConnectionOpenAck"
     ) -> "MsgConnectionOpenAckResponse":
         raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
 
     async def connection_open_confirm(
-        self,
-        connection_id: str,
-        proof_ack: bytes,
-        proof_height: "__client_v1__.Height",
-        signer: str,
+        self, msg_connection_open_confirm: "MsgConnectionOpenConfirm"
     ) -> "MsgConnectionOpenConfirmResponse":
         raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
 
-    async def __rpc_connection_open_init(self, stream: grpclib.server.Stream) -> None:
+    async def __rpc_connection_open_init(
+        self,
+        stream: "grpclib.server.Stream[MsgConnectionOpenInit, MsgConnectionOpenInitResponse]",
+    ) -> None:
         request = await stream.recv_message()
-
-        request_kwargs = {
-            "client_id": request.client_id,
-            "counterparty": request.counterparty,
-            "version": request.version,
-            "delay_period": request.delay_period,
-            "signer": request.signer,
-        }
-
-        response = await self.connection_open_init(**request_kwargs)
+        response = await self.connection_open_init(request)
         await stream.send_message(response)
 
-    async def __rpc_connection_open_try(self, stream: grpclib.server.Stream) -> None:
+    async def __rpc_connection_open_try(
+        self,
+        stream: "grpclib.server.Stream[MsgConnectionOpenTry, MsgConnectionOpenTryResponse]",
+    ) -> None:
         request = await stream.recv_message()
-
-        request_kwargs = {
-            "client_id": request.client_id,
-            "previous_connection_id": request.previous_connection_id,
-            "client_state": request.client_state,
-            "counterparty": request.counterparty,
-            "delay_period": request.delay_period,
-            "counterparty_versions": request.counterparty_versions,
-            "proof_height": request.proof_height,
-            "proof_init": request.proof_init,
-            "proof_client": request.proof_client,
-            "proof_consensus": request.proof_consensus,
-            "consensus_height": request.consensus_height,
-            "signer": request.signer,
-        }
-
-        response = await self.connection_open_try(**request_kwargs)
+        response = await self.connection_open_try(request)
         await stream.send_message(response)
 
-    async def __rpc_connection_open_ack(self, stream: grpclib.server.Stream) -> None:
+    async def __rpc_connection_open_ack(
+        self,
+        stream: "grpclib.server.Stream[MsgConnectionOpenAck, MsgConnectionOpenAckResponse]",
+    ) -> None:
         request = await stream.recv_message()
-
-        request_kwargs = {
-            "connection_id": request.connection_id,
-            "counterparty_connection_id": request.counterparty_connection_id,
-            "version": request.version,
-            "client_state": request.client_state,
-            "proof_height": request.proof_height,
-            "proof_try": request.proof_try,
-            "proof_client": request.proof_client,
-            "proof_consensus": request.proof_consensus,
-            "consensus_height": request.consensus_height,
-            "signer": request.signer,
-        }
-
-        response = await self.connection_open_ack(**request_kwargs)
+        response = await self.connection_open_ack(request)
         await stream.send_message(response)
 
     async def __rpc_connection_open_confirm(
-        self, stream: grpclib.server.Stream
+        self,
+        stream: "grpclib.server.Stream[MsgConnectionOpenConfirm, MsgConnectionOpenConfirmResponse]",
     ) -> None:
         request = await stream.recv_message()
-
-        request_kwargs = {
-            "connection_id": request.connection_id,
-            "proof_ack": request.proof_ack,
-            "proof_height": request.proof_height,
-            "signer": request.signer,
-        }
-
-        response = await self.connection_open_confirm(**request_kwargs)
+        response = await self.connection_open_confirm(request)
         await stream.send_message(response)
 
     def __mapping__(self) -> Dict[str, grpclib.const.Handler]:
@@ -753,83 +718,70 @@ class MsgBase(ServiceBase):
 
 
 class QueryBase(ServiceBase):
-    async def connection(self, connection_id: str) -> "QueryConnectionResponse":
+    async def connection(
+        self, query_connection_request: "QueryConnectionRequest"
+    ) -> "QueryConnectionResponse":
         raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
 
     async def connections(
-        self, pagination: "____cosmos_base_query_v1_beta1__.PageRequest"
+        self, query_connections_request: "QueryConnectionsRequest"
     ) -> "QueryConnectionsResponse":
         raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
 
     async def client_connections(
-        self, client_id: str
+        self, query_client_connections_request: "QueryClientConnectionsRequest"
     ) -> "QueryClientConnectionsResponse":
         raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
 
     async def connection_client_state(
-        self, connection_id: str
+        self, query_connection_client_state_request: "QueryConnectionClientStateRequest"
     ) -> "QueryConnectionClientStateResponse":
         raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
 
     async def connection_consensus_state(
-        self, connection_id: str, revision_number: int, revision_height: int
+        self,
+        query_connection_consensus_state_request: "QueryConnectionConsensusStateRequest",
     ) -> "QueryConnectionConsensusStateResponse":
         raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
 
-    async def __rpc_connection(self, stream: grpclib.server.Stream) -> None:
+    async def __rpc_connection(
+        self,
+        stream: "grpclib.server.Stream[QueryConnectionRequest, QueryConnectionResponse]",
+    ) -> None:
         request = await stream.recv_message()
-
-        request_kwargs = {
-            "connection_id": request.connection_id,
-        }
-
-        response = await self.connection(**request_kwargs)
+        response = await self.connection(request)
         await stream.send_message(response)
 
-    async def __rpc_connections(self, stream: grpclib.server.Stream) -> None:
+    async def __rpc_connections(
+        self,
+        stream: "grpclib.server.Stream[QueryConnectionsRequest, QueryConnectionsResponse]",
+    ) -> None:
         request = await stream.recv_message()
-
-        request_kwargs = {
-            "pagination": request.pagination,
-        }
-
-        response = await self.connections(**request_kwargs)
+        response = await self.connections(request)
         await stream.send_message(response)
 
-    async def __rpc_client_connections(self, stream: grpclib.server.Stream) -> None:
+    async def __rpc_client_connections(
+        self,
+        stream: "grpclib.server.Stream[QueryClientConnectionsRequest, QueryClientConnectionsResponse]",
+    ) -> None:
         request = await stream.recv_message()
-
-        request_kwargs = {
-            "client_id": request.client_id,
-        }
-
-        response = await self.client_connections(**request_kwargs)
+        response = await self.client_connections(request)
         await stream.send_message(response)
 
     async def __rpc_connection_client_state(
-        self, stream: grpclib.server.Stream
+        self,
+        stream: "grpclib.server.Stream[QueryConnectionClientStateRequest, QueryConnectionClientStateResponse]",
     ) -> None:
         request = await stream.recv_message()
-
-        request_kwargs = {
-            "connection_id": request.connection_id,
-        }
-
-        response = await self.connection_client_state(**request_kwargs)
+        response = await self.connection_client_state(request)
         await stream.send_message(response)
 
     async def __rpc_connection_consensus_state(
-        self, stream: grpclib.server.Stream
+        self,
+        stream: "grpclib.server.Stream[QueryConnectionConsensusStateRequest, QueryConnectionConsensusStateResponse]",
     ) -> None:
         request = await stream.recv_message()
-
-        request_kwargs = {
-            "connection_id": request.connection_id,
-            "revision_number": request.revision_number,
-            "revision_height": request.revision_height,
-        }
-
-        response = await self.connection_consensus_state(**request_kwargs)
+        response = await self.connection_consensus_state(request)
         await stream.send_message(response)
 
     def __mapping__(self) -> Dict[str, grpclib.const.Handler]:
@@ -865,9 +817,3 @@ class QueryBase(ServiceBase):
                 QueryConnectionConsensusStateResponse,
             ),
         }
-
-
-from .....cosmos.base.query import v1beta1 as ____cosmos_base_query_v1_beta1__
-from ...client import v1 as __client_v1__
-from ...commitment import v1 as __commitment_v1__
-import betterproto.lib.google.protobuf as betterproto_lib_google_protobuf

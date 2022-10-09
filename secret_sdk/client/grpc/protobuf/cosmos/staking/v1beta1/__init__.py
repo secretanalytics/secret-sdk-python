@@ -2,25 +2,47 @@
 # sources: cosmos/staking/v1beta1/authz.proto, cosmos/staking/v1beta1/genesis.proto, cosmos/staking/v1beta1/query.proto, cosmos/staking/v1beta1/staking.proto, cosmos/staking/v1beta1/tx.proto
 # plugin: python-betterproto
 from dataclasses import dataclass
-from datetime import datetime, timedelta
-from typing import Dict, List
+from datetime import (
+    datetime,
+    timedelta,
+)
+from typing import (
+    TYPE_CHECKING,
+    Dict,
+    List,
+    Optional,
+)
 
 import betterproto
-from betterproto.grpc.grpclib_server import ServiceBase
+import betterproto.lib.google.protobuf as betterproto_lib_google_protobuf
 import grpclib
+from betterproto.grpc.grpclib_server import ServiceBase
+
+from ....tendermint import types as ___tendermint_types__
+from ...base import v1beta1 as __base_v1_beta1__
+from ...base.query import v1beta1 as __base_query_v1_beta1__
+
+
+if TYPE_CHECKING:
+    import grpclib.server
+    from betterproto.grpc.grpclib_client import MetadataLike
+    from grpclib.metadata import Deadline
 
 
 class BondStatus(betterproto.Enum):
     """BondStatus is the status of a validator."""
 
-    # UNSPECIFIED defines an invalid validator status.
     BOND_STATUS_UNSPECIFIED = 0
-    # UNBONDED defines a validator that is not bonded.
+    """UNSPECIFIED defines an invalid validator status."""
+
     BOND_STATUS_UNBONDED = 1
-    # UNBONDING defines a validator that is unbonding.
+    """UNBONDED defines a validator that is not bonded."""
+
     BOND_STATUS_UNBONDING = 2
-    # BONDED defines a validator that is bonded.
+    """UNBONDING defines a validator that is unbonding."""
+
     BOND_STATUS_BONDED = 3
+    """BONDED defines a validator that is bonded."""
 
 
 class AuthorizationType(betterproto.Enum):
@@ -29,16 +51,27 @@ class AuthorizationType(betterproto.Enum):
     Since: cosmos-sdk 0.43
     """
 
-    # AUTHORIZATION_TYPE_UNSPECIFIED specifies an unknown authorization type
     AUTHORIZATION_TYPE_UNSPECIFIED = 0
-    # AUTHORIZATION_TYPE_DELEGATE defines an authorization type for Msg/Delegate
+    """
+    AUTHORIZATION_TYPE_UNSPECIFIED specifies an unknown authorization type
+    """
+
     AUTHORIZATION_TYPE_DELEGATE = 1
-    # AUTHORIZATION_TYPE_UNDELEGATE defines an authorization type for
-    # Msg/Undelegate
+    """
+    AUTHORIZATION_TYPE_DELEGATE defines an authorization type for Msg/Delegate
+    """
+
     AUTHORIZATION_TYPE_UNDELEGATE = 2
-    # AUTHORIZATION_TYPE_REDELEGATE defines an authorization type for
-    # Msg/BeginRedelegate
+    """
+    AUTHORIZATION_TYPE_UNDELEGATE defines an authorization type for
+    Msg/Undelegate
+    """
+
     AUTHORIZATION_TYPE_REDELEGATE = 3
+    """
+    AUTHORIZATION_TYPE_REDELEGATE defines an authorization type for
+    Msg/BeginRedelegate
+    """
 
 
 @dataclass(eq=False, repr=False)
@@ -61,41 +94,56 @@ class CommissionRates(betterproto.Message):
     creating a validator.
     """
 
-    # rate is the commission rate charged to delegators, as a fraction.
     rate: str = betterproto.string_field(1)
-    # max_rate defines the maximum commission rate which validator can ever
-    # charge, as a fraction.
+    """rate is the commission rate charged to delegators, as a fraction."""
+
     max_rate: str = betterproto.string_field(2)
-    # max_change_rate defines the maximum daily increase of the validator
-    # commission, as a fraction.
+    """
+    max_rate defines the maximum commission rate which validator can ever
+    charge, as a fraction.
+    """
+
     max_change_rate: str = betterproto.string_field(3)
+    """
+    max_change_rate defines the maximum daily increase of the validator
+    commission, as a fraction.
+    """
 
 
 @dataclass(eq=False, repr=False)
 class Commission(betterproto.Message):
     """Commission defines commission parameters for a given validator."""
 
-    # commission_rates defines the initial commission rates to be used for
-    # creating a validator.
     commission_rates: "CommissionRates" = betterproto.message_field(1)
-    # update_time is the last time the commission rate was changed.
+    """
+    commission_rates defines the initial commission rates to be used for
+    creating a validator.
+    """
+
     update_time: datetime = betterproto.message_field(2)
+    """update_time is the last time the commission rate was changed."""
 
 
 @dataclass(eq=False, repr=False)
 class Description(betterproto.Message):
     """Description defines a validator description."""
 
-    # moniker defines a human-readable name for the validator.
     moniker: str = betterproto.string_field(1)
-    # identity defines an optional identity signature (ex. UPort or Keybase).
+    """moniker defines a human-readable name for the validator."""
+
     identity: str = betterproto.string_field(2)
-    # website defines an optional website link.
+    """
+    identity defines an optional identity signature (ex. UPort or Keybase).
+    """
+
     website: str = betterproto.string_field(3)
-    # security_contact defines an optional email for security contact.
+    """website defines an optional website link."""
+
     security_contact: str = betterproto.string_field(4)
-    # details define other optional details.
+    """security_contact defines an optional email for security contact."""
+
     details: str = betterproto.string_field(5)
+    """details define other optional details."""
 
 
 @dataclass(eq=False, repr=False)
@@ -111,36 +159,60 @@ class Validator(betterproto.Message):
     shares multiplied by exchange rate.
     """
 
-    # operator_address defines the address of the validator's operator; bech
-    # encoded in JSON.
     operator_address: str = betterproto.string_field(1)
-    # consensus_pubkey is the consensus public key of the validator, as a
-    # Protobuf Any.
+    """
+    operator_address defines the address of the validator's operator; bech
+    encoded in JSON.
+    """
+
     consensus_pubkey: "betterproto_lib_google_protobuf.Any" = betterproto.message_field(
         2
     )
-    # jailed defined whether the validator has been jailed from bonded status or
-    # not.
+    """
+    consensus_pubkey is the consensus public key of the validator, as a
+    Protobuf Any.
+    """
+
     jailed: bool = betterproto.bool_field(3)
-    # status is the validator status (bonded/unbonding/unbonded).
+    """
+    jailed defined whether the validator has been jailed from bonded status or
+    not.
+    """
+
     status: "BondStatus" = betterproto.enum_field(4)
-    # tokens define the delegated tokens (incl. self-delegation).
+    """status is the validator status (bonded/unbonding/unbonded)."""
+
     tokens: str = betterproto.string_field(5)
-    # delegator_shares defines total shares issued to a validator's delegators.
+    """tokens define the delegated tokens (incl. self-delegation)."""
+
     delegator_shares: str = betterproto.string_field(6)
-    # description defines the description terms for the validator.
+    """
+    delegator_shares defines total shares issued to a validator's delegators.
+    """
+
     description: "Description" = betterproto.message_field(7)
-    # unbonding_height defines, if unbonding, the height at which this validator
-    # has begun unbonding.
+    """description defines the description terms for the validator."""
+
     unbonding_height: int = betterproto.int64_field(8)
-    # unbonding_time defines, if unbonding, the min time for the validator to
-    # complete unbonding.
+    """
+    unbonding_height defines, if unbonding, the height at which this validator
+    has begun unbonding.
+    """
+
     unbonding_time: datetime = betterproto.message_field(9)
-    # commission defines the commission parameters.
+    """
+    unbonding_time defines, if unbonding, the min time for the validator to
+    complete unbonding.
+    """
+
     commission: "Commission" = betterproto.message_field(10)
-    # min_self_delegation is the validator's self declared minimum self
-    # delegation.
+    """commission defines the commission parameters."""
+
     min_self_delegation: str = betterproto.string_field(11)
+    """
+    min_self_delegation is the validator's self declared minimum self
+    delegation.
+    """
 
 
 @dataclass(eq=False, repr=False)
@@ -198,12 +270,14 @@ class Delegation(betterproto.Message):
     by one delegator, and is associated with the voting power of one validator.
     """
 
-    # delegator_address is the bech32-encoded address of the delegator.
     delegator_address: str = betterproto.string_field(1)
-    # validator_address is the bech32-encoded address of the validator.
+    """delegator_address is the bech32-encoded address of the delegator."""
+
     validator_address: str = betterproto.string_field(2)
-    # shares define the delegation shares received.
+    """validator_address is the bech32-encoded address of the validator."""
+
     shares: str = betterproto.string_field(3)
+    """shares define the delegation shares received."""
 
 
 @dataclass(eq=False, repr=False)
@@ -213,12 +287,14 @@ class UnbondingDelegation(betterproto.Message):
     a single validator in an time-ordered list.
     """
 
-    # delegator_address is the bech32-encoded address of the delegator.
     delegator_address: str = betterproto.string_field(1)
-    # validator_address is the bech32-encoded address of the validator.
+    """delegator_address is the bech32-encoded address of the delegator."""
+
     validator_address: str = betterproto.string_field(2)
-    # entries are the unbonding delegation entries.
+    """validator_address is the bech32-encoded address of the validator."""
+
     entries: List["UnbondingDelegationEntry"] = betterproto.message_field(3)
+    """entries are the unbonding delegation entries."""
 
 
 @dataclass(eq=False, repr=False)
@@ -228,15 +304,20 @@ class UnbondingDelegationEntry(betterproto.Message):
     metadata.
     """
 
-    # creation_height is the height which the unbonding took place.
     creation_height: int = betterproto.int64_field(1)
-    # completion_time is the unix time for unbonding completion.
+    """creation_height is the height which the unbonding took place."""
+
     completion_time: datetime = betterproto.message_field(2)
-    # initial_balance defines the tokens initially scheduled to receive at
-    # completion.
+    """completion_time is the unix time for unbonding completion."""
+
     initial_balance: str = betterproto.string_field(3)
-    # balance defines the tokens to receive at completion.
+    """
+    initial_balance defines the tokens initially scheduled to receive at
+    completion.
+    """
+
     balance: str = betterproto.string_field(4)
+    """balance defines the tokens to receive at completion."""
 
 
 @dataclass(eq=False, repr=False)
@@ -245,15 +326,24 @@ class RedelegationEntry(betterproto.Message):
     RedelegationEntry defines a redelegation object with relevant metadata.
     """
 
-    # creation_height  defines the height which the redelegation took place.
     creation_height: int = betterproto.int64_field(1)
-    # completion_time defines the unix time for redelegation completion.
+    """
+    creation_height  defines the height which the redelegation took place.
+    """
+
     completion_time: datetime = betterproto.message_field(2)
-    # initial_balance defines the initial balance when redelegation started.
+    """completion_time defines the unix time for redelegation completion."""
+
     initial_balance: str = betterproto.string_field(3)
-    # shares_dst is the amount of destination-validator shares created by
-    # redelegation.
+    """
+    initial_balance defines the initial balance when redelegation started.
+    """
+
     shares_dst: str = betterproto.string_field(4)
+    """
+    shares_dst is the amount of destination-validator shares created by
+    redelegation.
+    """
 
 
 @dataclass(eq=False, repr=False)
@@ -264,33 +354,46 @@ class Redelegation(betterproto.Message):
     validator.
     """
 
-    # delegator_address is the bech32-encoded address of the delegator.
     delegator_address: str = betterproto.string_field(1)
-    # validator_src_address is the validator redelegation source operator
-    # address.
+    """delegator_address is the bech32-encoded address of the delegator."""
+
     validator_src_address: str = betterproto.string_field(2)
-    # validator_dst_address is the validator redelegation destination operator
-    # address.
+    """
+    validator_src_address is the validator redelegation source operator
+    address.
+    """
+
     validator_dst_address: str = betterproto.string_field(3)
-    # entries are the redelegation entries.
+    """
+    validator_dst_address is the validator redelegation destination operator
+    address.
+    """
+
     entries: List["RedelegationEntry"] = betterproto.message_field(4)
+    """entries are the redelegation entries."""
 
 
 @dataclass(eq=False, repr=False)
 class Params(betterproto.Message):
     """Params defines the parameters for the staking module."""
 
-    # unbonding_time is the time duration of unbonding.
     unbonding_time: timedelta = betterproto.message_field(1)
-    # max_validators is the maximum number of validators.
+    """unbonding_time is the time duration of unbonding."""
+
     max_validators: int = betterproto.uint32_field(2)
-    # max_entries is the max entries for either unbonding delegation or
-    # redelegation (per pair/trio).
+    """max_validators is the maximum number of validators."""
+
     max_entries: int = betterproto.uint32_field(3)
-    # historical_entries is the number of historical entries to persist.
+    """
+    max_entries is the max entries for either unbonding delegation or
+    redelegation (per pair/trio).
+    """
+
     historical_entries: int = betterproto.uint32_field(4)
-    # bond_denom defines the bondable coin denomination.
+    """historical_entries is the number of historical entries to persist."""
+
     bond_denom: str = betterproto.string_field(5)
+    """bond_denom defines the bondable coin denomination."""
 
 
 @dataclass(eq=False, repr=False)
@@ -371,10 +474,13 @@ class MsgEditValidator(betterproto.Message):
 
     description: "Description" = betterproto.message_field(1)
     validator_address: str = betterproto.string_field(2)
-    # We pass a reference to the new commission rate and min self delegation as
-    # it's not mandatory to update. If not updated, the deserialized rate will be
-    # zero with no way to distinguish if an update was intended. REF: #2373
     commission_rate: str = betterproto.string_field(3)
+    """
+    We pass a reference to the new commission rate and min self delegation as
+    it's not mandatory to update. If not updated, the deserialized rate will be
+    zero with no way to distinguish if an update was intended. REF: #2373
+    """
+
     min_self_delegation: str = betterproto.string_field(4)
 
 
@@ -453,10 +559,11 @@ class QueryValidatorsRequest(betterproto.Message):
     QueryValidatorsRequest is request type for Query/Validators RPC method.
     """
 
-    # status enables to query for validators matching a given status.
     status: str = betterproto.string_field(1)
-    # pagination defines an optional pagination for the request.
+    """status enables to query for validators matching a given status."""
+
     pagination: "__base_query_v1_beta1__.PageRequest" = betterproto.message_field(2)
+    """pagination defines an optional pagination for the request."""
 
 
 @dataclass(eq=False, repr=False)
@@ -466,10 +573,11 @@ class QueryValidatorsResponse(betterproto.Message):
     method
     """
 
-    # validators contains all the queried validators.
     validators: List["Validator"] = betterproto.message_field(1)
-    # pagination defines the pagination in the response.
+    """validators contains all the queried validators."""
+
     pagination: "__base_query_v1_beta1__.PageResponse" = betterproto.message_field(2)
+    """pagination defines the pagination in the response."""
 
 
 @dataclass(eq=False, repr=False)
@@ -478,8 +586,8 @@ class QueryValidatorRequest(betterproto.Message):
     QueryValidatorRequest is response type for the Query/Validator RPC method
     """
 
-    # validator_addr defines the validator address to query for.
     validator_addr: str = betterproto.string_field(1)
+    """validator_addr defines the validator address to query for."""
 
 
 @dataclass(eq=False, repr=False)
@@ -488,8 +596,8 @@ class QueryValidatorResponse(betterproto.Message):
     QueryValidatorResponse is response type for the Query/Validator RPC method
     """
 
-    # validator defines the the validator info.
     validator: "Validator" = betterproto.message_field(1)
+    """validator defines the the validator info."""
 
 
 @dataclass(eq=False, repr=False)
@@ -499,10 +607,11 @@ class QueryValidatorDelegationsRequest(betterproto.Message):
     Query/ValidatorDelegations RPC method
     """
 
-    # validator_addr defines the validator address to query for.
     validator_addr: str = betterproto.string_field(1)
-    # pagination defines an optional pagination for the request.
+    """validator_addr defines the validator address to query for."""
+
     pagination: "__base_query_v1_beta1__.PageRequest" = betterproto.message_field(2)
+    """pagination defines an optional pagination for the request."""
 
 
 @dataclass(eq=False, repr=False)
@@ -513,8 +622,8 @@ class QueryValidatorDelegationsResponse(betterproto.Message):
     """
 
     delegation_responses: List["DelegationResponse"] = betterproto.message_field(1)
-    # pagination defines the pagination in the response.
     pagination: "__base_query_v1_beta1__.PageResponse" = betterproto.message_field(2)
+    """pagination defines the pagination in the response."""
 
 
 @dataclass(eq=False, repr=False)
@@ -524,10 +633,11 @@ class QueryValidatorUnbondingDelegationsRequest(betterproto.Message):
     Query/ValidatorUnbondingDelegations RPC method
     """
 
-    # validator_addr defines the validator address to query for.
     validator_addr: str = betterproto.string_field(1)
-    # pagination defines an optional pagination for the request.
+    """validator_addr defines the validator address to query for."""
+
     pagination: "__base_query_v1_beta1__.PageRequest" = betterproto.message_field(2)
+    """pagination defines an optional pagination for the request."""
 
 
 @dataclass(eq=False, repr=False)
@@ -538,8 +648,8 @@ class QueryValidatorUnbondingDelegationsResponse(betterproto.Message):
     """
 
     unbonding_responses: List["UnbondingDelegation"] = betterproto.message_field(1)
-    # pagination defines the pagination in the response.
     pagination: "__base_query_v1_beta1__.PageResponse" = betterproto.message_field(2)
+    """pagination defines the pagination in the response."""
 
 
 @dataclass(eq=False, repr=False)
@@ -548,10 +658,11 @@ class QueryDelegationRequest(betterproto.Message):
     QueryDelegationRequest is request type for the Query/Delegation RPC method.
     """
 
-    # delegator_addr defines the delegator address to query for.
     delegator_addr: str = betterproto.string_field(1)
-    # validator_addr defines the validator address to query for.
+    """delegator_addr defines the delegator address to query for."""
+
     validator_addr: str = betterproto.string_field(2)
+    """validator_addr defines the validator address to query for."""
 
 
 @dataclass(eq=False, repr=False)
@@ -561,8 +672,8 @@ class QueryDelegationResponse(betterproto.Message):
     method.
     """
 
-    # delegation_responses defines the delegation info of a delegation.
     delegation_response: "DelegationResponse" = betterproto.message_field(1)
+    """delegation_responses defines the delegation info of a delegation."""
 
 
 @dataclass(eq=False, repr=False)
@@ -572,10 +683,11 @@ class QueryUnbondingDelegationRequest(betterproto.Message):
     Query/UnbondingDelegation RPC method.
     """
 
-    # delegator_addr defines the delegator address to query for.
     delegator_addr: str = betterproto.string_field(1)
-    # validator_addr defines the validator address to query for.
+    """delegator_addr defines the delegator address to query for."""
+
     validator_addr: str = betterproto.string_field(2)
+    """validator_addr defines the validator address to query for."""
 
 
 @dataclass(eq=False, repr=False)
@@ -585,8 +697,8 @@ class QueryUnbondingDelegationResponse(betterproto.Message):
     RPC method.
     """
 
-    # unbond defines the unbonding information of a delegation.
     unbond: "UnbondingDelegation" = betterproto.message_field(1)
+    """unbond defines the unbonding information of a delegation."""
 
 
 @dataclass(eq=False, repr=False)
@@ -596,10 +708,11 @@ class QueryDelegatorDelegationsRequest(betterproto.Message):
     Query/DelegatorDelegations RPC method.
     """
 
-    # delegator_addr defines the delegator address to query for.
     delegator_addr: str = betterproto.string_field(1)
-    # pagination defines an optional pagination for the request.
+    """delegator_addr defines the delegator address to query for."""
+
     pagination: "__base_query_v1_beta1__.PageRequest" = betterproto.message_field(2)
+    """pagination defines an optional pagination for the request."""
 
 
 @dataclass(eq=False, repr=False)
@@ -609,10 +722,13 @@ class QueryDelegatorDelegationsResponse(betterproto.Message):
     Query/DelegatorDelegations RPC method.
     """
 
-    # delegation_responses defines all the delegations' info of a delegator.
     delegation_responses: List["DelegationResponse"] = betterproto.message_field(1)
-    # pagination defines the pagination in the response.
+    """
+    delegation_responses defines all the delegations' info of a delegator.
+    """
+
     pagination: "__base_query_v1_beta1__.PageResponse" = betterproto.message_field(2)
+    """pagination defines the pagination in the response."""
 
 
 @dataclass(eq=False, repr=False)
@@ -622,10 +738,11 @@ class QueryDelegatorUnbondingDelegationsRequest(betterproto.Message):
     Query/DelegatorUnbondingDelegations RPC method.
     """
 
-    # delegator_addr defines the delegator address to query for.
     delegator_addr: str = betterproto.string_field(1)
-    # pagination defines an optional pagination for the request.
+    """delegator_addr defines the delegator address to query for."""
+
     pagination: "__base_query_v1_beta1__.PageRequest" = betterproto.message_field(2)
+    """pagination defines an optional pagination for the request."""
 
 
 @dataclass(eq=False, repr=False)
@@ -636,8 +753,8 @@ class QueryDelegatorUnbondingDelegationsResponse(betterproto.Message):
     """
 
     unbonding_responses: List["UnbondingDelegation"] = betterproto.message_field(1)
-    # pagination defines the pagination in the response.
     pagination: "__base_query_v1_beta1__.PageResponse" = betterproto.message_field(2)
+    """pagination defines the pagination in the response."""
 
 
 @dataclass(eq=False, repr=False)
@@ -647,14 +764,17 @@ class QueryRedelegationsRequest(betterproto.Message):
     method.
     """
 
-    # delegator_addr defines the delegator address to query for.
     delegator_addr: str = betterproto.string_field(1)
-    # src_validator_addr defines the validator address to redelegate from.
+    """delegator_addr defines the delegator address to query for."""
+
     src_validator_addr: str = betterproto.string_field(2)
-    # dst_validator_addr defines the validator address to redelegate to.
+    """src_validator_addr defines the validator address to redelegate from."""
+
     dst_validator_addr: str = betterproto.string_field(3)
-    # pagination defines an optional pagination for the request.
+    """dst_validator_addr defines the validator address to redelegate to."""
+
     pagination: "__base_query_v1_beta1__.PageRequest" = betterproto.message_field(4)
+    """pagination defines an optional pagination for the request."""
 
 
 @dataclass(eq=False, repr=False)
@@ -665,8 +785,8 @@ class QueryRedelegationsResponse(betterproto.Message):
     """
 
     redelegation_responses: List["RedelegationResponse"] = betterproto.message_field(1)
-    # pagination defines the pagination in the response.
     pagination: "__base_query_v1_beta1__.PageResponse" = betterproto.message_field(2)
+    """pagination defines the pagination in the response."""
 
 
 @dataclass(eq=False, repr=False)
@@ -676,10 +796,11 @@ class QueryDelegatorValidatorsRequest(betterproto.Message):
     Query/DelegatorValidators RPC method.
     """
 
-    # delegator_addr defines the delegator address to query for.
     delegator_addr: str = betterproto.string_field(1)
-    # pagination defines an optional pagination for the request.
+    """delegator_addr defines the delegator address to query for."""
+
     pagination: "__base_query_v1_beta1__.PageRequest" = betterproto.message_field(2)
+    """pagination defines an optional pagination for the request."""
 
 
 @dataclass(eq=False, repr=False)
@@ -689,10 +810,11 @@ class QueryDelegatorValidatorsResponse(betterproto.Message):
     Query/DelegatorValidators RPC method.
     """
 
-    # validators defines the the validators' info of a delegator.
     validators: List["Validator"] = betterproto.message_field(1)
-    # pagination defines the pagination in the response.
+    """validators defines the the validators' info of a delegator."""
+
     pagination: "__base_query_v1_beta1__.PageResponse" = betterproto.message_field(2)
+    """pagination defines the pagination in the response."""
 
 
 @dataclass(eq=False, repr=False)
@@ -702,10 +824,11 @@ class QueryDelegatorValidatorRequest(betterproto.Message):
     Query/DelegatorValidator RPC method.
     """
 
-    # delegator_addr defines the delegator address to query for.
     delegator_addr: str = betterproto.string_field(1)
-    # validator_addr defines the validator address to query for.
+    """delegator_addr defines the delegator address to query for."""
+
     validator_addr: str = betterproto.string_field(2)
+    """validator_addr defines the validator address to query for."""
 
 
 @dataclass(eq=False, repr=False)
@@ -715,8 +838,8 @@ class QueryDelegatorValidatorResponse(betterproto.Message):
     Query/DelegatorValidator RPC method.
     """
 
-    # validator defines the the validator info.
     validator: "Validator" = betterproto.message_field(1)
+    """validator defines the the validator info."""
 
 
 @dataclass(eq=False, repr=False)
@@ -726,8 +849,8 @@ class QueryHistoricalInfoRequest(betterproto.Message):
     method.
     """
 
-    # height defines at which height to query the historical info.
     height: int = betterproto.int64_field(1)
+    """height defines at which height to query the historical info."""
 
 
 @dataclass(eq=False, repr=False)
@@ -737,8 +860,8 @@ class QueryHistoricalInfoResponse(betterproto.Message):
     RPC method.
     """
 
-    # hist defines the historical info at the given height.
     hist: "HistoricalInfo" = betterproto.message_field(1)
+    """hist defines the historical info at the given height."""
 
 
 @dataclass(eq=False, repr=False)
@@ -752,8 +875,8 @@ class QueryPoolRequest(betterproto.Message):
 class QueryPoolResponse(betterproto.Message):
     """QueryPoolResponse is response type for the Query/Pool RPC method."""
 
-    # pool defines the pool info.
     pool: "Pool" = betterproto.message_field(1)
+    """pool defines the pool info."""
 
 
 @dataclass(eq=False, repr=False)
@@ -769,8 +892,8 @@ class QueryParamsResponse(betterproto.Message):
     QueryParamsResponse is response type for the Query/Params RPC method.
     """
 
-    # params holds all the parameters of this module.
     params: "Params" = betterproto.message_field(1)
+    """params holds all the parameters of this module."""
 
 
 @dataclass(eq=False, repr=False)
@@ -780,22 +903,31 @@ class StakeAuthorization(betterproto.Message):
     delegate/undelegate/redelegate. Since: cosmos-sdk 0.43
     """
 
-    # max_tokens specifies the maximum amount of tokens can be delegate to a
-    # validator. If it is empty, there is no spend limit and any amount of coins
-    # can be delegated.
     max_tokens: "__base_v1_beta1__.Coin" = betterproto.message_field(1)
-    # allow_list specifies list of validator addresses to whom grantee can
-    # delegate tokens on behalf of granter's account.
+    """
+    max_tokens specifies the maximum amount of tokens can be delegate to a
+    validator. If it is empty, there is no spend limit and any amount of coins
+    can be delegated.
+    """
+
     allow_list: "StakeAuthorizationValidators" = betterproto.message_field(
         2, group="validators"
     )
-    # deny_list specifies list of validator addresses to whom grantee can not
-    # delegate tokens.
+    """
+    allow_list specifies list of validator addresses to whom grantee can
+    delegate tokens on behalf of granter's account.
+    """
+
     deny_list: "StakeAuthorizationValidators" = betterproto.message_field(
         3, group="validators"
     )
-    # authorization_type defines one of AuthorizationType.
+    """
+    deny_list specifies list of validator addresses to whom grantee can not
+    delegate tokens.
+    """
+
     authorization_type: "AuthorizationType" = betterproto.enum_field(4)
+    """authorization_type defines one of AuthorizationType."""
 
 
 @dataclass(eq=False, repr=False)
@@ -809,22 +941,35 @@ class StakeAuthorizationValidators(betterproto.Message):
 class GenesisState(betterproto.Message):
     """GenesisState defines the staking module's genesis state."""
 
-    # params defines all the paramaters of related to deposit.
     params: "Params" = betterproto.message_field(1)
-    # last_total_power tracks the total amounts of bonded tokens recorded during
-    # the previous end block.
+    """params defines all the paramaters of related to deposit."""
+
     last_total_power: bytes = betterproto.bytes_field(2)
-    # last_validator_powers is a special index that provides a historical list of
-    # the last-block's bonded validators.
+    """
+    last_total_power tracks the total amounts of bonded tokens recorded during
+    the previous end block.
+    """
+
     last_validator_powers: List["LastValidatorPower"] = betterproto.message_field(3)
-    # delegations defines the validator set at genesis.
+    """
+    last_validator_powers is a special index that provides a historical list of
+    the last-block's bonded validators.
+    """
+
     validators: List["Validator"] = betterproto.message_field(4)
-    # delegations defines the delegations active at genesis.
+    """delegations defines the validator set at genesis."""
+
     delegations: List["Delegation"] = betterproto.message_field(5)
-    # unbonding_delegations defines the unbonding delegations active at genesis.
+    """delegations defines the delegations active at genesis."""
+
     unbonding_delegations: List["UnbondingDelegation"] = betterproto.message_field(6)
-    # redelegations defines the redelegations active at genesis.
+    """
+    unbonding_delegations defines the unbonding delegations active at genesis.
+    """
+
     redelegations: List["Redelegation"] = betterproto.message_field(7)
+    """redelegations defines the redelegations active at genesis."""
+
     exported: bool = betterproto.bool_field(8)
 
 
@@ -832,444 +977,400 @@ class GenesisState(betterproto.Message):
 class LastValidatorPower(betterproto.Message):
     """LastValidatorPower required for validator set update logic."""
 
-    # address is the address of the validator.
     address: str = betterproto.string_field(1)
-    # power defines the power of the validator.
+    """address is the address of the validator."""
+
     power: int = betterproto.int64_field(2)
+    """power defines the power of the validator."""
 
 
 class MsgStub(betterproto.ServiceStub):
     async def create_validator(
         self,
+        msg_create_validator: "MsgCreateValidator",
         *,
-        description: "Description" = None,
-        commission: "CommissionRates" = None,
-        min_self_delegation: str = "",
-        delegator_address: str = "",
-        validator_address: str = "",
-        pubkey: "betterproto_lib_google_protobuf.Any" = None,
-        value: "__base_v1_beta1__.Coin" = None
+        timeout: Optional[float] = None,
+        deadline: Optional["Deadline"] = None,
+        metadata: Optional["MetadataLike"] = None
     ) -> "MsgCreateValidatorResponse":
-
-        request = MsgCreateValidator()
-        if description is not None:
-            request.description = description
-        if commission is not None:
-            request.commission = commission
-        request.min_self_delegation = min_self_delegation
-        request.delegator_address = delegator_address
-        request.validator_address = validator_address
-        if pubkey is not None:
-            request.pubkey = pubkey
-        if value is not None:
-            request.value = value
-
         return await self._unary_unary(
             "/cosmos.staking.v1beta1.Msg/CreateValidator",
-            request,
+            msg_create_validator,
             MsgCreateValidatorResponse,
+            timeout=timeout,
+            deadline=deadline,
+            metadata=metadata,
         )
 
     async def edit_validator(
         self,
+        msg_edit_validator: "MsgEditValidator",
         *,
-        description: "Description" = None,
-        validator_address: str = "",
-        commission_rate: str = "",
-        min_self_delegation: str = ""
+        timeout: Optional[float] = None,
+        deadline: Optional["Deadline"] = None,
+        metadata: Optional["MetadataLike"] = None
     ) -> "MsgEditValidatorResponse":
-
-        request = MsgEditValidator()
-        if description is not None:
-            request.description = description
-        request.validator_address = validator_address
-        request.commission_rate = commission_rate
-        request.min_self_delegation = min_self_delegation
-
         return await self._unary_unary(
             "/cosmos.staking.v1beta1.Msg/EditValidator",
-            request,
+            msg_edit_validator,
             MsgEditValidatorResponse,
+            timeout=timeout,
+            deadline=deadline,
+            metadata=metadata,
         )
 
     async def delegate(
         self,
+        msg_delegate: "MsgDelegate",
         *,
-        delegator_address: str = "",
-        validator_address: str = "",
-        amount: "__base_v1_beta1__.Coin" = None
+        timeout: Optional[float] = None,
+        deadline: Optional["Deadline"] = None,
+        metadata: Optional["MetadataLike"] = None
     ) -> "MsgDelegateResponse":
-
-        request = MsgDelegate()
-        request.delegator_address = delegator_address
-        request.validator_address = validator_address
-        if amount is not None:
-            request.amount = amount
-
         return await self._unary_unary(
-            "/cosmos.staking.v1beta1.Msg/Delegate", request, MsgDelegateResponse
+            "/cosmos.staking.v1beta1.Msg/Delegate",
+            msg_delegate,
+            MsgDelegateResponse,
+            timeout=timeout,
+            deadline=deadline,
+            metadata=metadata,
         )
 
     async def begin_redelegate(
         self,
+        msg_begin_redelegate: "MsgBeginRedelegate",
         *,
-        delegator_address: str = "",
-        validator_src_address: str = "",
-        validator_dst_address: str = "",
-        amount: "__base_v1_beta1__.Coin" = None
+        timeout: Optional[float] = None,
+        deadline: Optional["Deadline"] = None,
+        metadata: Optional["MetadataLike"] = None
     ) -> "MsgBeginRedelegateResponse":
-
-        request = MsgBeginRedelegate()
-        request.delegator_address = delegator_address
-        request.validator_src_address = validator_src_address
-        request.validator_dst_address = validator_dst_address
-        if amount is not None:
-            request.amount = amount
-
         return await self._unary_unary(
             "/cosmos.staking.v1beta1.Msg/BeginRedelegate",
-            request,
+            msg_begin_redelegate,
             MsgBeginRedelegateResponse,
+            timeout=timeout,
+            deadline=deadline,
+            metadata=metadata,
         )
 
     async def undelegate(
         self,
+        msg_undelegate: "MsgUndelegate",
         *,
-        delegator_address: str = "",
-        validator_address: str = "",
-        amount: "__base_v1_beta1__.Coin" = None
+        timeout: Optional[float] = None,
+        deadline: Optional["Deadline"] = None,
+        metadata: Optional["MetadataLike"] = None
     ) -> "MsgUndelegateResponse":
-
-        request = MsgUndelegate()
-        request.delegator_address = delegator_address
-        request.validator_address = validator_address
-        if amount is not None:
-            request.amount = amount
-
         return await self._unary_unary(
-            "/cosmos.staking.v1beta1.Msg/Undelegate", request, MsgUndelegateResponse
+            "/cosmos.staking.v1beta1.Msg/Undelegate",
+            msg_undelegate,
+            MsgUndelegateResponse,
+            timeout=timeout,
+            deadline=deadline,
+            metadata=metadata,
         )
 
 
 class QueryStub(betterproto.ServiceStub):
     async def validators(
         self,
+        query_validators_request: "QueryValidatorsRequest",
         *,
-        status: str = "",
-        pagination: "__base_query_v1_beta1__.PageRequest" = None
+        timeout: Optional[float] = None,
+        deadline: Optional["Deadline"] = None,
+        metadata: Optional["MetadataLike"] = None
     ) -> "QueryValidatorsResponse":
-
-        request = QueryValidatorsRequest()
-        request.status = status
-        if pagination is not None:
-            request.pagination = pagination
-
         return await self._unary_unary(
-            "/cosmos.staking.v1beta1.Query/Validators", request, QueryValidatorsResponse
+            "/cosmos.staking.v1beta1.Query/Validators",
+            query_validators_request,
+            QueryValidatorsResponse,
+            timeout=timeout,
+            deadline=deadline,
+            metadata=metadata,
         )
 
-    async def validator(self, *, validator_addr: str = "") -> "QueryValidatorResponse":
-
-        request = QueryValidatorRequest()
-        request.validator_addr = validator_addr
-
+    async def validator(
+        self,
+        query_validator_request: "QueryValidatorRequest",
+        *,
+        timeout: Optional[float] = None,
+        deadline: Optional["Deadline"] = None,
+        metadata: Optional["MetadataLike"] = None
+    ) -> "QueryValidatorResponse":
         return await self._unary_unary(
-            "/cosmos.staking.v1beta1.Query/Validator", request, QueryValidatorResponse
+            "/cosmos.staking.v1beta1.Query/Validator",
+            query_validator_request,
+            QueryValidatorResponse,
+            timeout=timeout,
+            deadline=deadline,
+            metadata=metadata,
         )
 
     async def validator_delegations(
         self,
+        query_validator_delegations_request: "QueryValidatorDelegationsRequest",
         *,
-        validator_addr: str = "",
-        pagination: "__base_query_v1_beta1__.PageRequest" = None
+        timeout: Optional[float] = None,
+        deadline: Optional["Deadline"] = None,
+        metadata: Optional["MetadataLike"] = None
     ) -> "QueryValidatorDelegationsResponse":
-
-        request = QueryValidatorDelegationsRequest()
-        request.validator_addr = validator_addr
-        if pagination is not None:
-            request.pagination = pagination
-
         return await self._unary_unary(
             "/cosmos.staking.v1beta1.Query/ValidatorDelegations",
-            request,
+            query_validator_delegations_request,
             QueryValidatorDelegationsResponse,
+            timeout=timeout,
+            deadline=deadline,
+            metadata=metadata,
         )
 
     async def validator_unbonding_delegations(
         self,
+        query_validator_unbonding_delegations_request: "QueryValidatorUnbondingDelegationsRequest",
         *,
-        validator_addr: str = "",
-        pagination: "__base_query_v1_beta1__.PageRequest" = None
+        timeout: Optional[float] = None,
+        deadline: Optional["Deadline"] = None,
+        metadata: Optional["MetadataLike"] = None
     ) -> "QueryValidatorUnbondingDelegationsResponse":
-
-        request = QueryValidatorUnbondingDelegationsRequest()
-        request.validator_addr = validator_addr
-        if pagination is not None:
-            request.pagination = pagination
-
         return await self._unary_unary(
             "/cosmos.staking.v1beta1.Query/ValidatorUnbondingDelegations",
-            request,
+            query_validator_unbonding_delegations_request,
             QueryValidatorUnbondingDelegationsResponse,
+            timeout=timeout,
+            deadline=deadline,
+            metadata=metadata,
         )
 
     async def delegation(
-        self, *, delegator_addr: str = "", validator_addr: str = ""
+        self,
+        query_delegation_request: "QueryDelegationRequest",
+        *,
+        timeout: Optional[float] = None,
+        deadline: Optional["Deadline"] = None,
+        metadata: Optional["MetadataLike"] = None
     ) -> "QueryDelegationResponse":
-
-        request = QueryDelegationRequest()
-        request.delegator_addr = delegator_addr
-        request.validator_addr = validator_addr
-
         return await self._unary_unary(
-            "/cosmos.staking.v1beta1.Query/Delegation", request, QueryDelegationResponse
+            "/cosmos.staking.v1beta1.Query/Delegation",
+            query_delegation_request,
+            QueryDelegationResponse,
+            timeout=timeout,
+            deadline=deadline,
+            metadata=metadata,
         )
 
     async def unbonding_delegation(
-        self, *, delegator_addr: str = "", validator_addr: str = ""
+        self,
+        query_unbonding_delegation_request: "QueryUnbondingDelegationRequest",
+        *,
+        timeout: Optional[float] = None,
+        deadline: Optional["Deadline"] = None,
+        metadata: Optional["MetadataLike"] = None
     ) -> "QueryUnbondingDelegationResponse":
-
-        request = QueryUnbondingDelegationRequest()
-        request.delegator_addr = delegator_addr
-        request.validator_addr = validator_addr
-
         return await self._unary_unary(
             "/cosmos.staking.v1beta1.Query/UnbondingDelegation",
-            request,
+            query_unbonding_delegation_request,
             QueryUnbondingDelegationResponse,
+            timeout=timeout,
+            deadline=deadline,
+            metadata=metadata,
         )
 
     async def delegator_delegations(
         self,
+        query_delegator_delegations_request: "QueryDelegatorDelegationsRequest",
         *,
-        delegator_addr: str = "",
-        pagination: "__base_query_v1_beta1__.PageRequest" = None
+        timeout: Optional[float] = None,
+        deadline: Optional["Deadline"] = None,
+        metadata: Optional["MetadataLike"] = None
     ) -> "QueryDelegatorDelegationsResponse":
-
-        request = QueryDelegatorDelegationsRequest()
-        request.delegator_addr = delegator_addr
-        if pagination is not None:
-            request.pagination = pagination
-
         return await self._unary_unary(
             "/cosmos.staking.v1beta1.Query/DelegatorDelegations",
-            request,
+            query_delegator_delegations_request,
             QueryDelegatorDelegationsResponse,
+            timeout=timeout,
+            deadline=deadline,
+            metadata=metadata,
         )
 
     async def delegator_unbonding_delegations(
         self,
+        query_delegator_unbonding_delegations_request: "QueryDelegatorUnbondingDelegationsRequest",
         *,
-        delegator_addr: str = "",
-        pagination: "__base_query_v1_beta1__.PageRequest" = None
+        timeout: Optional[float] = None,
+        deadline: Optional["Deadline"] = None,
+        metadata: Optional["MetadataLike"] = None
     ) -> "QueryDelegatorUnbondingDelegationsResponse":
-
-        request = QueryDelegatorUnbondingDelegationsRequest()
-        request.delegator_addr = delegator_addr
-        if pagination is not None:
-            request.pagination = pagination
-
         return await self._unary_unary(
             "/cosmos.staking.v1beta1.Query/DelegatorUnbondingDelegations",
-            request,
+            query_delegator_unbonding_delegations_request,
             QueryDelegatorUnbondingDelegationsResponse,
+            timeout=timeout,
+            deadline=deadline,
+            metadata=metadata,
         )
 
     async def redelegations(
         self,
+        query_redelegations_request: "QueryRedelegationsRequest",
         *,
-        delegator_addr: str = "",
-        src_validator_addr: str = "",
-        dst_validator_addr: str = "",
-        pagination: "__base_query_v1_beta1__.PageRequest" = None
+        timeout: Optional[float] = None,
+        deadline: Optional["Deadline"] = None,
+        metadata: Optional["MetadataLike"] = None
     ) -> "QueryRedelegationsResponse":
-
-        request = QueryRedelegationsRequest()
-        request.delegator_addr = delegator_addr
-        request.src_validator_addr = src_validator_addr
-        request.dst_validator_addr = dst_validator_addr
-        if pagination is not None:
-            request.pagination = pagination
-
         return await self._unary_unary(
             "/cosmos.staking.v1beta1.Query/Redelegations",
-            request,
+            query_redelegations_request,
             QueryRedelegationsResponse,
+            timeout=timeout,
+            deadline=deadline,
+            metadata=metadata,
         )
 
     async def delegator_validators(
         self,
+        query_delegator_validators_request: "QueryDelegatorValidatorsRequest",
         *,
-        delegator_addr: str = "",
-        pagination: "__base_query_v1_beta1__.PageRequest" = None
+        timeout: Optional[float] = None,
+        deadline: Optional["Deadline"] = None,
+        metadata: Optional["MetadataLike"] = None
     ) -> "QueryDelegatorValidatorsResponse":
-
-        request = QueryDelegatorValidatorsRequest()
-        request.delegator_addr = delegator_addr
-        if pagination is not None:
-            request.pagination = pagination
-
         return await self._unary_unary(
             "/cosmos.staking.v1beta1.Query/DelegatorValidators",
-            request,
+            query_delegator_validators_request,
             QueryDelegatorValidatorsResponse,
+            timeout=timeout,
+            deadline=deadline,
+            metadata=metadata,
         )
 
     async def delegator_validator(
-        self, *, delegator_addr: str = "", validator_addr: str = ""
+        self,
+        query_delegator_validator_request: "QueryDelegatorValidatorRequest",
+        *,
+        timeout: Optional[float] = None,
+        deadline: Optional["Deadline"] = None,
+        metadata: Optional["MetadataLike"] = None
     ) -> "QueryDelegatorValidatorResponse":
-
-        request = QueryDelegatorValidatorRequest()
-        request.delegator_addr = delegator_addr
-        request.validator_addr = validator_addr
-
         return await self._unary_unary(
             "/cosmos.staking.v1beta1.Query/DelegatorValidator",
-            request,
+            query_delegator_validator_request,
             QueryDelegatorValidatorResponse,
+            timeout=timeout,
+            deadline=deadline,
+            metadata=metadata,
         )
 
     async def historical_info(
-        self, *, height: int = 0
+        self,
+        query_historical_info_request: "QueryHistoricalInfoRequest",
+        *,
+        timeout: Optional[float] = None,
+        deadline: Optional["Deadline"] = None,
+        metadata: Optional["MetadataLike"] = None
     ) -> "QueryHistoricalInfoResponse":
-
-        request = QueryHistoricalInfoRequest()
-        request.height = height
-
         return await self._unary_unary(
             "/cosmos.staking.v1beta1.Query/HistoricalInfo",
-            request,
+            query_historical_info_request,
             QueryHistoricalInfoResponse,
+            timeout=timeout,
+            deadline=deadline,
+            metadata=metadata,
         )
 
-    async def pool(self) -> "QueryPoolResponse":
-
-        request = QueryPoolRequest()
-
+    async def pool(
+        self,
+        query_pool_request: "QueryPoolRequest",
+        *,
+        timeout: Optional[float] = None,
+        deadline: Optional["Deadline"] = None,
+        metadata: Optional["MetadataLike"] = None
+    ) -> "QueryPoolResponse":
         return await self._unary_unary(
-            "/cosmos.staking.v1beta1.Query/Pool", request, QueryPoolResponse
+            "/cosmos.staking.v1beta1.Query/Pool",
+            query_pool_request,
+            QueryPoolResponse,
+            timeout=timeout,
+            deadline=deadline,
+            metadata=metadata,
         )
 
-    async def params(self) -> "QueryParamsResponse":
-
-        request = QueryParamsRequest()
-
+    async def params(
+        self,
+        query_params_request: "QueryParamsRequest",
+        *,
+        timeout: Optional[float] = None,
+        deadline: Optional["Deadline"] = None,
+        metadata: Optional["MetadataLike"] = None
+    ) -> "QueryParamsResponse":
         return await self._unary_unary(
-            "/cosmos.staking.v1beta1.Query/Params", request, QueryParamsResponse
+            "/cosmos.staking.v1beta1.Query/Params",
+            query_params_request,
+            QueryParamsResponse,
+            timeout=timeout,
+            deadline=deadline,
+            metadata=metadata,
         )
 
 
 class MsgBase(ServiceBase):
     async def create_validator(
-        self,
-        description: "Description",
-        commission: "CommissionRates",
-        min_self_delegation: str,
-        delegator_address: str,
-        validator_address: str,
-        pubkey: "betterproto_lib_google_protobuf.Any",
-        value: "__base_v1_beta1__.Coin",
+        self, msg_create_validator: "MsgCreateValidator"
     ) -> "MsgCreateValidatorResponse":
         raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
 
     async def edit_validator(
-        self,
-        description: "Description",
-        validator_address: str,
-        commission_rate: str,
-        min_self_delegation: str,
+        self, msg_edit_validator: "MsgEditValidator"
     ) -> "MsgEditValidatorResponse":
         raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
 
-    async def delegate(
-        self,
-        delegator_address: str,
-        validator_address: str,
-        amount: "__base_v1_beta1__.Coin",
-    ) -> "MsgDelegateResponse":
+    async def delegate(self, msg_delegate: "MsgDelegate") -> "MsgDelegateResponse":
         raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
 
     async def begin_redelegate(
-        self,
-        delegator_address: str,
-        validator_src_address: str,
-        validator_dst_address: str,
-        amount: "__base_v1_beta1__.Coin",
+        self, msg_begin_redelegate: "MsgBeginRedelegate"
     ) -> "MsgBeginRedelegateResponse":
         raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
 
     async def undelegate(
-        self,
-        delegator_address: str,
-        validator_address: str,
-        amount: "__base_v1_beta1__.Coin",
+        self, msg_undelegate: "MsgUndelegate"
     ) -> "MsgUndelegateResponse":
         raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
 
-    async def __rpc_create_validator(self, stream: grpclib.server.Stream) -> None:
+    async def __rpc_create_validator(
+        self,
+        stream: "grpclib.server.Stream[MsgCreateValidator, MsgCreateValidatorResponse]",
+    ) -> None:
         request = await stream.recv_message()
-
-        request_kwargs = {
-            "description": request.description,
-            "commission": request.commission,
-            "min_self_delegation": request.min_self_delegation,
-            "delegator_address": request.delegator_address,
-            "validator_address": request.validator_address,
-            "pubkey": request.pubkey,
-            "value": request.value,
-        }
-
-        response = await self.create_validator(**request_kwargs)
+        response = await self.create_validator(request)
         await stream.send_message(response)
 
-    async def __rpc_edit_validator(self, stream: grpclib.server.Stream) -> None:
+    async def __rpc_edit_validator(
+        self,
+        stream: "grpclib.server.Stream[MsgEditValidator, MsgEditValidatorResponse]",
+    ) -> None:
         request = await stream.recv_message()
-
-        request_kwargs = {
-            "description": request.description,
-            "validator_address": request.validator_address,
-            "commission_rate": request.commission_rate,
-            "min_self_delegation": request.min_self_delegation,
-        }
-
-        response = await self.edit_validator(**request_kwargs)
+        response = await self.edit_validator(request)
         await stream.send_message(response)
 
-    async def __rpc_delegate(self, stream: grpclib.server.Stream) -> None:
+    async def __rpc_delegate(
+        self, stream: "grpclib.server.Stream[MsgDelegate, MsgDelegateResponse]"
+    ) -> None:
         request = await stream.recv_message()
-
-        request_kwargs = {
-            "delegator_address": request.delegator_address,
-            "validator_address": request.validator_address,
-            "amount": request.amount,
-        }
-
-        response = await self.delegate(**request_kwargs)
+        response = await self.delegate(request)
         await stream.send_message(response)
 
-    async def __rpc_begin_redelegate(self, stream: grpclib.server.Stream) -> None:
+    async def __rpc_begin_redelegate(
+        self,
+        stream: "grpclib.server.Stream[MsgBeginRedelegate, MsgBeginRedelegateResponse]",
+    ) -> None:
         request = await stream.recv_message()
-
-        request_kwargs = {
-            "delegator_address": request.delegator_address,
-            "validator_src_address": request.validator_src_address,
-            "validator_dst_address": request.validator_dst_address,
-            "amount": request.amount,
-        }
-
-        response = await self.begin_redelegate(**request_kwargs)
+        response = await self.begin_redelegate(request)
         await stream.send_message(response)
 
-    async def __rpc_undelegate(self, stream: grpclib.server.Stream) -> None:
+    async def __rpc_undelegate(
+        self, stream: "grpclib.server.Stream[MsgUndelegate, MsgUndelegateResponse]"
+    ) -> None:
         request = await stream.recv_message()
-
-        request_kwargs = {
-            "delegator_address": request.delegator_address,
-            "validator_address": request.validator_address,
-            "amount": request.amount,
-        }
-
-        response = await self.undelegate(**request_kwargs)
+        response = await self.undelegate(request)
         await stream.send_message(response)
 
     def __mapping__(self) -> Dict[str, grpclib.const.Handler]:
@@ -1309,221 +1410,183 @@ class MsgBase(ServiceBase):
 
 class QueryBase(ServiceBase):
     async def validators(
-        self, status: str, pagination: "__base_query_v1_beta1__.PageRequest"
+        self, query_validators_request: "QueryValidatorsRequest"
     ) -> "QueryValidatorsResponse":
         raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
 
-    async def validator(self, validator_addr: str) -> "QueryValidatorResponse":
+    async def validator(
+        self, query_validator_request: "QueryValidatorRequest"
+    ) -> "QueryValidatorResponse":
         raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
 
     async def validator_delegations(
-        self, validator_addr: str, pagination: "__base_query_v1_beta1__.PageRequest"
+        self, query_validator_delegations_request: "QueryValidatorDelegationsRequest"
     ) -> "QueryValidatorDelegationsResponse":
         raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
 
     async def validator_unbonding_delegations(
-        self, validator_addr: str, pagination: "__base_query_v1_beta1__.PageRequest"
+        self,
+        query_validator_unbonding_delegations_request: "QueryValidatorUnbondingDelegationsRequest",
     ) -> "QueryValidatorUnbondingDelegationsResponse":
         raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
 
     async def delegation(
-        self, delegator_addr: str, validator_addr: str
+        self, query_delegation_request: "QueryDelegationRequest"
     ) -> "QueryDelegationResponse":
         raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
 
     async def unbonding_delegation(
-        self, delegator_addr: str, validator_addr: str
+        self, query_unbonding_delegation_request: "QueryUnbondingDelegationRequest"
     ) -> "QueryUnbondingDelegationResponse":
         raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
 
     async def delegator_delegations(
-        self, delegator_addr: str, pagination: "__base_query_v1_beta1__.PageRequest"
+        self, query_delegator_delegations_request: "QueryDelegatorDelegationsRequest"
     ) -> "QueryDelegatorDelegationsResponse":
         raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
 
     async def delegator_unbonding_delegations(
-        self, delegator_addr: str, pagination: "__base_query_v1_beta1__.PageRequest"
+        self,
+        query_delegator_unbonding_delegations_request: "QueryDelegatorUnbondingDelegationsRequest",
     ) -> "QueryDelegatorUnbondingDelegationsResponse":
         raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
 
     async def redelegations(
-        self,
-        delegator_addr: str,
-        src_validator_addr: str,
-        dst_validator_addr: str,
-        pagination: "__base_query_v1_beta1__.PageRequest",
+        self, query_redelegations_request: "QueryRedelegationsRequest"
     ) -> "QueryRedelegationsResponse":
         raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
 
     async def delegator_validators(
-        self, delegator_addr: str, pagination: "__base_query_v1_beta1__.PageRequest"
+        self, query_delegator_validators_request: "QueryDelegatorValidatorsRequest"
     ) -> "QueryDelegatorValidatorsResponse":
         raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
 
     async def delegator_validator(
-        self, delegator_addr: str, validator_addr: str
+        self, query_delegator_validator_request: "QueryDelegatorValidatorRequest"
     ) -> "QueryDelegatorValidatorResponse":
         raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
 
-    async def historical_info(self, height: int) -> "QueryHistoricalInfoResponse":
+    async def historical_info(
+        self, query_historical_info_request: "QueryHistoricalInfoRequest"
+    ) -> "QueryHistoricalInfoResponse":
         raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
 
-    async def pool(self) -> "QueryPoolResponse":
+    async def pool(self, query_pool_request: "QueryPoolRequest") -> "QueryPoolResponse":
         raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
 
-    async def params(self) -> "QueryParamsResponse":
+    async def params(
+        self, query_params_request: "QueryParamsRequest"
+    ) -> "QueryParamsResponse":
         raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
 
-    async def __rpc_validators(self, stream: grpclib.server.Stream) -> None:
+    async def __rpc_validators(
+        self,
+        stream: "grpclib.server.Stream[QueryValidatorsRequest, QueryValidatorsResponse]",
+    ) -> None:
         request = await stream.recv_message()
-
-        request_kwargs = {
-            "status": request.status,
-            "pagination": request.pagination,
-        }
-
-        response = await self.validators(**request_kwargs)
+        response = await self.validators(request)
         await stream.send_message(response)
 
-    async def __rpc_validator(self, stream: grpclib.server.Stream) -> None:
+    async def __rpc_validator(
+        self,
+        stream: "grpclib.server.Stream[QueryValidatorRequest, QueryValidatorResponse]",
+    ) -> None:
         request = await stream.recv_message()
-
-        request_kwargs = {
-            "validator_addr": request.validator_addr,
-        }
-
-        response = await self.validator(**request_kwargs)
+        response = await self.validator(request)
         await stream.send_message(response)
 
-    async def __rpc_validator_delegations(self, stream: grpclib.server.Stream) -> None:
+    async def __rpc_validator_delegations(
+        self,
+        stream: "grpclib.server.Stream[QueryValidatorDelegationsRequest, QueryValidatorDelegationsResponse]",
+    ) -> None:
         request = await stream.recv_message()
-
-        request_kwargs = {
-            "validator_addr": request.validator_addr,
-            "pagination": request.pagination,
-        }
-
-        response = await self.validator_delegations(**request_kwargs)
+        response = await self.validator_delegations(request)
         await stream.send_message(response)
 
     async def __rpc_validator_unbonding_delegations(
-        self, stream: grpclib.server.Stream
+        self,
+        stream: "grpclib.server.Stream[QueryValidatorUnbondingDelegationsRequest, QueryValidatorUnbondingDelegationsResponse]",
     ) -> None:
         request = await stream.recv_message()
-
-        request_kwargs = {
-            "validator_addr": request.validator_addr,
-            "pagination": request.pagination,
-        }
-
-        response = await self.validator_unbonding_delegations(**request_kwargs)
+        response = await self.validator_unbonding_delegations(request)
         await stream.send_message(response)
 
-    async def __rpc_delegation(self, stream: grpclib.server.Stream) -> None:
+    async def __rpc_delegation(
+        self,
+        stream: "grpclib.server.Stream[QueryDelegationRequest, QueryDelegationResponse]",
+    ) -> None:
         request = await stream.recv_message()
-
-        request_kwargs = {
-            "delegator_addr": request.delegator_addr,
-            "validator_addr": request.validator_addr,
-        }
-
-        response = await self.delegation(**request_kwargs)
+        response = await self.delegation(request)
         await stream.send_message(response)
 
-    async def __rpc_unbonding_delegation(self, stream: grpclib.server.Stream) -> None:
+    async def __rpc_unbonding_delegation(
+        self,
+        stream: "grpclib.server.Stream[QueryUnbondingDelegationRequest, QueryUnbondingDelegationResponse]",
+    ) -> None:
         request = await stream.recv_message()
-
-        request_kwargs = {
-            "delegator_addr": request.delegator_addr,
-            "validator_addr": request.validator_addr,
-        }
-
-        response = await self.unbonding_delegation(**request_kwargs)
+        response = await self.unbonding_delegation(request)
         await stream.send_message(response)
 
-    async def __rpc_delegator_delegations(self, stream: grpclib.server.Stream) -> None:
+    async def __rpc_delegator_delegations(
+        self,
+        stream: "grpclib.server.Stream[QueryDelegatorDelegationsRequest, QueryDelegatorDelegationsResponse]",
+    ) -> None:
         request = await stream.recv_message()
-
-        request_kwargs = {
-            "delegator_addr": request.delegator_addr,
-            "pagination": request.pagination,
-        }
-
-        response = await self.delegator_delegations(**request_kwargs)
+        response = await self.delegator_delegations(request)
         await stream.send_message(response)
 
     async def __rpc_delegator_unbonding_delegations(
-        self, stream: grpclib.server.Stream
+        self,
+        stream: "grpclib.server.Stream[QueryDelegatorUnbondingDelegationsRequest, QueryDelegatorUnbondingDelegationsResponse]",
     ) -> None:
         request = await stream.recv_message()
-
-        request_kwargs = {
-            "delegator_addr": request.delegator_addr,
-            "pagination": request.pagination,
-        }
-
-        response = await self.delegator_unbonding_delegations(**request_kwargs)
+        response = await self.delegator_unbonding_delegations(request)
         await stream.send_message(response)
 
-    async def __rpc_redelegations(self, stream: grpclib.server.Stream) -> None:
+    async def __rpc_redelegations(
+        self,
+        stream: "grpclib.server.Stream[QueryRedelegationsRequest, QueryRedelegationsResponse]",
+    ) -> None:
         request = await stream.recv_message()
-
-        request_kwargs = {
-            "delegator_addr": request.delegator_addr,
-            "src_validator_addr": request.src_validator_addr,
-            "dst_validator_addr": request.dst_validator_addr,
-            "pagination": request.pagination,
-        }
-
-        response = await self.redelegations(**request_kwargs)
+        response = await self.redelegations(request)
         await stream.send_message(response)
 
-    async def __rpc_delegator_validators(self, stream: grpclib.server.Stream) -> None:
+    async def __rpc_delegator_validators(
+        self,
+        stream: "grpclib.server.Stream[QueryDelegatorValidatorsRequest, QueryDelegatorValidatorsResponse]",
+    ) -> None:
         request = await stream.recv_message()
-
-        request_kwargs = {
-            "delegator_addr": request.delegator_addr,
-            "pagination": request.pagination,
-        }
-
-        response = await self.delegator_validators(**request_kwargs)
+        response = await self.delegator_validators(request)
         await stream.send_message(response)
 
-    async def __rpc_delegator_validator(self, stream: grpclib.server.Stream) -> None:
+    async def __rpc_delegator_validator(
+        self,
+        stream: "grpclib.server.Stream[QueryDelegatorValidatorRequest, QueryDelegatorValidatorResponse]",
+    ) -> None:
         request = await stream.recv_message()
-
-        request_kwargs = {
-            "delegator_addr": request.delegator_addr,
-            "validator_addr": request.validator_addr,
-        }
-
-        response = await self.delegator_validator(**request_kwargs)
+        response = await self.delegator_validator(request)
         await stream.send_message(response)
 
-    async def __rpc_historical_info(self, stream: grpclib.server.Stream) -> None:
+    async def __rpc_historical_info(
+        self,
+        stream: "grpclib.server.Stream[QueryHistoricalInfoRequest, QueryHistoricalInfoResponse]",
+    ) -> None:
         request = await stream.recv_message()
-
-        request_kwargs = {
-            "height": request.height,
-        }
-
-        response = await self.historical_info(**request_kwargs)
+        response = await self.historical_info(request)
         await stream.send_message(response)
 
-    async def __rpc_pool(self, stream: grpclib.server.Stream) -> None:
+    async def __rpc_pool(
+        self, stream: "grpclib.server.Stream[QueryPoolRequest, QueryPoolResponse]"
+    ) -> None:
         request = await stream.recv_message()
-
-        request_kwargs = {}
-
-        response = await self.pool(**request_kwargs)
+        response = await self.pool(request)
         await stream.send_message(response)
 
-    async def __rpc_params(self, stream: grpclib.server.Stream) -> None:
+    async def __rpc_params(
+        self, stream: "grpclib.server.Stream[QueryParamsRequest, QueryParamsResponse]"
+    ) -> None:
         request = await stream.recv_message()
-
-        request_kwargs = {}
-
-        response = await self.params(**request_kwargs)
+        response = await self.params(request)
         await stream.send_message(response)
 
     def __mapping__(self) -> Dict[str, grpclib.const.Handler]:
@@ -1613,9 +1676,3 @@ class QueryBase(ServiceBase):
                 QueryParamsResponse,
             ),
         }
-
-
-from ....tendermint import types as ___tendermint_types__
-from ...base import v1beta1 as __base_v1_beta1__
-from ...base.query import v1beta1 as __base_query_v1_beta1__
-import betterproto.lib.google.protobuf as betterproto_lib_google_protobuf

@@ -2,11 +2,22 @@
 # sources: secret/intertx/v1beta1/query.proto, secret/intertx/v1beta1/tx.proto
 # plugin: python-betterproto
 from dataclasses import dataclass
-from typing import Dict
+from typing import (
+    TYPE_CHECKING,
+    Dict,
+    Optional,
+)
 
 import betterproto
-from betterproto.grpc.grpclib_server import ServiceBase
+import betterproto.lib.google.protobuf as betterproto_lib_google_protobuf
 import grpclib
+from betterproto.grpc.grpclib_server import ServiceBase
+
+
+if TYPE_CHECKING:
+    import grpclib.server
+    from betterproto.grpc.grpclib_client import MetadataLike
+    from grpclib.metadata import Deadline
 
 
 @dataclass(eq=False, repr=False)
@@ -71,89 +82,81 @@ class QueryInterchainAccountFromAddressResponse(betterproto.Message):
 
 class MsgStub(betterproto.ServiceStub):
     async def register_account(
-        self, *, owner: str = "", connection_id: str = ""
+        self,
+        msg_register_account: "MsgRegisterAccount",
+        *,
+        timeout: Optional[float] = None,
+        deadline: Optional["Deadline"] = None,
+        metadata: Optional["MetadataLike"] = None
     ) -> "MsgRegisterAccountResponse":
-
-        request = MsgRegisterAccount()
-        request.owner = owner
-        request.connection_id = connection_id
-
         return await self._unary_unary(
             "/secret.intertx.v1beta1.Msg/RegisterAccount",
-            request,
+            msg_register_account,
             MsgRegisterAccountResponse,
+            timeout=timeout,
+            deadline=deadline,
+            metadata=metadata,
         )
 
     async def submit_tx(
         self,
+        msg_submit_tx: "MsgSubmitTx",
         *,
-        owner: bytes = b"",
-        connection_id: str = "",
-        msg: "betterproto_lib_google_protobuf.Any" = None
+        timeout: Optional[float] = None,
+        deadline: Optional["Deadline"] = None,
+        metadata: Optional["MetadataLike"] = None
     ) -> "MsgSubmitTxResponse":
-
-        request = MsgSubmitTx()
-        request.owner = owner
-        request.connection_id = connection_id
-        if msg is not None:
-            request.msg = msg
-
         return await self._unary_unary(
-            "/secret.intertx.v1beta1.Msg/SubmitTx", request, MsgSubmitTxResponse
+            "/secret.intertx.v1beta1.Msg/SubmitTx",
+            msg_submit_tx,
+            MsgSubmitTxResponse,
+            timeout=timeout,
+            deadline=deadline,
+            metadata=metadata,
         )
 
 
 class QueryStub(betterproto.ServiceStub):
     async def interchain_account_from_address(
-        self, *, owner: str = "", connection_id: str = ""
+        self,
+        query_interchain_account_from_address_request: "QueryInterchainAccountFromAddressRequest",
+        *,
+        timeout: Optional[float] = None,
+        deadline: Optional["Deadline"] = None,
+        metadata: Optional["MetadataLike"] = None
     ) -> "QueryInterchainAccountFromAddressResponse":
-
-        request = QueryInterchainAccountFromAddressRequest()
-        request.owner = owner
-        request.connection_id = connection_id
-
         return await self._unary_unary(
             "/secret.intertx.v1beta1.Query/InterchainAccountFromAddress",
-            request,
+            query_interchain_account_from_address_request,
             QueryInterchainAccountFromAddressResponse,
+            timeout=timeout,
+            deadline=deadline,
+            metadata=metadata,
         )
 
 
 class MsgBase(ServiceBase):
     async def register_account(
-        self, owner: str, connection_id: str
+        self, msg_register_account: "MsgRegisterAccount"
     ) -> "MsgRegisterAccountResponse":
         raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
 
-    async def submit_tx(
-        self,
-        owner: bytes,
-        connection_id: str,
-        msg: "betterproto_lib_google_protobuf.Any",
-    ) -> "MsgSubmitTxResponse":
+    async def submit_tx(self, msg_submit_tx: "MsgSubmitTx") -> "MsgSubmitTxResponse":
         raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
 
-    async def __rpc_register_account(self, stream: grpclib.server.Stream) -> None:
+    async def __rpc_register_account(
+        self,
+        stream: "grpclib.server.Stream[MsgRegisterAccount, MsgRegisterAccountResponse]",
+    ) -> None:
         request = await stream.recv_message()
-
-        request_kwargs = {
-            "owner": request.owner,
-            "connection_id": request.connection_id,
-        }
-
-        response = await self.register_account(**request_kwargs)
+        response = await self.register_account(request)
         await stream.send_message(response)
 
-    async def __rpc_submit_tx(self, stream: grpclib.server.Stream) -> None:
+    async def __rpc_submit_tx(
+        self, stream: "grpclib.server.Stream[MsgSubmitTx, MsgSubmitTxResponse]"
+    ) -> None:
         request = await stream.recv_message()
-
-        request_kwargs = {
-            "owner": request.owner,
-            "connection_id": request.connection_id,
-            "msg": request.msg,
-        }
-
-        response = await self.submit_tx(**request_kwargs)
+        response = await self.submit_tx(request)
         await stream.send_message(response)
 
     def __mapping__(self) -> Dict[str, grpclib.const.Handler]:
@@ -175,21 +178,17 @@ class MsgBase(ServiceBase):
 
 class QueryBase(ServiceBase):
     async def interchain_account_from_address(
-        self, owner: str, connection_id: str
+        self,
+        query_interchain_account_from_address_request: "QueryInterchainAccountFromAddressRequest",
     ) -> "QueryInterchainAccountFromAddressResponse":
         raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
 
     async def __rpc_interchain_account_from_address(
-        self, stream: grpclib.server.Stream
+        self,
+        stream: "grpclib.server.Stream[QueryInterchainAccountFromAddressRequest, QueryInterchainAccountFromAddressResponse]",
     ) -> None:
         request = await stream.recv_message()
-
-        request_kwargs = {
-            "owner": request.owner,
-            "connection_id": request.connection_id,
-        }
-
-        response = await self.interchain_account_from_address(**request_kwargs)
+        response = await self.interchain_account_from_address(request)
         await stream.send_message(response)
 
     def __mapping__(self) -> Dict[str, grpclib.const.Handler]:
@@ -201,6 +200,3 @@ class QueryBase(ServiceBase):
                 QueryInterchainAccountFromAddressResponse,
             ),
         }
-
-
-import betterproto.lib.google.protobuf as betterproto_lib_google_protobuf
