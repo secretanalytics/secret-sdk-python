@@ -125,7 +125,7 @@ class EncryptionUtils:
         return [secrets.randbits(8) for _ in range(32)]
 
     @staticmethod
-    def generate_key_pair():
+    def generate_key_pair(seed):
         privkey = X25519PrivateKey.generate()
         pubkey = privkey.public_key()
         return privkey, pubkey
