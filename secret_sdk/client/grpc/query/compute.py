@@ -11,6 +11,9 @@ from ..encryption import EncryptionUtils
 from ..protobuf.secret.compute.v1beta1 import CodeInfoResponse as baseCodeInfoResponse
 from ..protobuf.secret.compute.v1beta1 import ContractInfo as baseContractInfo
 from ..protobuf.secret.compute.v1beta1 import QueryStub as computeQueryStub
+from ..protobuf.secret.compute.v1beta1 import QueryByContractAddressRequest, QueryByCodeIdRequest
+from ..protobuf.secret.compute.v1beta1 import QueryContractInfoResponse, QueryCodeResponse
+
 from . import address as address_utils
 
 """
@@ -46,15 +49,6 @@ class ContractInfo:
 
 
 @dataclass(eq=False, repr=False)
-class QueryContractInfoResponse:
-    """QueryContractInfoResponse is the response type for the Query/ContractInfo RPC method"""
-
-    # address is the address of the contract
-    address: str
-    contract_info: ContractInfo
-
-
-@dataclass(eq=False, repr=False)
 class CodeInfoResponse:
     code_id: str
     creator: str
@@ -75,11 +69,6 @@ class ContractInfoWithAddress:
 class QueryContractsByCodeResponse:
     contract_infos: List[ContractInfoWithAddress]
 
-
-@dataclass(eq=False, repr=False)
-class QueryCodeResponse:
-    code_info: CodeInfoResponse
-    data: bytes
 
 
 class ComputeQuerier:
@@ -115,19 +104,21 @@ class ComputeQuerier:
         return code_hash
 
     async def contract_info(self, address: str) -> QueryContractInfoResponse:
-        response = await self.client.contract_info(
-            address=address_utils.address_to_bytes(address)
+        query_contract_info_response = await self.client.contract_info(
+            QueryByContractAddressRequest(contract_address=address)
         )
 
         return QueryContractInfoResponse(
-            address=address_utils.bytes_to_address(response.address),
+            contract_address=query_contract_info_response.contract_address,
             contract_info=ComputeQuerier.contract_info_from_protobuf(
-                response.contract_info
+                query_contract_info_response.contract_info
             ),
         )
 
     async def contracts_by_code(self, code_id: int = 1) -> QueryContractsByCodeResponse:
-        response = await self.client.contracts_by_code(code_id=code_id)
+        response = await self.client.contracts_by_code(
+            QueryByCodeIdRequest(code_id=code_id)
+        )
 
         return QueryContractsByCodeResponse(
             contract_infos=[
@@ -143,19 +134,18 @@ class ComputeQuerier:
             ]
         )
 
-    async def query_contract(self, contract_address: str, query: json):
+    async def query_contract(self, contract_address: str, query: json, code_hash: str = None):
 
         # code hash was an arugment in secret.js but I thought it was easier to just pull in manually
-        code_hash = await self.contract_code_hash(contract_address)
-
-        code_hash = code_hash.replace("0x", "").lower()
+        if code_hash is None:
+            code_hash = await self.contract_code_hash(contract_address)
 
         encrypted_query = await self.encryption.encrypt(code_hash, query)
         nonce = encrypted_query[0:32]
 
         encrypted_result = (
             await self.client.smart_contract_state(
-                address=address_utils.address_to_bytes(contract_address),
+                address=contract_address,
                 query_data=bytes(encrypted_query),
             )
         ).data
@@ -164,13 +154,13 @@ class ComputeQuerier:
         return json.loads(base64.b64decode(decrypted_b64_result))
 
     async def code(self, code_id: int) -> QueryCodeResponse:
-        response = await self.client.code(code_id=code_id)
-        code_info = ComputeQuerier.code_info_response_from_protobuf(response.code_info)
-
+        query_code_response = await self.client.code(
+            QueryByCodeIdRequest(code_id=code_id)
+        )
         # might want to turn this level of caching back but was causing problems
         # self.code_hash_cache[code_id] = code_info.code_hash.replace("0x", "").lower()
 
-        return QueryCodeResponse(code_info=code_info, data=response.data)
+        return query_code_response
 
     async def codes(self) -> List[CodeInfoResponse]:
         response = await self.client.codes()
@@ -194,12 +184,8 @@ class ComputeQuerier:
         # this should never be empty strings
         return CodeInfoResponse(
             code_id=code_info.code_id if code_info.code_id else "",
-            creator=address_utils.bytes_to_address(code_info.creator)
-            if code_info.creator
-            else "",
-            code_hash=code_info.data_hash.hex().replace("0x", "").lower()
-            if code_info.data_hash
-            else "",
+            creator=code_info.creator if code_info.creator else "",
+            code_hash=code_info.code_hash.replace("0x", "").lower() if code_info.code_hash else "",
             source=code_info.source if code_info.source else "",
             builder=code_info.builder if code_info.builder else "",
         )

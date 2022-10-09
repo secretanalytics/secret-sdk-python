@@ -18,6 +18,7 @@ from miscreant.aes.siv import SIV
 from grpclib.client import Channel
 
 from .protobuf.secret.registration.v1beta1 import QueryStub as registrationQueryStub
+import betterproto.lib.google.protobuf as betterproto_lib_google_protobuf
 
 hkdf_salt = bytes(
     [
@@ -136,7 +137,7 @@ class EncryptionUtils:
         return (privkey, pubkey)
 
     async def get_consensus_io_pubkey(self) -> List[int]:
-        key = (await self.registrationQuerier.tx_key()).key
+        key = (await self.registrationQuerier.tx_key(betterproto_lib_google_protobuf.Empty)).key
         consensus_io_pubkey = EncryptionUtils.extract_pubkey(key)
         return consensus_io_pubkey
 
