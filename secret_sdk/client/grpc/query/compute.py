@@ -11,7 +11,7 @@ from ..encryption import EncryptionUtils
 from ..protobuf.secret.compute.v1beta1 import CodeInfoResponse as baseCodeInfoResponse
 from ..protobuf.secret.compute.v1beta1 import ContractInfo as baseContractInfo
 from ..protobuf.secret.compute.v1beta1 import QueryStub as computeQueryStub
-from ..protobuf.secret.compute.v1beta1 import QueryByContractAddressRequest, QueryByCodeIdRequest
+from ..protobuf.secret.compute.v1beta1 import QueryByContractAddressRequest, QueryByCodeIdRequest, QuerySecretContractRequest
 from ..protobuf.secret.compute.v1beta1 import QueryContractInfoResponse, QueryCodeResponse
 
 from . import address as address_utils
@@ -144,9 +144,11 @@ class ComputeQuerier:
         nonce = encrypted_query[0:32]
 
         encrypted_result = (
-            await self.client.smart_contract_state(
-                address=contract_address,
-                query_data=bytes(encrypted_query),
+            await self.client.query_secret_contract(
+                QuerySecretContractRequest(
+                    contract_address=contract_address,
+                    query=bytes(encrypted_query)
+                )
             )
         ).data
         decrypted_b64_result = await self.encryption.decrypt(encrypted_result, nonce)

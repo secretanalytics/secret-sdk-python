@@ -1,9 +1,6 @@
 import base64
-import codecs
 import json
 import secrets
-from functools import reduce
-from tabnanny import check
 from typing import Any, Dict, List, Tuple
 
 from cryptography.hazmat.primitives import hashes, serialization
@@ -18,7 +15,14 @@ from miscreant.aes.siv import SIV
 from grpclib.client import Channel
 
 from .protobuf.secret.registration.v1beta1 import QueryStub as registrationQueryStub
-import betterproto.lib.google.protobuf as betterproto_lib_google_protobuf
+from dataclasses import dataclass
+import betterproto
+
+
+@dataclass(eq=False, repr=False)
+class EmptyRequest(betterproto.Message):
+    pass
+
 
 hkdf_salt = bytes(
     [
@@ -137,8 +141,8 @@ class EncryptionUtils:
         return (privkey, pubkey)
 
     async def get_consensus_io_pubkey(self) -> List[int]:
-        key = (await self.registrationQuerier.tx_key(betterproto_lib_google_protobuf.Empty)).key
-        consensus_io_pubkey = EncryptionUtils.extract_pubkey(key)
+        tx_key = await self.registrationQuerier.tx_key(EmptyRequest())
+        consensus_io_pubkey = EncryptionUtils.extract_pubkey(tx_key.key)
         return consensus_io_pubkey
 
     # async def get_consensus_io_pubkey(self):
