@@ -355,6 +355,7 @@ class QueryStub(betterproto.ServiceStub):
 
     async def contracts_by_code_id(
         self,
+        query_by_code_id_request: "QueryByCodeIdRequest",
         *,
         timeout: Optional[float] = None,
         deadline: Optional["Deadline"] = None,

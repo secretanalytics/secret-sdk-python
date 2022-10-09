@@ -1,7 +1,7 @@
-import base64
 import json
+import base64
 import secrets
-from typing import Any, Dict, List, Tuple
+from typing import Any, List, Tuple
 
 from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric.x25519 import (
@@ -11,18 +11,9 @@ from cryptography.hazmat.primitives.asymmetric.x25519 import (
 from cryptography.hazmat.primitives.kdf.hkdf import HKDF
 from miscreant.aes.siv import SIV
 
-
 from grpclib.client import Channel
-
+from .grpc_utils import EmptyRequest
 from .protobuf.secret.registration.v1beta1 import QueryStub as registrationQueryStub
-from dataclasses import dataclass
-import betterproto
-
-
-@dataclass(eq=False, repr=False)
-class EmptyRequest(betterproto.Message):
-    pass
-
 
 hkdf_salt = bytes(
     [
@@ -122,20 +113,24 @@ class EncryptionUtils:
             # TODO: not sure if this is the best approach for detecting mainnet
             self.consensus_io_pubkey = mainnet_consensus_io_pubkey
 
+    @staticmethod
     def generate_new_key_pair() -> Tuple[List[int], List[int]]:
         """Returns: (privkey, pubkey)"""
         return EncryptionUtils.generate_new_key_pair_from_seed(
             EncryptionUtils.generate_new_seed()
         )
 
+    @staticmethod
     def generate_new_seed() -> List[int]:
         return [secrets.randbits(8) for _ in range(32)]
 
-    def generate_key_pair(seed):
+    @staticmethod
+    def generate_key_pair():
         privkey = X25519PrivateKey.generate()
         pubkey = privkey.public_key()
         return privkey, pubkey
 
+    @staticmethod
     def generate_new_key_pair_from_seed(seed: List[int]) -> Tuple[List[int], List[int]]:
         privkey, pubkey = EncryptionUtils.generate_key_pair(seed)
         return (privkey, pubkey)
@@ -144,12 +139,6 @@ class EncryptionUtils:
         tx_key = await self.registrationQuerier.tx_key(EmptyRequest())
         consensus_io_pubkey = EncryptionUtils.extract_pubkey(tx_key.key)
         return consensus_io_pubkey
-
-    # async def get_consensus_io_pubkey(self):
-    #     io_exch_pubkey = await self.registrationQuerier.tx_key()
-    #     io_exch_pubkey = io_exch_pubkey.key
-    #     consensus_io_pubkey = base64.b64decode(io_exch_pubkey)
-    #     return bytes([x for x in consensus_io_pubkey])
 
     async def get_tx_encryption_key(self, nonce: List[int]) -> List[int]:
         self.consensus_io_pubkey = await self.get_consensus_io_pubkey()

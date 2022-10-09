@@ -1,13 +1,11 @@
 import math
-
 from typing import Dict, List, Union
 
-from .protobuf.cosmos.base.abci.v1beta1 import TxResponse
-
+from grpclib.client import Channel
 from .parsing import Tx, parse_tx
-
 from .encryption import EncryptionUtils
 
+from .protobuf.cosmos.base.abci.v1beta1 import TxResponse
 from .protobuf.cosmos.auth.v1beta1 import QueryStub as authQueryStub
 from .protobuf.cosmos.authz.v1beta1 import (
     QueryStub as authzQueryStub,
@@ -50,7 +48,6 @@ from .protobuf.cosmos.tx.v1beta1 import (
     ServiceStub as txServiceStub,
     GetTxsEventRequest,
 )
-
 from .protobuf.ibc.core.channel.v1 import (
     QueryStub as channelQueryStub,
     MsgStub as channelMsgStub,
@@ -67,17 +64,14 @@ from .protobuf.ibc.applications.transfer.v1 import (
     QueryStub as transferQueryStub,
     MsgStub as transferMsgStub,
 )
-
 from .protobuf.cosmos.base.tendermint.v1beta1 import (
     ServiceStub as tendermintServiceStub,
 )
 from .protobuf.cosmos.base.reflection.v1beta1 import (
     ReflectionServiceStub as reflectionServiceStub,
 )
-
-from grpclib.client import Channel
-
 from .query.compute import ComputeQuerier
+
 
 # from .query.tendermint import TendermintQuerier
 class AsyncGRPCClient:
@@ -171,10 +165,9 @@ class AsyncGRPCClient:
 
     async def get_tx(self, hash: str, nonces: Dict = {}) -> Tx:
         query = f"tx.hash='{hash}'"
-        results = await self.txs_query(query=query)
+        results = await self.txs_query(query=query, nonces=nonces)
         if results:
             return results
-
 
     async def txs_query(self, query: str, nonces: Dict = {}, parse=True) -> Union[List[Tx], List[TxResponse]]:
         events = [q.strip() for q in query.split(" AND ")]
