@@ -46,7 +46,10 @@ from .protobuf.cosmos.staking.v1beta1 import (
 )
 from .protobuf.cosmos.upgrade.v1beta1 import QueryStub as upgradeQueryStub
 
-from .protobuf.cosmos.tx.v1beta1 import ServiceStub as txServiceStub
+from .protobuf.cosmos.tx.v1beta1 import (
+    ServiceStub as txServiceStub,
+    GetTxsEventRequest,
+)
 
 from .protobuf.ibc.core.channel.v1 import (
     QueryStub as channelQueryStub,
@@ -171,18 +174,14 @@ class AsyncGRPCClient:
         results = await self.txs_query(query=query)
         if results:
             return results
-        else:
-            return None
+
 
     async def txs_query(self, query: str, nonces: Dict = {}, parse=True) -> Union[List[Tx], List[TxResponse]]:
         events = [q.strip() for q in query.split(" AND ")]
-        result = await self.txService.get_txs_event(events=events)
-        tx_responses = result.tx_responses
-        # print(f"\n{result=}\n")
-        # str_response = json.dumps(result.tx_responses, indent=4)
-        # print(str_response)
-        # print(json.dumps(tx_responses[0].to_dict(), indent=4))
-
+        result = await self.txService.get_txs_event(
+            GetTxsEventRequest(events=events)
+        )
+        tx_responses: List[TxResponse] = result.tx_responses
         if not parse:
             return tx_responses
 
