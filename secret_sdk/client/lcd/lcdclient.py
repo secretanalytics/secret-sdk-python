@@ -5,9 +5,11 @@ from json import JSONDecodeError
 from threading import Lock
 from typing import Optional, Union, List
 
+import base64
 import nest_asyncio
 from aiohttp import ClientSession
 from multidict import CIMultiDict
+import requests
 
 from secret_sdk.core import Coins, Dec, Numeric
 from secret_sdk.core import StdFee
@@ -30,8 +32,9 @@ from .api.staking import AsyncStakingAPI, StakingAPI
 from .api.tendermint import AsyncTendermintAPI, TendermintAPI
 from .api.tx import AsyncTxAPI, TxAPI
 from .api.wasm import AsyncWasmAPI, WasmAPI
-from .lcdutils import AsyncLCDUtils, LCDUtils
+from .lcdutils import AsyncLCDUtils, LCDUtils, EncryptionUtils
 from .params import APIParams
+from .lcdutils import EncryptionUtils
 from .wallet import AsyncWallet, Wallet
 
 
@@ -55,6 +58,21 @@ default_fees = {
 }
 default_gas_prices = Coins.from_data([{"amount": 0.25, "denom": "uscrt"}])
 default_gas_adjustment = 1
+
+mainnet_chain_ids = {"secret-2", "secret-3", "secret-4"}
+
+mainnetConsensusIoPubKey = bytes.fromhex(
+  "083b1a03661211d5a4cc8d39a77795795862f7730645573b2bcc2c1920c53c04",
+)
+
+
+def sync_get_consensus_io_pubkey(url) -> bytes:
+    # this needs to be a proto
+    io_exch_pubkey = requests.get(f"{url}/reg/tx-key")
+    io_exch_pubkey = io_exch_pubkey.json()
+    io_exch_pubkey = io_exch_pubkey.get("result", {}).get("TxKey", '')
+    consensus_io_pubkey = base64.b64decode(io_exch_pubkey)
+    return bytes([x for x in consensus_io_pubkey])
 
 
 class AsyncLCDClient:
@@ -98,7 +116,13 @@ class AsyncLCDClient:
         self.ibc = AsyncIbcAPI(self)
         self.ibc_transfer = AsyncIbcTransferAPI(self)
         self.tx = AsyncTxAPI(self)
-        self.utils = AsyncLCDUtils(self)
+
+        if self.chain_id in mainnet_chain_ids:
+            consensus_io_pub_key = mainnetConsensusIoPubKey
+        else:
+            consensus_io_pub_key = sync_get_consensus_io_pubkey(url)
+        self.encrypt_utils = EncryptionUtils(consensus_io_pub_key)
+
 
     def wallet(self, key: Key) -> AsyncWallet:
         """Creates a :class:`AsyncWallet` object from a key.
@@ -288,6 +312,13 @@ class LCDClient(AsyncLCDClient):
         self.ibc_transfer = IbcTransferAPI(self)
         self.tx = TxAPI(self)
         self.utils = LCDUtils(self)
+
+        if self.chain_id in mainnet_chain_ids:
+            consensus_io_pub_key = mainnetConsensusIoPubKey
+        else:
+            consensus_io_pub_key = sync_get_consensus_io_pubkey(url)
+        self.encrypt_utils = EncryptionUtils(consensus_io_pub_key)
+        self.lock = Lock()
 
     async def __aenter__(self):
         raise NotImplementedError(

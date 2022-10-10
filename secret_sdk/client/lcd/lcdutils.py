@@ -56,9 +56,8 @@ def index_by_pub_key(m: Dict[str, Any], o: Any):
     return m
 
 
-class AsyncLCDUtils(BaseAsyncAPI):
-    def __init__(self, c):
-        super().__init__(c)
+class EncryptionUtils():
+    def __init__(self, consensus_io_pubkey: bytes):
         self.seed = self.generate_new_seed()
         self.privkey, self.pubkey = self.generate_new_key_pair_from_seed(self.seed)
 
@@ -122,6 +121,7 @@ class AsyncLCDUtils(BaseAsyncAPI):
             self.consensus_io_pubkey = await BaseAsyncAPI._try_await(
                 self.get_consensus_io_pubkey()
             )
+    def get_tx_encryption_key(self, nonce):
         consensus_io_pubkey = X25519PublicKey.from_public_bytes(
             self.consensus_io_pubkey
         )
@@ -135,11 +135,9 @@ class AsyncLCDUtils(BaseAsyncAPI):
 
         return tx_encryption_key
 
-    async def encrypt(self, contract_code_hash: str, msg: Any):
+    def encrypt(self, contract_code_hash: str, msg: Any):
         nonce = self.generate_new_seed()
-        tx_encryption_key = await BaseAsyncAPI._try_await(
-            self.get_tx_encryption_key(nonce)
-        )
+        tx_encryption_key = self.get_tx_encryption_key(nonce)
 
         siv = SIV(tx_encryption_key)
 
@@ -152,66 +150,25 @@ class AsyncLCDUtils(BaseAsyncAPI):
 
         return nonce + [x for x in key_dump] + [x for x in ciphertext]
 
-    async def decrypt(self, ciphertext: bytes, nonce: List[int]) -> bytes:
+    def decrypt(self, ciphertext: bytes, nonce: List[int]) -> bytes:
         if not ciphertext:
             return bytes([])
 
-        tx_encryption_key = await BaseAsyncAPI._try_await(
-            self.get_tx_encryption_key(nonce)
-        )
+        tx_encryption_key = self.get_tx_encryption_key(nonce)
         siv = SIV(tx_encryption_key)
         plaintext = siv.open(ciphertext, [bytes()])
         return plaintext
 
-    async def get_pub_key(self):
+    def get_pub_key(self):
         return self.pubkey.public_bytes(
             encoding=serialization.Encoding.Raw, format=serialization.PublicFormat.Raw
         )
 
-    async def decrypt_data_field(self, data_field, nonces):
+    def decrypt_data_field(self, data_field, nonces):
         # nonces are a list of nonce in the case of multi execute
         wasm_output_data_cipher_bz = bytes.fromhex(data_field)
         for nonce in nonces:
-            decrypted_data = await self.decrypt(wasm_output_data_cipher_bz, nonce)
+            decrypted_data = self.decrypt(wasm_output_data_cipher_bz, nonce)
             decrypted = base64.b64decode(decrypted_data.decode("utf-8"))
             return decrypted
 
-
-class LCDUtils(AsyncLCDUtils):
-    def __init__(self, c):
-        super().__init__(c)
-        self.seed = self.generate_new_seed()
-        self.privkey, self.pubkey = self.generate_new_key_pair_from_seed(self.seed)
-        self.consensus_io_pubkey = self.get_consensus_io_pubkey()
-
-    @sync_bind(AsyncLCDUtils.validators_with_voting_power)
-    async def validators_with_voting_power(self) -> Dict[str, dict]:
-        pass
-
-    validators_with_voting_power.__doc__ = (
-        AsyncLCDUtils.validators_with_voting_power.__doc__
-    )
-
-    @sync_bind(AsyncLCDUtils.get_consensus_io_pubkey)
-    async def get_consensus_io_pubkey(self):
-        pass
-
-    get_consensus_io_pubkey.__doc__ = AsyncLCDUtils.get_consensus_io_pubkey.__doc__
-
-    @sync_bind(AsyncLCDUtils.get_tx_encryption_key)
-    async def get_tx_encryption_key(self, nonce):
-        pass
-
-    get_tx_encryption_key.__doc__ = AsyncLCDUtils.get_tx_encryption_key.__doc__
-
-    @sync_bind(AsyncLCDUtils.encrypt)
-    async def encrypt(self, contract_code_hash, msg):
-        pass
-
-    encrypt.__doc__ = AsyncLCDUtils.encrypt.__doc__
-
-    @sync_bind(AsyncLCDUtils.decrypt)
-    async def decrypt(self, ciphertext, nonce) -> str:
-        pass
-
-    decrypt.__doc__ = AsyncLCDUtils.decrypt.__doc__
