@@ -56,36 +56,11 @@ def index_by_pub_key(m: Dict[str, Any], o: Any):
     return m
 
 
-class AsyncLCDUtils(BaseAsyncAPI):
-    def __init__(self, c):
-        super().__init__(c)
+class EncryptionUtils():
+    def __init__(self, consensus_io_pubkey: bytes):
         self.seed = self.generate_new_seed()
         self.privkey, self.pubkey = self.generate_new_key_pair_from_seed(self.seed)
-
-    async def validators_with_voting_power(self) -> Dict[str, dict]:
-        """Gets current validators and merges their voting power from the validator set query.
-
-        Returns:
-            Dict[str, dict]: validators with voting power
-        """
-        validator_set_response = await BaseAsyncAPI._try_await(
-            self._c.tendermint.validator_set()
-        )
-        validators = await BaseAsyncAPI._try_await(self._c.staking.validators())
-        validator_set: Dict[str, Any] = reduce(
-            index_by_pub_key, validator_set_response["validators"], {}
-        )
-        res = {}
-        for v in validators:
-            delegate_info = validator_set.get(v.consensus_pubkey["value"])
-            if delegate_info is None:
-                continue
-            res[v.operator_address] = {
-                "validator_info": v,
-                "voting_power": int(delegate_info["voting_power"]),
-                "proposer_priority": int(delegate_info["proposer_priority"]),
-            }
-        return res
+        self.consensus_io_pubkey = consensus_io_pubkey
 
     def generate_new_seed(self):
         return [secrets.randbits(8) for _ in range(32)]
@@ -102,17 +77,7 @@ class AsyncLCDUtils(BaseAsyncAPI):
     def generate_new_key_pair(self):
         return self.generate_new_key_pair_from_seed(self.generate_new_seed())
 
-    async def get_consensus_io_pubkey(self):
-        io_exch_pubkey = await BaseAsyncAPI._try_await(self._c._get("/reg/tx-key"))
-        io_exch_pubkey = io_exch_pubkey["TxKey"]
-        consensus_io_pubkey = base64.b64decode(io_exch_pubkey)
-        return bytes([x for x in consensus_io_pubkey])
-
     async def get_tx_encryption_key(self, nonce):
-        if not hasattr(self, "consensus_io_pubkey"):
-            self.consensus_io_pubkey = await BaseAsyncAPI._try_await(
-                self.get_consensus_io_pubkey()
-            )
         consensus_io_pubkey = X25519PublicKey.from_public_bytes(
             self.consensus_io_pubkey
         )
@@ -167,42 +132,3 @@ class AsyncLCDUtils(BaseAsyncAPI):
             decrypted = base64.b64decode(decrypted_data.decode("utf-8"))
             return decrypted
 
-
-class LCDUtils(AsyncLCDUtils):
-    def __init__(self, c):
-        super().__init__(c)
-        self.seed = self.generate_new_seed()
-        self.privkey, self.pubkey = self.generate_new_key_pair_from_seed(self.seed)
-        self.consensus_io_pubkey = self.get_consensus_io_pubkey()
-
-    @sync_bind(AsyncLCDUtils.validators_with_voting_power)
-    async def validators_with_voting_power(self) -> Dict[str, dict]:
-        pass
-
-    validators_with_voting_power.__doc__ = (
-        AsyncLCDUtils.validators_with_voting_power.__doc__
-    )
-
-    @sync_bind(AsyncLCDUtils.get_consensus_io_pubkey)
-    async def get_consensus_io_pubkey(self):
-        pass
-
-    get_consensus_io_pubkey.__doc__ = AsyncLCDUtils.get_consensus_io_pubkey.__doc__
-
-    @sync_bind(AsyncLCDUtils.get_tx_encryption_key)
-    async def get_tx_encryption_key(self, nonce):
-        pass
-
-    get_tx_encryption_key.__doc__ = AsyncLCDUtils.get_tx_encryption_key.__doc__
-
-    @sync_bind(AsyncLCDUtils.encrypt)
-    async def encrypt(self, contract_code_hash, msg):
-        pass
-
-    encrypt.__doc__ = AsyncLCDUtils.encrypt.__doc__
-
-    @sync_bind(AsyncLCDUtils.decrypt)
-    async def decrypt(self, ciphertext, nonce) -> str:
-        pass
-
-    decrypt.__doc__ = AsyncLCDUtils.decrypt.__doc__
