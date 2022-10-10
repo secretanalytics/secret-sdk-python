@@ -237,46 +237,46 @@ class LCDClient(AsyncLCDClient):
     """Height of response of last-made made LCD request."""
 
     auth: AuthAPI
-    """:class:`AuthAPI<terra_sdk.client.lcd.api.auth.AuthAPI>`."""
+    """:class:`AuthAPI<secret_sdk.client.lcd.api.auth.AuthAPI>`."""
 
     bank: BankAPI
-    """:class:`BankAPI<terra_sdk.client.lcd.api.bank.BankAPI>`."""
+    """:class:`BankAPI<secret_sdk.client.lcd.api.bank.BankAPI>`."""
 
     distribution: DistributionAPI
-    """:class:`DistributionAPI<terra_sdk.client.lcd.api.distribution.DistributionAPI>`."""
+    """:class:`DistributionAPI<secret_sdk.client.lcd.api.distribution.DistributionAPI>`."""
 
     gov: GovAPI
-    """:class:`GovAPI<terra_sdk.client.lcd.api.gov.GovAPI>`."""
+    """:class:`GovAPI<secret_sdk.client.lcd.api.gov.GovAPI>`."""
 
     feegrant: FeeGrantAPI
-    """:class:`FeeGrant<terra_sdk.client.lcd.api.feegrant.FeeGrantAPI>`."""
+    """:class:`FeeGrant<secret_sdk.client.lcd.api.feegrant.FeeGrantAPI>`."""
 
     mint: MintAPI
-    """:class:`MintAPI<terra_sdk.client.lcd.api.mint.MintAPI>`."""
+    """:class:`MintAPI<secret_sdk.client.lcd.api.mint.MintAPI>`."""
 
     authz: AuthzAPI
-    """:class:`AuthzAPI<terra_sdk.client.lcd.api.authz.AuthzAPI>`."""
+    """:class:`AuthzAPI<secret_sdk.client.lcd.api.authz.AuthzAPI>`."""
 
     slashing: SlashingAPI
-    """:class:`SlashingAPI<terra_sdk.client.lcd.api.slashing.SlashingAPI>`."""
+    """:class:`SlashingAPI<secret_sdk.client.lcd.api.slashing.SlashingAPI>`."""
 
     staking: StakingAPI
-    """:class:`StakingAPI<terra_sdk.client.lcd.api.staking.StakingAPI>`."""
+    """:class:`StakingAPI<secret_sdk.client.lcd.api.staking.StakingAPI>`."""
 
     tendermint: TendermintAPI
-    """:class:`TendermintAPI<terra_sdk.client.lcd.api.tendermint.TendermintAPI>`."""
+    """:class:`TendermintAPI<secret_sdk.client.lcd.api.tendermint.TendermintAPI>`."""
 
     wasm: WasmAPI
-    """:class:`WasmAPI<terra_sdk.client.lcd.api.wasm.WasmAPI>`."""
+    """:class:`WasmAPI<secret_sdk.client.lcd.api.wasm.WasmAPI>`."""
 
     tx: TxAPI
-    """:class:`TxAPI<terra_sdk.client.lcd.api.tx.TxAPI>`."""
+    """:class:`TxAPI<secret_sdk.client.lcd.api.tx.TxAPI>`."""
 
     ibc: IbcAPI
-    """:class:`IbcAPI<terra_sdk.client.lcd.api.ibc.IbcAPI>`."""
+    """:class:`IbcAPI<secret_sdk.client.lcd.api.ibc.IbcAPI>`."""
 
     ibc_transfer: IbcTransferAPI
-    """:class:`IbcTransferAPI<terra_sdk.client.lcd.api.ibc_transfer.IbcTransferAPI>`."""
+    """:class:`IbcTransferAPI<secret_sdk.client.lcd.api.ibc_transfer.IbcTransferAPI>`."""
 
     def __init__(
         self,
