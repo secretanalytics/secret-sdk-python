@@ -20,11 +20,11 @@ class AsyncGovAPI(BaseAsyncAPI):
         Args:
             options (dict, optional): dictionary containing options. Defaults to {}. you can use one or more below:
                 {
-                    "proposal_status": terra_sdk.core.gov.ProposalStatus (int)
+                    "proposal_status": secret_sdk.core.gov.ProposalStatus (int)
                     "voter": voter address (str),
                     "depositor": depositor address(str)
                 }
-                example) {"proposal_status":1, "depositor":"terra17lmam6zguazs5q5u6z5mmx76uj63gldnse2pdp"}
+                example) {"proposal_status":1, "depositor":"secret..."}
 
             params (APIParams, optional): additional params for the API like pagination
 

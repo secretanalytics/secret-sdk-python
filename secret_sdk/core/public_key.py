@@ -195,7 +195,7 @@ class SimplePublicKey(PublicKey):
         return address_from_public_key(self)
 
     def address(self) -> str:
-        return get_bech("terra", self.raw_address().hex())
+        return get_bech("secret", self.raw_address().hex())
 
 
 @attr.s
@@ -245,7 +245,7 @@ class ValConsPubKey(PublicKey):
         return address_from_public_key(self)
 
     def address(self) -> str:
-        return get_bech("terravalcons", self.raw_address().hex())
+        return get_bech("secretvalcons", self.raw_address().hex())
 
 
 @attr.s
@@ -333,8 +333,8 @@ class LegacyAminoMultisigPublicKey(PublicKey):
         return hasher.digest()[0:20].hex()
 
     def address(self) -> str:
-        address = get_bech("terra", self.raw_address())
+        address = get_bech("secret", self.raw_address())
         return address
 
     def pubkey_address(self) -> str:
-        return get_bech("terrapub", str(self.encode_amino_pubkey()))
+        return get_bech("secretpub", str(self.encode_amino_pubkey()))
