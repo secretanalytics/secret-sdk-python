@@ -60,40 +60,7 @@ class EncryptionUtils():
     def __init__(self, consensus_io_pubkey: bytes):
         self.seed = self.generate_new_seed()
         self.privkey, self.pubkey = self.generate_new_key_pair_from_seed(self.seed)
-
-    async def validators_with_voting_power(self) -> Dict[str, dict]:
-        """Gets current validators and merges their voting power from the validator set query.
-
-        Returns:
-            Dict[str, dict]: validators with voting power
-        """
-        validator_set_response = await BaseAsyncAPI._try_await(
-            self._c.tendermint.validator_set()
-        )
-        next_key = ""
-        while True:
-            from secret_sdk.client.lcd import PaginationOptions
-
-            validators, pag = await BaseAsyncAPI._try_await(
-                self._c.staking.validators(PaginationOptions(key=next_key))
-            )
-            validator_set: Dict[str, Any] = reduce(
-                index_by_pub_key, validator_set_response["validators"], {}
-            )
-            if pag is None or pag["next_key"] is None:
-                break
-            next_key = pag["next_key"]
-        res = {}
-        for v in validators:
-            delegate_info = validator_set.get(v.consensus_pubkey["value"])
-            if delegate_info is None:
-                continue
-            res[v.operator_address] = {
-                "validator_info": v,
-                "voting_power": int(delegate_info["voting_power"]),
-                "proposer_priority": int(delegate_info["proposer_priority"]),
-            }
-        return res
+        self.consensus_io_pubkey = consensus_io_pubkey
 
     def generate_new_seed(self):
         return [secrets.randbits(8) for _ in range(32)]
@@ -110,17 +77,7 @@ class EncryptionUtils():
     def generate_new_key_pair(self):
         return self.generate_new_key_pair_from_seed(self.generate_new_seed())
 
-    async def get_consensus_io_pubkey(self):
-        io_exch_pubkey = await BaseAsyncAPI._try_await(self._c._get("/registration/v1beta1/tx-key"))
-        io_exch_pubkey = io_exch_pubkey["key"]
-        consensus_io_pubkey = base64.b64decode(io_exch_pubkey)
-        return bytes([x for x in consensus_io_pubkey])
 
-    async def get_tx_encryption_key(self, nonce):
-        if not hasattr(self, "consensus_io_pubkey"):
-            self.consensus_io_pubkey = await BaseAsyncAPI._try_await(
-                self.get_consensus_io_pubkey()
-            )
     def get_tx_encryption_key(self, nonce):
         consensus_io_pubkey = X25519PublicKey.from_public_bytes(
             self.consensus_io_pubkey
