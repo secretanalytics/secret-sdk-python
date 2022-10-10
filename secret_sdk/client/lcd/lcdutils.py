@@ -71,10 +71,19 @@ class AsyncLCDUtils(BaseAsyncAPI):
         validator_set_response = await BaseAsyncAPI._try_await(
             self._c.tendermint.validator_set()
         )
-        validators = await BaseAsyncAPI._try_await(self._c.staking.validators())
-        validator_set: Dict[str, Any] = reduce(
-            index_by_pub_key, validator_set_response["validators"], {}
-        )
+        next_key = ""
+        while True:
+            from secret_sdk.client.lcd import PaginationOptions
+
+            validators, pag = await BaseAsyncAPI._try_await(
+                self._c.staking.validators(PaginationOptions(key=next_key))
+            )
+            validator_set: Dict[str, Any] = reduce(
+                index_by_pub_key, validator_set_response["validators"], {}
+            )
+            if pag is None or pag["next_key"] is None:
+                break
+            next_key = pag["next_key"]
         res = {}
         for v in validators:
             delegate_info = validator_set.get(v.consensus_pubkey["value"])
@@ -103,8 +112,8 @@ class AsyncLCDUtils(BaseAsyncAPI):
         return self.generate_new_key_pair_from_seed(self.generate_new_seed())
 
     async def get_consensus_io_pubkey(self):
-        io_exch_pubkey = await BaseAsyncAPI._try_await(self._c._get("/reg/tx-key"))
-        io_exch_pubkey = io_exch_pubkey["TxKey"]
+        io_exch_pubkey = await BaseAsyncAPI._try_await(self._c._get("/registration/v1beta1/tx-key"))
+        io_exch_pubkey = io_exch_pubkey["key"]
         consensus_io_pubkey = base64.b64decode(io_exch_pubkey)
         return bytes([x for x in consensus_io_pubkey])
 

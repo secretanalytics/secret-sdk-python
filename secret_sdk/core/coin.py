@@ -1,9 +1,11 @@
 from __future__ import annotations
 
+import math
 import re
 from typing import Union
 
 import attr
+from secret_sdk.protobuf.cosmos.base.v1beta1 import Coin as Coin_pb
 
 from secret_sdk.util.json import JSONSerializable
 
@@ -17,7 +19,7 @@ class Coin(JSONSerializable):
     """
 
     denom: str = attr.ib()
-    """Coin's denomination, ex ``uusd``, ``uscrt``, etc."""
+    """Coin's denomination, only ``uscrt``."""
 
     amount: Numeric.Output = attr.ib(converter=Numeric.parse)  # type: ignore
     """Coin's amount -- can be a ``int`` or :class:`Dec`"""
@@ -48,6 +50,10 @@ class Coin(JSONSerializable):
         """Creates a new :class:`Coin` with an ``int`` amount."""
         return Coin(self.denom, int(self.amount))
 
+    def to_int_ceil_coin(self) -> Coin:
+        """Turns the :class:`coin` into an ``int`` coin with ceiling the amount."""
+        return Coin(self.denom, int(math.ceil(self.amount)))
+
     def to_dec_coin(self) -> Coin:
         """Creates a new :class:`Coin` with a :class:`Dec` amount."""
         return Coin(self.denom, Dec(self.amount))
@@ -60,17 +66,30 @@ class Coin(JSONSerializable):
             return f"{amount_str}{self.denom}"
         return f"{self.amount}{self.denom}"
 
+    def to_amino(self) -> dict:
+        return {"denom": self.denom, "amount": str(self.amount)}
+
     def to_data(self) -> dict:
         return {"denom": self.denom, "amount": str(self.amount)}
 
     @classmethod
+    def from_proto(cls, proto: Coin_pb) -> Coin:
+        return cls(proto.denom, proto.amount)
+
+    def to_proto(self) -> Coin_pb:
+        coin = Coin_pb()
+        coin.denom = self.denom
+        coin.amount = str(self.amount)
+        return coin
+
+    @classmethod
     def from_str(cls, string: str) -> Coin:
         """Creates a new :class:`Coin` from a coin-format string. Must match the format:
-        ``283923uusd`` (``int``-Coin) or ``23920.23020uusd`` (:class:`Dec`-Coin).
+        ``283923uscrt`` (``int``-Coin) or ``23920.23020uscrt`` (:class:`Dec`-Coin).
 
-        >>> int_coin = Coin.from_str("230920uusd")
+        >>> int_coin = Coin.from_str("230920uscrt")
         >>> int_coin.denom
-        'uusd'
+        'uscrt'
         >>> int_coin.amount
         230920
         >>> dec_coin = Coin.from_str("203922.223uscrt")
@@ -206,6 +225,15 @@ class Coin(JSONSerializable):
     @classmethod
     def from_data(cls, data: dict) -> Coin:
         """Deserializes a :class:`Coin` object from its JSON data representation.
+
+        Args:
+            data (dict): data object
+        """
+        return cls(data["denom"], data["amount"])
+
+    @classmethod
+    def from_amino(cls, data: dict) -> Coin:
+        """Deserializes a :class:`Coin` object from its amino-codec representation.
 
         Args:
             data (dict): data object

@@ -6,7 +6,7 @@ from typing import Optional
 from bech32 import bech32_encode, convertbits
 
 from secret_sdk.core import AccAddress, AccPubKey, ValAddress, ValPubKey
-from secret_sdk.core.auth import StdSignature, StdSignMsg, StdTx
+from secret_sdk.core import StdSignature, StdSignMsg, StdTx
 
 BECH32_PUBKEY_DATA_PREFIX = "eb5ae98721"
 

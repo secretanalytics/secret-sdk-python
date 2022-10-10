@@ -3,13 +3,15 @@ from __future__ import annotations
 import copy
 from typing import Any, Callable, Dict, Iterable, Iterator, List, Optional, Union
 
+from secret_sdk.protobuf.cosmos.base.v1beta1 import Coin as Coin_pb
+
 from secret_sdk.util.json import JSONSerializable
 
 from .coin import Coin
 from .numeric import Numeric
 
 
-class Coins(JSONSerializable):
+class Coins(JSONSerializable, List[Coin_pb]):
     """Represents an unordered collection of :class:`Coin` objects
     -- analagous to ``sdk.Coins`` and ``sdk.DecCoins`` in Cosmos SDK. If one of the
     input coins would be ``Dec``-amount type coin, the resultant Coins is converted to
@@ -110,11 +112,40 @@ class Coins(JSONSerializable):
         Args:
             data (list): list of Coin-data objects
         """
-        coins = map(Coin.from_data, data or [])
+        coins = map(Coin.from_data, data)
         return cls(coins)
+
+    @classmethod
+    def from_amino(cls, amino: list) -> Coins:
+        """Converts list of Coin-amino objects to :class:`Coins`.
+
+        Args:
+            amino (list): list of Coin-data objects
+        """
+        coins = map(Coin.from_amino, amino)
+        return cls(coins)
+
+    def to_amino(self) -> List[dict]:
+        return [coin.to_amino() for coin in self]
 
     def to_data(self) -> List[dict]:
         return [coin.to_data() for coin in self]
+
+    @classmethod
+    def from_proto(cls, proto: List[Coin_pb]) -> Coins:
+        """Converts list of Coin-data objects to :class:`Coins`.
+
+        Args:
+            data (list): list of Coin-data objects
+        """
+        coins = map(Coin.from_proto, proto)
+        return cls(coins)
+
+    def to_proto(self) -> List[Coin_pb]:
+        return [coin.to_proto() for coin in self]
+
+    def to_dict(self) -> List[dict]:
+        return [coin.to_dict for coin in self]
 
     def denoms(self) -> List[str]:
         """Get the list of denoms for all Coin objects contained."""
@@ -127,6 +158,10 @@ class Coins(JSONSerializable):
     def to_int_coins(self) -> Coins:
         """Creates new set of :class:`Coins` that have ``int`` amounts."""
         return Coins(c.to_int_coin() for c in self)
+
+    def to_int_ceil_coins(self) -> Coins:
+        """Creates a new :class:`Coins` object with all ``int`` coins with ceiling the amount"""
+        return Coins(c.to_int_ceil_coin() for c in self)
 
     def add(self, addend: Union[Coin, Coins]) -> Coins:
         """Performs addition, which combines the sets of Coin objects. Coins of similar denoms
@@ -156,7 +191,7 @@ class Coins(JSONSerializable):
         return self.sub(subtrahend)
 
     def mul(self, multiplier: Numeric.Input) -> Coins:
-        """Performs multiplication, which multiplies all the Coin objects in the set by a
+        """Performs multiplicaiton, which multiplies all the Coin objects in the set by a
         multiplier.
 
         Args:

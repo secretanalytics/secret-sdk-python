@@ -4,14 +4,13 @@ from __future__ import annotations
 
 from typing import NewType
 
-from bech32 import bech32_decode, bech32_encode
+from bech32 import bech32_decode, bech32_encode, convertbits
 
 __all__ = [
     "AccAddress",
     "ValAddress",
     "AccPubKey",
     "ValPubKey",
-    "ValConsPubKey",
     "is_acc_address",
     "is_acc_pubkey",
     "is_val_address",
@@ -21,7 +20,15 @@ __all__ = [
     "to_acc_pubkey",
     "to_val_address",
     "to_val_pubkey",
+    "get_bech",
 ]
+
+
+def get_bech(prefix: str, payload: str) -> str:
+    data = convertbits(bytes.fromhex(payload), 8, 5)
+    if data is None:
+        raise ValueError(f"could not parse data: prefix {prefix}, payload {payload}")
+    return bech32_encode(prefix, data)  # base64 -> base32
 
 
 def check_prefix_and_length(prefix: str, data: str, length: int):
@@ -30,27 +37,25 @@ def check_prefix_and_length(prefix: str, data: str, length: int):
 
 
 AccAddress = NewType("AccAddress", str)
-AccAddress.__doc__ = """Secret Bech32 Account Address -- type alias of str."""
+AccAddress.__doc__ = """Terra Bech32 Account Address -- type alias of str."""
 
 ValAddress = NewType("ValAddress", str)
-ValAddress.__doc__ = (
-    """Secret Bech32 Validator Operator Address -- type alias of str."""
-)
+ValAddress.__doc__ = """Terra Bech32 Validator Operator Address -- type alias of str."""
 
 AccPubKey = NewType("AccPubKey", str)
-AccPubKey.__doc__ = """Secret Bech32 Account Address -- type alias of str."""
+AccPubKey.__doc__ = """Terra Bech32 Account Address -- type alias of str."""
 
 ValPubKey = NewType("ValPubKey", str)
-ValPubKey.__doc__ = """Secret Bech32 Validator PubKey -- type alias of str."""
+ValPubKey.__doc__ = """Terra Bech32 Validator PubKey -- type alias of str."""
 
-ValConsPubKey = NewType("ValConsPubKey", str)
-ValConsPubKey.__doc__ = (
-    """Secret Bech32 Validator Conensus PubKey -- type alias of str."""
-)
+# ValConsPubKey = NewType("ValConsPubKey", str)
+# ValConsPubKey.__doc__ = (
+#  """Terra Bech32 Validator Conensus PubKey -- type alias of str."""
+# )
 
 
 def is_acc_address(data: str) -> bool:
-    """Checks whether the given string is a properly formatted Secret account address.
+    """Checks whether the given string is a properly formatted Terra account address.
 
     Args:
         data (str): string to check
@@ -58,7 +63,7 @@ def is_acc_address(data: str) -> bool:
     Returns:
         bool: whether the string is a proper account address
     """
-    return check_prefix_and_length("secret", data, 45)
+    return check_prefix_and_length("terra", data, 44)
 
 
 def to_acc_address(data: ValAddress) -> AccAddress:
@@ -76,11 +81,11 @@ def to_acc_address(data: ValAddress) -> AccAddress:
     vals = bech32_decode(data)
     if vals[1] is None:
         raise ValueError(f"invalid bech32: {data}")
-    return AccAddress(bech32_encode("secret", vals[1]))
+    return AccAddress(bech32_encode("terra", vals[1]))
 
 
 def is_val_address(data: str) -> bool:
-    """Checks whether the given string is a properly formatted Secret validator operator
+    """Checks whether the given string is a properly formatted Terra validator operator
     address.
 
     Args:
@@ -89,7 +94,7 @@ def is_val_address(data: str) -> bool:
     Returns:
         bool: whether the string is a proper validator address
     """
-    return check_prefix_and_length("secretvaloper", data, 52)
+    return check_prefix_and_length("terravaloper", data, 51)
 
 
 def to_val_address(data: AccAddress) -> ValAddress:
@@ -107,11 +112,11 @@ def to_val_address(data: AccAddress) -> ValAddress:
     vals = bech32_decode(data)
     if vals[1] is None:
         raise ValueError(f"invalid bech32: {data}")
-    return ValAddress(bech32_encode("secretvaloper", vals[1]))
+    return ValAddress(bech32_encode("terravaloper", vals[1]))
 
 
 def is_acc_pubkey(data: str) -> bool:
-    """Checks whether the provided string is a properly formatted Secret account pubkey.
+    """Checks whether the provided string is a properly formatted Terra account pubkey.
 
     Args:
         data (str): string to check
@@ -119,7 +124,7 @@ def is_acc_pubkey(data: str) -> bool:
     Returns:
         bool: whether string is account pubkey
     """
-    return check_prefix_and_length("secretpub", data, 77)
+    return check_prefix_and_length("terrapub", data, 76)
 
 
 def to_acc_pubkey(data: ValPubKey) -> AccPubKey:
@@ -137,11 +142,11 @@ def to_acc_pubkey(data: ValPubKey) -> AccPubKey:
     vals = bech32_decode(data)
     if vals[1] is None:
         raise ValueError(f"invalid bech32: {data}")
-    return AccPubKey(bech32_encode("secretpub", vals[1]))
+    return AccPubKey(bech32_encode("terrapub", vals[1]))
 
 
 def is_val_pubkey(data: str) -> bool:
-    """Checks whether provided string is a properly formatted Secret validator pubkey.
+    """Checks whether provided string is a properly formatted Terra validator pubkey.
 
     Args:
         data (str): string to check
@@ -149,7 +154,7 @@ def is_val_pubkey(data: str) -> bool:
     Returns:
         bool: whether string is validator pubkey
     """
-    return check_prefix_and_length("secretvaloperpub", data, 84)
+    return check_prefix_and_length("terravaloperpub", data, 83)
 
 
 def to_val_pubkey(data: AccPubKey) -> ValPubKey:
@@ -167,17 +172,17 @@ def to_val_pubkey(data: AccPubKey) -> ValPubKey:
     vals = bech32_decode(data)
     if vals[1] is None:
         raise ValueError(f"invalid bech32: {data}")
-    return ValPubKey(bech32_encode("secretvaloperpub", vals[1]))
+    return ValPubKey(bech32_encode("terravaloperpub", vals[1]))
 
 
-def is_valcons_pubkey(data: str) -> ValConsPubKey:
-    """Checks whether provided string is a properly formatted Secret validator consensus
+def is_valcons_pubkey(data: str) -> bool:  # -> ValConsPubKey:
+    """Checks whether provided string is a properly formatted Terra validator consensus
     pubkey.
 
     Args:
         data (str): string to check
 
     Returns:
-        ValConsPubKey: validator consensus pubkey
+        bool: whether string is validator consensus pubkey
     """
-    return check_prefix_and_length("secretvalconspub", data, 83)
+    return check_prefix_and_length("terravalconspub", data, 83)

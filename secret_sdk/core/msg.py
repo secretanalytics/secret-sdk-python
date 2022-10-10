@@ -1,33 +1,31 @@
 from __future__ import annotations
 
-import attr
+from betterproto.lib.google.protobuf import Any as Any_pb
 
 from secret_sdk.util.base import BaseSecretData
 
 
 class Msg(BaseSecretData):
+    def to_proto(self):
+        raise NotImplementedError
+
+    def pack_any(self) -> Any_pb:
+        return Any_pb(type_url=self.type_url, value=bytes(self.to_proto()))
+
     @staticmethod
     def from_data(data: dict) -> Msg:
         from secret_sdk.util.parse_msg import parse_msg
 
         return parse_msg(data)
 
+    @staticmethod
+    def from_proto(proto: any) -> Msg:
+        from secret_sdk.util.parse_msg import parse_proto
 
-@attr.s
-class MsgData(Msg):
-    """Data structure holding MsgData.
+        return parse_proto(proto)
 
-    Args:
-        type (str): message type
-        value (string): data
-    """
+    @staticmethod
+    def unpack_any(any_pb: Any_pb) -> Msg:
+        from secret_sdk.util.parse_msg import parse_unpack_any
 
-    type: str = attr.ib(converter=str)
-    value: dict = attr.ib(converter=dict)
-
-    def to_data(self) -> dict:
-        return {"type": self.type, "value": self.value}
-
-    @classmethod
-    def from_data(cls, data: dict) -> MsgData:
-        return cls(type=data["type"], value=data["value"])
+        return parse_unpack_any(any_pb)

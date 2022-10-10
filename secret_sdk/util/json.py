@@ -8,12 +8,18 @@ from secret_sdk.util.converter import to_isoformat
 
 
 def to_data(x: Any) -> Any:
-    if "to_data" in dir(x):
+    if hasattr(x, "to_data"):
         return x.to_data()
+    if isinstance(x, int):
+        return str(x)
+    if isinstance(x, datetime):
+        return to_isoformat(x)
     if isinstance(x, list):
         return [to_data(g) for g in x]
     if isinstance(x, dict):
         return dict_to_data(x)
+    if isinstance(x, datetime):
+        return to_isoformat(x)
     return x
 
 
@@ -22,6 +28,8 @@ def to_amino(x: Any) -> Any:
         return x.to_amino()
     if isinstance(x, list):
         return [to_data(g) for g in x]
+    if isinstance(x, datetime):
+        return to_isoformat(x)
     if isinstance(x, dict):
         return dict_to_amino(x)
     if isinstance(x, int):
@@ -49,6 +57,6 @@ class JSONSerializable(ABC):
         and the JSON rendered removes all unnecessary whitespace.
 
         Returns:
-            str: JSON string representation
+           str: JSON string representation
         """
         return json.dumps(self.to_data(), sort_keys=True, separators=(",", ":"))

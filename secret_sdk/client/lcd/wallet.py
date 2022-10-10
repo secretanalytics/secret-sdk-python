@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import Dict, List, Optional
 
 from secret_sdk.core import AccAddress, Coins, Numeric
-from secret_sdk.core.auth import StdFee, StdSignMsg, StdTx
+from secret_sdk.core import StdFee, StdSignMsg, StdTx
 from secret_sdk.core.bank import MsgSend
 from secret_sdk.core.msg import Msg
 from secret_sdk.key.key import Key

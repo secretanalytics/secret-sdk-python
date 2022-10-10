@@ -1,28 +1,126 @@
 import base64
 import re
+import json
 from typing import List, Optional
 
 import attr
+from multidict import CIMultiDict
 
-from secret_sdk.core import AccAddress, Coins, Numeric
-from secret_sdk.core.auth import SearchTxsResponse, StdFee, StdSignMsg, StdTx, TxInfo
+from secret_sdk.core import AccAddress, Coins, Dec, Numeric, PublicKey
+from secret_sdk.core import SearchTxsResponse, StdFee, StdSignMsg, StdTx, TxInfo
 from secret_sdk.core.broadcast import (
     AsyncTxBroadcastResult,
     BlockTxBroadcastResult,
     SyncTxBroadcastResult,
 )
+from secret_sdk.core.tx_decoder import msg_decoder_mapper
+from secret_sdk.core.fee import Fee
 from secret_sdk.core.msg import Msg
+from secret_sdk.core.tx import AuthInfo, SignerData, SignMode, Tx, TxBody, TxInfo
 from secret_sdk.util.hash import hash_amino
+from secret_sdk.util.json import JSONSerializable
 
+from secret_sdk.protobuf.secret.compute.v1beta1 import MsgInstantiateContractResponse, MsgExecuteContractResponse
+from ..params import APIParams
 from ._base import BaseAsyncAPI, sync_bind
 
-__all__ = ["AsyncTxAPI", "TxAPI", "BroadcastOptions"]
+__all__ = [
+    "AsyncTxAPI",
+    "TxAPI",
+    "BroadcastOptions",
+    "CreateTxOptions",
+    "SignerOptions",
+]
+
+
+@attr.s
+class SignerOptions:
+    """SignerOptions specifies infomations about signers
+    Args:
+        address (AccAddress): address of the signer
+        sequence (int, optional): nonce of the messages from the signer
+        public_key (PublicKey, optional): signer's PublicKey
+    """
+
+    address: AccAddress = attr.ib()
+    sequence: Optional[int] = attr.ib(default=None)
+    public_key: Optional[PublicKey] = attr.ib(default=None)
+
+
+@attr.s
+class CreateTxOptions:
+    """
+
+    Args:
+        msgs (List[Msg]): list of messages to include
+        fee (Optional[Fee], optional): transaction fee. If ``None``, will be estimated.
+            See more on `fee estimation`_.
+        memo (str, optional): optional short string to include with transaction.
+        gas (str, optional): gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically
+        gas_prices (Coins.Input, optional): gas prices for fee estimation.
+        gas_adjustment (Numeric.Input, optional): gas adjustment for fee estimation.
+        fee_denoms (List[str], optional): list of denoms to use for fee after estimation.
+        account_number (int, optional): account number (overrides blockchain query if
+            provided)
+        sequence (int, optional): sequence (overrides blockchain qu ery if provided)
+        timeout_height (int, optional):  specifies a block timeout height to prevent the tx from being committed past a certain height.
+        sign_mode: (SignMode, optional): SignMode.SIGN_MODE_DIRECT by default. multisig needs SignMode.SIGN_MODE_LEGACY_AMINO_JSON.
+    """
+
+    msgs: List[Msg] = attr.ib()
+    fee: Optional[Fee] = attr.ib(default=None)
+    memo: Optional[str] = attr.ib(default=None)
+    gas: Optional[str] = attr.ib(default=None)
+    gas_prices: Optional[Coins.Input] = attr.ib(default=None)
+    gas_adjustment: Optional[Numeric.Output] = attr.ib(
+        default=0, converter=Numeric.parse
+    )
+    fee_denoms: Optional[List[str]] = attr.ib(default=None)
+    account_number: Optional[int] = attr.ib(default=None)
+    sequence: Optional[int] = attr.ib(default=None)
+    timeout_height: Optional[int] = attr.ib(default=None)
+    sign_mode: Optional[SignMode] = attr.ib(default=None)
 
 
 @attr.s
 class BroadcastOptions:
     sequences: Optional[List[int]] = attr.ib()
     fee_granter: Optional[AccAddress] = attr.ib(default=None)
+
+
+@attr.s
+class GasInfo:
+    gas_wanted: int = attr.ib(converter=int)
+    gas_used: int = attr.ib(converter=int)
+
+
+@attr.s
+class EventAttribute:
+    key: str = attr.ib()
+    value: str = attr.ib()
+
+
+@attr.s
+class Event:
+    type: str = attr.ib()
+    attributes: List[EventAttribute] = attr.ib(converter=list)
+
+
+@attr.s
+class SimulateResult:
+    data: str = attr.ib()
+    log: str = attr.ib()
+    events: List[Event] = attr.ib(converter=list)
+
+
+@attr.s
+class SimulateResponse(JSONSerializable):
+    gas_info: GasInfo = attr.ib()
+    result: SimulateResult = attr.ib()
+
+    @classmethod
+    def from_data(cls, data: dict):
+        return cls(gas_info=data["gas_info"], result=data["result"])
 
 
 class AsyncTxAPI(BaseAsyncAPI):
@@ -35,7 +133,8 @@ class AsyncTxAPI(BaseAsyncAPI):
         Returns:
             TxInfo: transaction info
         """
-        return TxInfo.from_data(await self._c._get(f"/txs/{tx_hash}", raw=True))
+        res = await self._c._get(f"/cosmos/tx/v1beta1/txs/{tx_hash}")
+        return TxInfo.from_data(res["tx_response"])
 
     async def tx_by_id(self, id: str) -> TxInfo:
         """Fetches information for an included transaction given a tx hash.
@@ -46,11 +145,11 @@ class AsyncTxAPI(BaseAsyncAPI):
         Returns:
             TxInfo: transaction info
         """
-        response_data = await self._c._get(f"/txs/{id}", raw=True)
-        if "tx" not in response_data:
+        res = await self._c._get(f"/cosmos/tx/v1beta1/txs/{id}")
+        if "tx" not in res:
             raise Exception("Unexpected response data format")
         # TODO: update TxInfo interface
-        return await self.decrypt_txs_response(response_data)
+        return await self.decrypt_txs_response(res)
 
     async def decrypt_data_field(self, data_field: str, nonces):
         wasm_output_data_cipher_bz = bytearray.fromhex(data_field)
@@ -92,80 +191,126 @@ class AsyncTxAPI(BaseAsyncAPI):
         return logs
 
     async def decrypt_txs_response(self, txs_response):
-        data_field = None
-        data = []
+        nonces = {}
 
-        if txs_response.get("data"):
-            data_field = txs_response[
-                "data"
-            ]  # await self.decode_tx_data(txs_response['data'])
+        decoded_tx = Tx.from_data(txs_response['tx'])
+        for i, message in enumerate(decoded_tx.body.messages):
+            msg_type = message.type_url
+            msg_decoder = msg_decoder_mapper.get(msg_type)
 
-        logs = txs_response.get("logs")
-        if logs:
-            logs[0]["msg_index"] = 0
-
-        for i, msg in enumerate(txs_response["tx"]["value"].get("msg")):
-
-            if msg["type"] == "wasm/MsgExecuteContract":
-                input_msg_encrypted = base64.b64decode(msg["value"]["msg"])
-            elif msg["type"] == "wasm/MsgInstantiateContract":
-                input_msg_encrypted = base64.b64decode(msg["value"]["init_msg"])
-            else:
+            if not msg_decoder:
                 continue
 
-            input_msg_pubkey = input_msg_encrypted[32:64]
-            pub_key = await self._c.utils.get_pub_key()
-            if base64.b64encode(pub_key) == base64.b64encode(input_msg_pubkey):
-                # my pubkey, can decrypt
-                nonce = input_msg_pubkey[0:32]
+            msg = {
+                'type_url': msg_type,
+                'value': msg_decoder(message)
+            }
 
-                # decrypt input
-                input_msg = await self._c.utils.decrypt(input_msg_encrypted[:64], nonce)
+            # Check if the message needs decryption
+            contract_input_msg_field_name = ''
+            if msg_type == "/secret.compute.v1beta1.MsgInstantiateContract":
+                contract_input_msg_field_name = "initMsg";
+            elif msg_type == "/secret.compute.v1beta1.MsgExecuteContract":
+                contract_input_msg_field_name = "msg";
 
-                if msg["type"] == "wasm/MsgExecuteContract":
-                    # decrypt input
-                    txs_response["tx"]["value"]["msg"][i]["value"]["msg"] = input_msg
+            if contract_input_msg_field_name != '':
+                # Encrypted, try to decrypt
+                try:
+                    contract_input_msg_bytes = base64.b64decode(msg["value"][contract_input_msg_field_name])
+                    nonce = contract_input_msg_bytes[0:32]
+                    account_pub_key = contract_input_msg_bytes[32:64]
+                    ciphertext = contract_input_msg_bytes[64:]
 
-                    # decrypt output data
-                    # hack since only 1st message data is returned
-                    if data_field and i == 0 and data_field[0]["data"]:
-                        data = await self.decrypt_data_field(
-                            bytearray.fromhex(base64.b64decode(data_field[0]["data"])),
-                            [nonce],
-                        )
-                elif msg.type == "wasm/MsgInstantiateContract":
-                    # decrypt input
-                    txs_response["tx"]["value"]["msg"][0]["value"][
-                        "init_msg"
-                    ] = input_msg
+                    plaintext = await self._c.utils.decrypt(
+                        ciphertext,
+                        nonce
+                    )
+                    # first 64 chars is the code hash as hex string
+                    msg["value"][contract_input_msg_field_name] = plaintext[64:]
 
-                # decrypt output logs
-                if txs_response.get("logs") and logs:
-                    if "log" not in txs_response["logs"][i]:
-                        logs[i]["log"] = ""
-                    logs[i] = await self.decrypt_logs(
-                        [txs_response["logs"][i]], [nonce]
-                    )[0]
+                    # Fill nonces array to later use it in output decryption
+                    nonces[i] = nonce
+                except:
+                    pass
+                    # Not encrypted or can't decrypt because not original sender
 
-                # failed to execute message; message index: 0: encrypted: (.+?): (?:instantiate | execute | query) contract failed
-                # decrypt error const
+            decoded_tx.body.messages[i] = msg
+
+        raw_log = txs_response['tx_response']['raw_log']
+        json_log = None
+        array_log = None
+
+        code = txs_response['tx_response']['code']
+        if code == 0 and raw_log != '':
+            json_log = json.loads(raw_log)
+
+            for i, _ in enumerate(json_log):
+                if 'msg_index' not in json_log[i] or not json_log[i]['msg_index']:
+                    # See https://github.com/cosmos/cosmos-sdk/pull/11147
+                    json_log[i]['msg_index'] = i
+
+            array_log = await self.decrypt_logs(json_log, nonces)
+        elif code != 0 and raw_log != '':
+            try:
                 error_message_rgx = re.compile(
-                    rf"failed to execute message; message index: {i}: encrypted: (.+?): (?:instantiate|execute|query) contract failed"
+                    rf'; message index: (\d+):(?: dispatch: submessages:)* encrypted: (.+?): (?:instantiate|execute|query|reply to) contract failed'
                 )
-                rgx_matches = error_message_rgx.findall(txs_response["raw_log"])
-                if rgx_matches and len(rgx_matches) == 2:
-                    error_cipher_b64 = rgx_matches[1]
+                rgx_matches = error_message_rgx.findall(raw_log)
+                if rgx_matches and len(rgx_matches) == 3:
+                    msg_index = int(rgx_matches[1])
+                    error_cipher_b64 = rgx_matches[2]
                     error_cipher_bz = base64.b64decode(error_cipher_b64)
-                    error_plain_bz = await self._c.utils.decrypt(error_cipher_bz, nonce)
-                    txs_response["raw_log"] = txs_response["raw_log"].replace(
-                        error_cipher_b64, error_plain_bz
+                    error_plain_bz = await self._c.utils.decrypt(error_cipher_bz, nonces[msg_index])
+                    raw_log = raw_log.replace(
+                        f'encrypted: {rgx_matches[2]}', error_plain_bz
                     )
 
-        txs_response = {k: v for k, v in txs_response.items()}
-        txs_response["logs"] = logs
-        txs_response["data"] = data
+                    try:
+                        json_log = json.loads(error_plain_bz)
+                    except:
+                        pass
+            except:
+                pass
 
-        return txs_response
+        tx_msg_data = [bytearray.fromhex(txs_response['tx_response']['data'])]
+        for i, data in enumerate(tx_msg_data):
+            nonce = nonces.get(i)
+            if nonce and len(nonces) == 32:
+                # Check if the message needs decryption
+                try:
+                    msg_type = decoded_tx.body.messages[i].type_url
+                    if msg_type == '/secret.compute.v1beta1.MsgInstantiateContract':
+                        decoded = MsgInstantiateContractResponse(data['data'])
+                        decrypted = await self.decrypt_data_field(data['data'], [nonce])
+                        data[i] = MsgInstantiateContractResponse(
+                            address=decoded.address,
+                            data=decrypted
+                        )
+                    elif msg_type == '/secret.compute.v1beta1.MsgExecuteContract':
+                        decoded = MsgExecuteContractResponse(data['data'])
+                        decrypted = await self.decrypt_data_field(data['data'], [nonce])
+                        data[i] = MsgExecuteContractResponse(
+                            data=decrypted
+                        )
+                except:
+                    pass
+
+        tx_resp = txs_response['tx_response']
+        return {
+          'height': int(tx_resp['height']),
+          'timestamp': tx_resp['timestamp'],
+          'transactionHash': tx_resp['txhash'],
+          'code': tx_resp['code'],
+          'tx': decoded_tx,
+          'txBytes': tx_resp['tx'].get('value'),
+          'rawLog': raw_log,
+          'jsonLog': json_log,
+          'arrayLog': array_log,
+          'events': tx_resp['events'],
+          'data': data,
+          'gasUsed': int(tx_resp['gas_used']),
+          'gasWanted': int(tx_resp['gas_wanted']),
+        }
 
     async def create(
         self,
@@ -291,7 +436,7 @@ class AsyncTxAPI(BaseAsyncAPI):
                 data["sequences"] = [str(i) for i in options.sequences]
             if options.fee_granter is not None and len(options.fee_granter) > 0:
                 data["fee_granter"] = options.fee_granter
-        return await self._c._post("/txs", data, raw=True)
+        return await self._c._post("/txs", data)
 
     async def broadcast_sync(
         self, tx: StdTx, options: BroadcastOptions = None
@@ -351,17 +496,57 @@ class AsyncTxAPI(BaseAsyncAPI):
             codespace=res.get("codespace"),
         )
 
-    async def search(self, options: dict = {}) -> SearchTxsResponse:
+    async def search(
+        self, events: List[list], params: Optional[APIParams] = None
+    ) -> dict:
         """Searches for transactions given criteria.
 
         Args:
-            options (dict, optional): dictionary containing options. Defaults to {}.
+            events (dict): dictionary containing options
+            params (APIParams): optional parameters
 
         Returns:
             dict: transaction search results
         """
-        res = await self._c._get("/txs", options, raw=True)
-        return SearchTxsResponse.from_data(res)
+
+        actual_params = CIMultiDict()
+
+        for event in events:
+            if event == "tx.height":
+                actual_params.add("events", f"{event}={events[event]}")
+            else:
+                actual_params.add("events", f"{event}='{events[event]}'")
+        if params:
+            for p in params:
+                actual_params.add(p, params[p])
+
+        res = await self._c._get("/cosmos/tx/v1beta1/txs", actual_params)
+        return {
+            "txs": [TxInfo.from_data(tx) for tx in res.get("tx_responses")],
+            "pagination": res.get("pagination"),
+        }
+
+    async def tx_infos_by_height(self, height: Optional[int] = None) -> List[TxInfo]:
+        """Fetches information for an included transaction given block height or latest
+
+        Args:
+            height (int, optional): height to lookup. latest if height is None.
+
+        Returns:
+            List[TxInfo]: transaction info
+        """
+        if height is None:
+            x = "latest"
+        else:
+            x = height
+
+        res = await self._c._get(f"/cosmos/base/tendermint/v1beta1/blocks/{x}")
+
+        txs = res.get("block").get("data").get("txs")
+        hashes = [hash_amino(tx) for tx in txs]
+        return [
+            await BaseAsyncAPI._try_await(self.tx_info(tx_hash)) for tx_hash in hashes
+        ]
 
 
 class TxAPI(AsyncTxAPI):
@@ -443,7 +628,13 @@ class TxAPI(AsyncTxAPI):
     broadcast.__doc__ = AsyncTxAPI.broadcast.__doc__
 
     @sync_bind(AsyncTxAPI.search)
-    def search(self, options: dict = {}) -> SearchTxsResponse:
+    def search(self, events: List[list], params: Optional[APIParams] = None) -> dict:
         pass
 
     search.__doc__ = AsyncTxAPI.search.__doc__
+
+    @sync_bind(AsyncTxAPI.tx_infos_by_height)
+    def tx_infos_by_height(self, height: Optional[int] = None) -> List[TxInfo]:
+        pass
+
+    tx_infos_by_height.__doc__ = AsyncTxAPI.tx_infos_by_height.__doc__

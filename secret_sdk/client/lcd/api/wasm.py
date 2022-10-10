@@ -18,7 +18,7 @@ class AsyncWasmAPI(BaseAsyncAPI):
         Returns:
             list: codes information
         """
-        return await self._c._get("/wasm/code") or []
+        return await self._c._get("/compute/v1beta1/codes") or []
 
     async def code_info(self, code_id: int) -> dict:
         """Fetches information about an uploaded code.
@@ -29,7 +29,7 @@ class AsyncWasmAPI(BaseAsyncAPI):
         Returns:
             dict: code information
         """
-        return await self._c._get(f"/wasm/code/{code_id}")
+        return await self._c._get(f"/compute/v1beta1/contracts/{code_id}")
 
     async def list_contracts_by_code_id(self, code_id: int) -> list:
         """Fetches information about an uploaded code.
@@ -40,7 +40,7 @@ class AsyncWasmAPI(BaseAsyncAPI):
         Returns:
             dict: code information
         """
-        return await self._c._get(f"/wasm/code/{code_id}/contracts") or []
+        return await self._c._get(f"/compute/v1beta1/contracts/{code_id}") or []
 
     async def contract_info(self, contract_address: str) -> dict:
         """Fetches information about an instantiated contract.
@@ -51,7 +51,7 @@ class AsyncWasmAPI(BaseAsyncAPI):
         Returns:
             dict: contract information
         """
-        res = await self._c._get(f"/wasm/contract/{contract_address}")
+        res = await self._c._get(f"/compute/v1beta1/info/{contract_address}")
         return res
 
     async def contract_hash_by_code_id(self, code_id: int) -> str:
@@ -63,7 +63,7 @@ class AsyncWasmAPI(BaseAsyncAPI):
         Returns:
             dict: contract hash
         """
-        contract_code_hash = await self._c._get(f"/wasm/code/{code_id}/hash")
+        contract_code_hash = await self._c._get(f"/compute/v1beta1/code_hash/{code_id}")
         return contract_code_hash
 
     async def contract_hash(self, contract_address: str) -> str:
@@ -78,9 +78,9 @@ class AsyncWasmAPI(BaseAsyncAPI):
 
         if contract_address not in _contract_code_hash:
             contract_code_hash = await self._c._get(
-                f"/wasm/contract/{contract_address}/code-hash"
+                f"/compute/v1beta1/code_hash/{contract_address}"
             )
-            _contract_code_hash[contract_address] = contract_code_hash
+            _contract_code_hash[contract_address] = contract_code_hash['code_hash']
         return _contract_code_hash[contract_address]
 
     async def contract_query(
@@ -105,8 +105,9 @@ class AsyncWasmAPI(BaseAsyncAPI):
 
         nonce = encrypted[0:32]
         encoded = base64.b64encode(bytes(encrypted)).hex()
-        query_path = f"/wasm/contract/{contract_address}/query/{encoded}?encoding=hex&height={height}"
+        # query_path = f"/wasm/contract/{contract_address}/query/{encoded}?encoding=hex&height={height}"
 
+        query_path = f"/compute/v1beta1/query/{contract_address}/query/{encoded}?encoding=hex&height={height}"
         query_result = await BaseAsyncAPI._try_await(self._c._get(query_path))
         encoded_result = base64.b64decode(bytes(query_result["smart"], "utf-8"))
         decrypted = await BaseAsyncAPI._try_await(
