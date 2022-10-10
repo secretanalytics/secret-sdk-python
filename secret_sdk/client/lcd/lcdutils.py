@@ -77,7 +77,7 @@ class EncryptionUtils():
     def generate_new_key_pair(self):
         return self.generate_new_key_pair_from_seed(self.generate_new_seed())
 
-    async def get_tx_encryption_key(self, nonce):
+    def get_tx_encryption_key(self, nonce):
         consensus_io_pubkey = X25519PublicKey.from_public_bytes(
             self.consensus_io_pubkey
         )
@@ -91,11 +91,9 @@ class EncryptionUtils():
 
         return tx_encryption_key
 
-    async def encrypt(self, contract_code_hash: str, msg: Any):
+    def encrypt(self, contract_code_hash: str, msg: Any):
         nonce = self.generate_new_seed()
-        tx_encryption_key = await BaseAsyncAPI._try_await(
-            self.get_tx_encryption_key(nonce)
-        )
+        tx_encryption_key = self.get_tx_encryption_key(nonce)
 
         siv = SIV(tx_encryption_key)
 
@@ -108,27 +106,25 @@ class EncryptionUtils():
 
         return nonce + [x for x in key_dump] + [x for x in ciphertext]
 
-    async def decrypt(self, ciphertext: bytes, nonce: List[int]) -> bytes:
+    def decrypt(self, ciphertext: bytes, nonce: List[int]) -> bytes:
         if not ciphertext:
             return bytes([])
 
-        tx_encryption_key = await BaseAsyncAPI._try_await(
-            self.get_tx_encryption_key(nonce)
-        )
+        tx_encryption_key = self.get_tx_encryption_key(nonce)
         siv = SIV(tx_encryption_key)
         plaintext = siv.open(ciphertext, [bytes()])
         return plaintext
 
-    async def get_pub_key(self):
+    def get_pub_key(self):
         return self.pubkey.public_bytes(
             encoding=serialization.Encoding.Raw, format=serialization.PublicFormat.Raw
         )
 
-    async def decrypt_data_field(self, data_field, nonces):
+    def decrypt_data_field(self, data_field, nonces):
         # nonces are a list of nonce in the case of multi execute
         wasm_output_data_cipher_bz = bytes.fromhex(data_field)
         for nonce in nonces:
-            decrypted_data = await self.decrypt(wasm_output_data_cipher_bz, nonce)
+            decrypted_data = self.decrypt(wasm_output_data_cipher_bz, nonce)
             decrypted = base64.b64decode(decrypted_data.decode("utf-8"))
             return decrypted
 
