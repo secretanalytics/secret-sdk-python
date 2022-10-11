@@ -5,11 +5,9 @@ from json import JSONDecodeError
 from threading import Lock
 from typing import Optional, Union, List
 
-import base64
 import nest_asyncio
 from aiohttp import ClientSession
 from multidict import CIMultiDict
-import requests
 
 from secret_sdk.core import Coins, Dec, Numeric
 from secret_sdk.core import StdFee
@@ -34,7 +32,7 @@ from .api.tx import AsyncTxAPI, TxAPI
 from .api.wasm import AsyncWasmAPI, WasmAPI
 from .api.registration import AsyncRegistrationAPI, RegistrationAPI
 from .params import APIParams
-from .lcdutils import EncryptionUtils
+from secret_sdk.util.encrypt_utils import EncryptionUtils
 from .wallet import AsyncWallet, Wallet
 
 

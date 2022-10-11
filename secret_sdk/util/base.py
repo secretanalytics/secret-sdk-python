@@ -1,10 +1,11 @@
 """Some useful base classes to inherit from."""
 from abc import abstractmethod
-from typing import Any, Callable, Dict, List
+from typing import Any, Callable, Dict, List, Optional
 
 import attr
 from betterproto import Message
 from betterproto.lib.google.protobuf import Any as Any_pb
+from secret_sdk.util.encrypt_utils import EncryptionUtils
 
 from .json import JSONSerializable, dict_to_data
 
@@ -20,7 +21,7 @@ class BaseSecretData(JSONSerializable, Message):
         return data
 
     @abstractmethod
-    def to_proto(self):
+    def to_proto(self, encryption_utils: Optional[EncryptionUtils]):
         pass
 
 

@@ -3,10 +3,13 @@ from __future__ import annotations
 from betterproto.lib.google.protobuf import Any as Any_pb
 
 from secret_sdk.util.base import BaseSecretData
+from typing import Optional
+from secret_sdk.util.encrypt_utils import EncryptionUtils
+
 
 
 class Msg(BaseSecretData):
-    def to_proto(self):
+    def to_proto(self, encryption_utils: Optional[EncryptionUtils]):
         raise NotImplementedError
 
     def pack_any(self) -> Any_pb:

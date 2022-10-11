@@ -1,6 +1,5 @@
 import base64
 import secrets
-from functools import reduce
 from typing import Any, Dict, List
 
 from cryptography.hazmat.primitives import hashes, serialization
@@ -10,7 +9,6 @@ from cryptography.hazmat.primitives.asymmetric.x25519 import (
 )
 from cryptography.hazmat.primitives.kdf.hkdf import HKDF
 from miscreant.aes.siv import SIV
-import json
 
 hkdf_salt = bytes(
     [

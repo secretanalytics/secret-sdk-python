@@ -7,6 +7,7 @@ import json
 from typing import Optional, Union
 
 import attr
+from secret_sdk.util.address_converter import address_to_bytes, bytes_to_address
 from secret_sdk.protobuf.secret.compute.v1beta1 import MsgExecuteContract as MsgExecuteContract_pb
 from secret_sdk.protobuf.secret.compute.v1beta1 import (
     MsgInstantiateContract as MsgInstantiateContract_pb,
@@ -16,6 +17,7 @@ from secret_sdk.protobuf.secret.compute.v1beta1 import MsgStoreCode as MsgStoreC
 from secret_sdk.core import AccAddress, Coins
 from secret_sdk.core.msg import Msg
 from secret_sdk.util.remove_none import remove_none
+from secret_sdk.util.encrypt_utils import EncryptionUtils
 
 __all__ = [
     "MsgStoreCode",
@@ -86,7 +88,7 @@ class MsgStoreCode(Msg):
         # await self.gzip_wasm()
 
         return MsgStoreCode_pb(
-            sender=self.sender,
+            sender=address_to_bytes(self.sender),
             wasm_byte_code=base64.b64decode(self.wasm_byte_code),
             source=self.source,
             builder=self.builder
@@ -95,7 +97,7 @@ class MsgStoreCode(Msg):
     @classmethod
     def from_proto(cls, proto: MsgStoreCode_pb) -> MsgStoreCode:
         return cls(
-            sender=proto.sender,
+            sender=AccAddress(bytes_to_address(proto.sender)),
             wasm_byte_code=base64.b64encode(proto.wasm_byte_code).decode(),
             source=proto.source,
             builder=proto.builder
@@ -177,7 +179,7 @@ class MsgInstantiateContract(Msg):
             # self.init_msg_encrypted = await utils.encrypt(self.code_hash, self.init_msg)
 
         return MsgInstantiateContract_pb(
-            sender=self.sender,
+            sender=address_to_bytes(self.sender),
             code_id=self.code_id,
             label=self.label,
             init_msg=bytes(json.dumps(self.init_msg_encrypted), "utf-8"),
@@ -187,7 +189,7 @@ class MsgInstantiateContract(Msg):
     @classmethod
     def from_proto(cls, proto: MsgInstantiateContract_pb) -> MsgInstantiateContract:
         return cls(
-            sender=proto.sender,
+            sender=AccAddress(bytes_to_address(proto.sender)),
             code_id=proto.code_id,
             label=proto.label,
             init_msg=parse_msg(proto.init_msg),
@@ -205,6 +207,7 @@ class MsgExecuteContract(Msg):
         msg (dict|str): ExecuteMsg to pass
         sent_funds: coins to be sent, if needed by contract to execute.
             Defaults to empty ``Coins()``
+        code_hash: hash of the contract (optional)
     """
 
     type_amino = "wasm/MsgExecuteContract"
@@ -218,10 +221,11 @@ class MsgExecuteContract(Msg):
     contract: AccAddress = attr.ib()
     msg: Union[dict, str] = attr.ib()
     sent_funds: Coins = attr.ib(converter=Coins, factory=Coins)
+    code_hash: Optional[str] = attr.ib(default=None)
 
-    msg_encrypted: Optional[Union[dict, str]] = None
-    code_hash: str = None
+    msg_encrypted: Optional[bytes] = None
     warn_code_hash: bool = False
+    _msg_str: str = ''
 
     def __attrs_post_init__(self):
         if self.code_hash:
@@ -230,24 +234,11 @@ class MsgExecuteContract(Msg):
             self.code_hash = ''
             self.warn_code_hash = True
             # print('WARNING: MsgExecuteContract was used without the "codeHash" parameter. This is discouraged and will result in much slower execution times for your app.')
+        if isinstance(self.msg, (dict,)):
+            self._msg_str = json.dumps(self.msg, separators=(",", ":"))
+        else:
+            self._msg_str = self.msg
 
-    def to_amino(self) -> dict:
-        if not self.msg_encrypted:
-            # The encryption uses a random nonce
-            # toProto() & toAmino() are called multiple times during signing
-            # so to keep the msg consistant across calls we encrypt the msg only once
-            pass
-            # self.msg_encrypted = await utils.encrypt(self.code_hash, self.msg)
-
-        return {
-            "type": self.type_amino,
-            "value": {
-                "sender": self.sender,
-                "contract": self.contract,
-                "msg": remove_none(self.msg_encrypted),
-                "sent_funds": self.sent_funds.to_amino(),
-            },
-        }
 
     @classmethod
     def from_data(cls, data: dict) -> MsgExecuteContract:
@@ -258,26 +249,24 @@ class MsgExecuteContract(Msg):
             sent_funds=Coins.from_data(data["sent_funds"]),
         )
 
-    def to_proto(self) -> MsgExecuteContract_pb:
+    def to_proto(self, encryption_utils: Optional[EncryptionUtils]) -> MsgExecuteContract_pb:
+        if not self.msg_encrypted and not encryption_utils:
+            raise NotImplementedError('Cannot serialized MsgExecuteContract without encryption')
         if not self.msg_encrypted:
-            # The encryption uses a random nonce
-            # toProto() & toAmino() are called multiple times during signing
-            # so to keep the msg consistant across calls we encrypt the msg only once
-            pass
-            # self.msg_encrypted = await utils.encrypt(self.code_hash, self.msg)
+            self.msg_encrypted  = bytes(encryption_utils.encrypt(self.code_hash, self._msg_str))
 
         return MsgExecuteContract_pb(
-            sender=self.sender,
-            contract=self.contract,
-            msg=bytes(json.dumps(self.msg_encrypted), "utf-8"),
+            sender=address_to_bytes(self.sender),
+            contract=address_to_bytes(self.contract),
+            msg=self.msg_encrypted,
             sent_funds=self.sent_funds.to_proto(),
         )
 
     @classmethod
     def from_proto(cls, proto: MsgExecuteContract_pb) -> MsgExecuteContract:
         return cls(
-            sender=proto.sender,
-            contract=proto.contract,
+            sender=AccAddress(bytes_to_address(proto.sender)),
+            contract=AccAddress(bytes_to_address(proto.contract)),
             msg=parse_msg(proto.msg),
-            sent_funds=proto.sent_funds,
+            sent_funds=Coins.from_proto(proto.sent_funds),
         )
