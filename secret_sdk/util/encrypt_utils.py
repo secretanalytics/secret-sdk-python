@@ -89,7 +89,7 @@ class EncryptionUtils():
 
         return tx_encryption_key
 
-    def encrypt(self, contract_code_hash: str, msg: Any):
+    def encrypt(self, contract_code_hash: str, msg: Any) -> List[int]:
         nonce = self.generate_new_seed()
         tx_encryption_key = self.get_tx_encryption_key(nonce)
 
