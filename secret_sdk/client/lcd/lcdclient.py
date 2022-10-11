@@ -34,24 +34,25 @@ from .api.registration import AsyncRegistrationAPI, RegistrationAPI
 from .params import APIParams
 from secret_sdk.util.encrypt_utils import EncryptionUtils
 from .wallet import AsyncWallet, Wallet
+from secret_sdk.core.fee import Fee
 
 
 # default gas_price is 0.25, amount = gas * gas_price
 default_fees = {
-    "upload": StdFee(
-        gas=1_000_000, amount=Coins.from_data([{"amount": 250_000, "denom": "uscrt"}])
+    "upload": Fee(
+        gas_limit=1_000_000, amount=Coins.from_data([{"amount": 250_000, "denom": "uscrt"}])
     ),
-    "init": StdFee(
-        gas=500_000, amount=Coins.from_data([{"amount": 125_000, "denom": "uscrt"}])
+    "init": Fee(
+        gas_limit=500_000, amount=Coins.from_data([{"amount": 125_000, "denom": "uscrt"}])
     ),
-    "exec": StdFee(
-        gas=200_000, amount=Coins.from_data([{"amount": 50_000, "denom": "uscrt"}])
+    "exec": Fee(
+        gas_limit=200_000, amount=Coins.from_data([{"amount": 50_000, "denom": "uscrt"}])
     ),
-    "send": StdFee(
-        gas=80_000, amount=Coins.from_data([{"amount": 20_000, "denom": "uscrt"}])
+    "send": Fee(
+        gas_limit=80_000, amount=Coins.from_data([{"amount": 20_000, "denom": "uscrt"}])
     ),
-    "default": StdFee(
-        gas=200_000, amount=Coins.from_data([{"amount": 50_000, "denom": "uscrt"}])
+    "default": Fee(
+        gas_limit=200_000, amount=Coins.from_data([{"amount": 50_000, "denom": "uscrt"}])
     ),
 }
 default_gas_prices = Coins.from_data([{"amount": 0.25, "denom": "uscrt"}])

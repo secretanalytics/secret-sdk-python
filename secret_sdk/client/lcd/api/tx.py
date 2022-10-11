@@ -9,7 +9,6 @@ from multidict import CIMultiDict
 
 
 from secret_sdk.core import AccAddress, Coins, Dec, Numeric, PublicKey
-from secret_sdk.core import SearchTxsResponse, StdFee, StdSignMsg, StdTx, TxInfo
 from secret_sdk.core.broadcast import (
     AsyncTxBroadcastResult,
     BlockTxBroadcastResult,
@@ -23,6 +22,7 @@ from secret_sdk.util.hash import hash_amino
 from secret_sdk.util.json import JSONSerializable
 
 from secret_sdk.protobuf.secret.compute.v1beta1 import MsgInstantiateContractResponse, MsgExecuteContractResponse
+from secret_sdk.protobuf.cosmos.tx.v1beta1 import BroadcastMode
 from ..params import APIParams
 from ._base import BaseAsyncAPI, sync_bind
 
@@ -403,10 +403,19 @@ class AsyncTxAPI(BaseAsyncAPI):
         amino = await super()._try_await(self.encode(tx))
         return hash_amino(amino)
 
+    async def broadcast_adapter(self, tx: Tx, mode: BroadcastMode, options: BroadcastOptions = None):
+        if mode == BroadcastMode.BROADCAST_MODE_BLOCK:
+            return await self.broadcast(tx, options)
+        if mode == BroadcastMode.BROADCAST_MODE_ASYNC:
+            return await self.broadcast_async(tx, options)
+        if mode == BroadcastMode.BROADCAST_MODE_SYNC:
+            return await self.broadcast_sync(tx, options)
+
+
     async def _broadcast(
-        self, tx: Tx, mode: str, options: BroadcastOptions = None
+        self, tx: Tx, mode: BroadcastMode, options: BroadcastOptions = None
     ) -> dict:
-        data = {"tx_bytes": await super()._try_await(self.encode(tx)), "mode": mode}
+        data = {"tx_bytes": await super()._try_await(self.encode(tx)), "mode": mode.name}
         if options is not None:
             if options.sequences is not None and len(options.sequences) > 0:
                 data["sequences"] = [str(i) for i in options.sequences]
@@ -426,7 +435,7 @@ class AsyncTxAPI(BaseAsyncAPI):
         Returns:
             SyncTxBroadcastResult: result
         """
-        res = await self._broadcast(tx, "BROADCAST_MODE_SYNC", options)
+        res = await self._broadcast(tx, BroadcastMode.BROADCAST_MODE_SYNC, options)
         res = res.get("tx_response")
         return SyncTxBroadcastResult(
             txhash=res.get("txhash"),
@@ -447,7 +456,7 @@ class AsyncTxAPI(BaseAsyncAPI):
         Returns:
             AsyncTxBroadcastResult: result
         """
-        res = await self._broadcast(tx, "BROADCAST_MODE_ASYNC", options)
+        res = await self._broadcast(tx, BroadcastMode.BROADCAST_MODE_ASYNC, options)
         res = res.get("tx_response")
         return AsyncTxBroadcastResult(
             txhash=res.get("txhash"),
@@ -465,7 +474,7 @@ class AsyncTxAPI(BaseAsyncAPI):
         Returns:
             BlockTxBroadcastResult: result
         """
-        res = await self._broadcast(tx, "BROADCAST_MODE_BLOCK", options)
+        res = await self._broadcast(tx, BroadcastMode.BROADCAST_MODE_BLOCK, options)
         res = res["tx_response"]
         return BlockTxBroadcastResult(
             height=res.get("height") or 0,
@@ -552,7 +561,7 @@ class TxAPI(AsyncTxAPI):
 
     @sync_bind(AsyncTxAPI.estimate_fee)
     def estimate_fee(
-            self, signers: List[SignerOptions], options: CreateTxOptions
+            self, options: CreateTxOptions
     ) -> Fee:
         pass
 
@@ -583,6 +592,12 @@ class TxAPI(AsyncTxAPI):
         pass
 
     hash.__doc__ = AsyncTxAPI.hash.__doc__
+
+    @sync_bind(AsyncTxAPI.broadcast_adapter)
+    def broadcast_adapter(self, tx: Tx, mode: BroadcastMode, options: BroadcastOptions = None):
+        pass
+
+    broadcast_adapter.__doc__ = AsyncTxAPI.broadcast_adapter.__doc__
 
     @sync_bind(AsyncTxAPI.broadcast_sync)
     def broadcast_sync(
