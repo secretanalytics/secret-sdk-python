@@ -62,7 +62,7 @@ default_gas_adjustment = 1
 mainnet_chain_ids = {"secret-2", "secret-3", "secret-4"}
 
 mainnetConsensusIoPubKey = bytes.fromhex(
-  "083b1a03661211d5a4cc8d39a77795795862f7730645573b2bcc2c1920c53c04",
+  "083b1a03661211d5a4cc8d39a77795795862f7730645573b2bcc2c1920c53c04"
 )
 
 
@@ -112,7 +112,7 @@ class AsyncLCDClient:
         if self.chain_id in mainnet_chain_ids:
             consensus_io_pub_key = mainnetConsensusIoPubKey
         else:
-            consensus_io_pub_key = RegistrationAPI(self).tx_key()
+            consensus_io_pub_key = RegistrationAPI(self).consensus_io_pub_key()
         self.encrypt_utils = EncryptionUtils(consensus_io_pub_key)
 
     def wallet(self, key: Key) -> AsyncWallet:
@@ -307,7 +307,7 @@ class LCDClient(AsyncLCDClient):
         if self.chain_id in mainnet_chain_ids:
             consensus_io_pub_key = mainnetConsensusIoPubKey
         else:
-            consensus_io_pub_key = self.registration.tx_key()
+            consensus_io_pub_key = self.registration.consensus_io_pub_key()
         self.encrypt_utils = EncryptionUtils(consensus_io_pub_key)
         self.lock = Lock()
 

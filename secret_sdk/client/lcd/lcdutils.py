@@ -10,8 +10,7 @@ from cryptography.hazmat.primitives.asymmetric.x25519 import (
 )
 from cryptography.hazmat.primitives.kdf.hkdf import HKDF
 from miscreant.aes.siv import SIV
-
-from .api._base import BaseAsyncAPI, sync_bind
+import json
 
 hkdf_salt = bytes(
     [
