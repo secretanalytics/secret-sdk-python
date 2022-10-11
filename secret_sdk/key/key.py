@@ -26,6 +26,7 @@ from secret_sdk.core.public_key import (
 from secret_sdk.core.tx import AuthInfo, SignerInfo, SignMode, Tx
 from secret_sdk.core.signature_v2 import Descriptor
 from secret_sdk.core.signature_v2 import Single as SingleDescriptor
+from secret_sdk.util.encrypt_utils import EncryptionUtils
 
 
 
@@ -144,7 +145,7 @@ class Key:
             raise ValueError("could not compute val_pubkey: missing raw_pubkey")
         return ValPubKey(get_bech("secretvaloperpub", self.raw_pubkey.hex()))
 
-    def create_signature(self, sign_doc: SignDoc) -> SignatureV2:
+    def create_signature(self, sign_doc: SignDoc, encryption_utils: Optional[EncryptionUtils] = None) -> SignatureV2:
         """Signs the transaction with the signing algorithm provided by this Key implementation,
         and outputs the signature. The signature is only returned, and must be manually added to
         the ``signatures`` field of an :class:`Tx`.
@@ -174,7 +175,8 @@ class Key:
                 ),
             )
         ]
-        signature = self.sign(sign_doc.to_bytes())
+        # generate the .proto of all messages, need encryption_utils
+        signature = self.sign(sign_doc.to_bytes(encryption_utils=encryption_utils))
 
         # restore
         sign_doc.auth_info.signer_infos = si_backup
@@ -189,7 +191,7 @@ class Key:
             sequence=sign_doc.sequence,
         )
 
-    def sign_tx(self, tx: Tx, options: SignOptions) -> Tx:
+    def sign_tx(self, tx: Tx, options: SignOptions, encryption_utils: Optional[EncryptionUtils] = None) -> Tx:
         """Signs the transaction with the signing algorithm provided by this Key implementation,
         and creates a ready-to-broadcast :class:`Tx` object with the signature applied.
 
@@ -213,7 +215,7 @@ class Key:
             tx_body=signedTx.body,
         )
 
-        signature: SignatureV2 = self.create_signature(signDoc)
+        signature: SignatureV2 = self.create_signature(signDoc, encryption_utils=encryption_utils)
 
         sigData: SingleDescriptor = signature.data.single
         for sig in tx.signatures:

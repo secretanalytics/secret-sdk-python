@@ -7,6 +7,7 @@ from secret_sdk.core.tx import Tx
 from secret_sdk.core.bank import MsgSend
 from secret_sdk.key.key import Key, SignOptions
 from secret_sdk.client.lcd.api.tx import CreateTxOptions, SignerOptions
+from secret_sdk.util.encrypt_utils import EncryptionUtils
 
 __all__ = ["Wallet", "AsyncWallet"]
 
@@ -56,6 +57,7 @@ class AsyncWallet:
                 sequence=sequence,
                 chain_id=self.lcd.chain_id
             ),
+            encryption_utils=self.lcd.encrypt_utils
         )
 
     async def execute_tx(
@@ -183,6 +185,7 @@ class Wallet:
                 sequence=sequence,
                 chain_id=self.lcd.chain_id,
             ),
+            encryption_utils=self.lcd.encrypt_utils
         )
 
     def execute_tx(

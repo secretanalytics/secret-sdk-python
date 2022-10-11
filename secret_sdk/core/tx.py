@@ -16,6 +16,7 @@ from secret_sdk.protobuf.cosmos.tx.v1beta1 import AuthInfo as AuthInfo_pb
 from secret_sdk.protobuf.cosmos.tx.v1beta1 import SignerInfo as SignerInfo_pb
 from secret_sdk.protobuf.cosmos.tx.v1beta1 import Tx as Tx_pb
 from secret_sdk.protobuf.cosmos.tx.v1beta1 import TxBody as TxBody_pb
+from secret_sdk.util.encrypt_utils import EncryptionUtils
 
 from secret_sdk.core.compact_bit_array import CompactBitArray
 from secret_sdk.core.fee import Fee
@@ -363,9 +364,9 @@ class TxBody(JSONSerializable):
             "timeout_height": self.timeout_height,
         }
 
-    def to_proto(self) -> TxBody_pb:
+    def to_proto(self, encryption_utils: Optional[EncryptionUtils] = None) -> TxBody_pb:
         return TxBody_pb(
-            messages=[m.pack_any() for m in self.messages],
+            messages=[m.pack_any(encryption_utils) for m in self.messages],
             memo=self.memo,
             timeout_height=self.timeout_height,
         )

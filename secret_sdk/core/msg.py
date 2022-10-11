@@ -12,8 +12,8 @@ class Msg(BaseSecretData):
     def to_proto(self, encryption_utils: Optional[EncryptionUtils]):
         raise NotImplementedError
 
-    def pack_any(self) -> Any_pb:
-        return Any_pb(type_url=self.type_url, value=bytes(self.to_proto()))
+    def pack_any(self, encryption_utils: Optional[EncryptionUtils]) -> Any_pb:
+        return Any_pb(type_url=self.type_url, value=bytes(self.to_proto(encryption_utils)))
 
     @staticmethod
     def from_data(data: dict) -> Msg:

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import json
-
+from typing import Optional
 import attr
 from secret_sdk.protobuf.cosmos.tx.v1beta1 import SignDoc as SignDoc_pb
 
@@ -13,6 +13,7 @@ from secret_sdk.util.json import JSONSerializable
 __all__ = ["SignDoc"]
 
 from secret_sdk.util.remove_none import remove_none
+from secret_sdk.util.encrypt_utils import EncryptionUtils
 
 
 @attr.s
@@ -66,16 +67,16 @@ class SignDoc(JSONSerializable):
             tx_body=TxBody.from_proto(proto.body_bytes),
         )
 
-    def to_proto(self) -> SignDoc_pb:
+    def to_proto(self, encryption_utils: Optional[EncryptionUtils] = None) -> SignDoc_pb:
         return SignDoc_pb(
-            body_bytes=bytes(self.tx_body.to_proto()),
+            body_bytes=bytes(self.tx_body.to_proto(encryption_utils)),
             auth_info_bytes=bytes(self.auth_info.to_proto()),
             chain_id=self.chain_id,
             account_number=self.account_number,
         )
 
-    def to_bytes(self) -> bytes:
-        return bytes(self.to_proto())
+    def to_bytes(self, encryption_utils: Optional[EncryptionUtils] = None) -> bytes:
+        return bytes(self.to_proto(encryption_utils))
 
     def to_amino_json(self) -> bytes:
         amino = self.to_amino()
