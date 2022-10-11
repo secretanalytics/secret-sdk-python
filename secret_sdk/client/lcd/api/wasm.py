@@ -103,17 +103,19 @@ class AsyncWasmAPI(BaseAsyncAPI):
                     self.contract_hash(contract_address)
                 )
                 _contract_code_hash[contract_address] = contract_code_hash
+            else:
+                contract_code_hash = _contract_code_hash[contract_address]
         encrypted = self._c.encrypt_utils.encrypt(contract_code_hash, query_str)
         # first 32 bytes are the nonce
         nonce = encrypted[0:32]
         # base64 over the wire
-        params = {'contract_address': contract_address, 'query': base64.b64encode(bytes(encrypted))}
+        params = {'contract_address': contract_address, 'query': base64.b64encode(bytes(encrypted)).decode('utf-8')}
 
         query_path = f"/compute/v1beta1/query/{contract_address}"
-        query_result = await BaseAsyncAPI._try_await(self._c._get(query_path, params=params))
+        query_result = await BaseAsyncAPI._try_await(self._c._get(query_path, params=params, block_height=height))
 
         encoded_result = base64.b64decode(bytes(query_result["data"], "utf-8"))
-        decrypted = self._c.utils.decrypt(encoded_result, nonce)
+        decrypted = self._c.encrypt_utils.decrypt(encoded_result, nonce)
         return json.loads(base64.b64decode(decrypted))
 
     async def contract_execute_msg(
@@ -130,6 +132,8 @@ class AsyncWasmAPI(BaseAsyncAPI):
                     self.contract_hash(contract_address)
                 )
                 _contract_code_hash[contract_address] = contract_code_hash
+            else:
+                contract_code_hash = _contract_code_hash[contract_address]
         return MsgExecuteContract(
             sender_address, contract_address, msg=handle_msg, sent_funds=transfer_amount, code_hash=contract_code_hash
         )

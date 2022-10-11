@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import copy
 from asyncio import AbstractEventLoop, get_event_loop
 from json import JSONDecodeError
 from threading import Lock
@@ -126,7 +127,7 @@ class AsyncLCDClient:
         self,
         endpoint: str,
         params: Optional[Union[APIParams, CIMultiDict, list, dict]] = None,
-        # raw: bool = False
+        block_height: int = 0
     ):
         if (
             params
@@ -134,6 +135,9 @@ class AsyncLCDClient:
             and callable(getattr(params, "to_dict"))
         ):
             params = params.to_dict()
+
+        if block_height:
+            self.session.headers['x-cosmos-block-height'] = str(block_height)
 
         async with self.session.get(
             urljoin(self.url, endpoint), params=params
@@ -147,7 +151,9 @@ class AsyncLCDClient:
         self.last_request_height = (
             result.get("height") if result else self.last_request_height
         )
-        return result  # if raw else result["result"]
+        if block_height:
+            self.session.headers.pop('x-cosmos-block-height')
+        return result
 
     async def _post(
         self, endpoint: str, data: Optional[dict] = None  # , raw: bool = False
