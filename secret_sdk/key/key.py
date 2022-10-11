@@ -1,14 +1,33 @@
 import abc
 import base64
+import copy
 import hashlib
 from typing import Optional
+import attr
 
 from bech32 import bech32_encode, convertbits
 
-from secret_sdk.core import AccAddress, AccPubKey, ValAddress, ValPubKey
-from secret_sdk.core import StdSignature, StdSignMsg, StdTx
+from secret_sdk.core import (
+    AccAddress,
+    AccPubKey,
+    ModeInfo,
+    ModeInfoSingle,
+    SignatureV2,
+    SignDoc,
+    ValAddress,
+    ValPubKey,
+)
+from secret_sdk.core.public_key import (
+    PublicKey,
+    address_from_public_key,
+    amino_pubkey_from_public_key as pubkey_from_public_key,
+)
 
-BECH32_PUBKEY_DATA_PREFIX = "eb5ae98721"
+from secret_sdk.core.tx import AuthInfo, SignerInfo, SignMode, Tx
+from secret_sdk.core.signature_v2 import Descriptor
+from secret_sdk.core.signature_v2 import Single as SingleDescriptor
+
+
 
 __all__ = ["Key"]
 
@@ -20,18 +39,12 @@ def get_bech(prefix: str, payload: str) -> str:
     return bech32_encode(prefix, data)  # base64 -> base32
 
 
-def address_from_public_key(public_key: bytes) -> bytes:
-    sha = hashlib.sha256()
-    rip = hashlib.new("ripemd160")
-    sha.update(public_key)
-    rip.update(sha.digest())
-    return rip.digest()
 
-
-def pubkey_from_public_key(public_key: bytes) -> bytes:
-    arr = bytearray.fromhex(BECH32_PUBKEY_DATA_PREFIX)
-    arr += bytearray(public_key)
-    return bytes(arr)
+@attr.s
+class SignOptions:
+    account_number: int = attr.ib(converter=int)
+    sequence: int = attr.ib(converter=int)
+    chain_id: str = attr.ib()
 
 
 class Key:
@@ -54,7 +67,7 @@ class Key:
     pubkeys.
     """
 
-    def __init__(self, public_key: Optional[bytes] = None):
+    def __init__(self, public_key: Optional[PublicKey] = None):
         self.public_key = public_key
         if public_key:
             self.raw_address = address_from_public_key(public_key)
@@ -131,45 +144,88 @@ class Key:
             raise ValueError("could not compute val_pubkey: missing raw_pubkey")
         return ValPubKey(get_bech("secretvaloperpub", self.raw_pubkey.hex()))
 
-    def create_signature(self, tx: StdSignMsg) -> StdSignature:
+    def create_signature(self, sign_doc: SignDoc) -> SignatureV2:
         """Signs the transaction with the signing algorithm provided by this Key implementation,
         and outputs the signature. The signature is only returned, and must be manually added to
-        the ``signatures`` field of an :class:`StdTx`.
+        the ``signatures`` field of an :class:`Tx`.
 
         Args:
-            tx (StdSignMsg): unsigned transaction
+            sign_doc (SignDoc): unsigned transaction
 
         Raises:
             ValueError: if missing ``public_key``
 
         Returns:
-            StdSignature: signature object
+            SignatureV2: signature object
         """
         if self.public_key is None:
             raise ValueError(
                 "signature could not be created: Key instance missing public_key"
             )
 
-        sig_buffer = self.sign(tx.to_json().strip().encode())
-        return StdSignature.from_data(
-            {
-                "signature": base64.b64encode(sig_buffer).decode(),
-                "pub_key": {
-                    "type": "tendermint/PubKeySecp256k1",
-                    "value": base64.b64encode(self.public_key).decode(),
-                },
-            }
+        # make backup
+        si_backup = copy.deepcopy(sign_doc.auth_info.signer_infos)
+        sign_doc.auth_info.signer_infos = [
+            SignerInfo(
+                public_key=self.public_key,
+                sequence=sign_doc.sequence,
+                mode_info=ModeInfo(
+                    single=ModeInfoSingle(mode=SignMode.SIGN_MODE_DIRECT)
+                ),
+            )
+        ]
+        signature = self.sign(sign_doc.to_bytes())
+
+        # restore
+        sign_doc.auth_info.signer_infos = si_backup
+
+        return SignatureV2(
+            public_key=self.public_key,
+            data=Descriptor(
+                single=SingleDescriptor(
+                    mode=SignMode.SIGN_MODE_DIRECT, signature=signature
+                )
+            ),
+            sequence=sign_doc.sequence,
         )
 
-    def sign_tx(self, tx: StdSignMsg) -> StdTx:
+    def sign_tx(self, tx: Tx, options: SignOptions) -> Tx:
         """Signs the transaction with the signing algorithm provided by this Key implementation,
-        and creates a ready-to-broadcast :class:`StdTx` object with the signature applied.
+        and creates a ready-to-broadcast :class:`Tx` object with the signature applied.
 
         Args:
-            tx (StdSignMsg): unsigned transaction
+            tx (Tx): unsigned transaction
+            options (SignOptions): options for signing
 
         Returns:
-            StdTx: ready-to-broadcast transaction object
+            Tx: ready-to-broadcast transaction object
         """
-        sig = self.create_signature(tx)
-        return StdTx(tx.msgs, tx.fee, [sig], tx.memo)
+        signedTx = Tx(
+            body=tx.body,
+            auth_info=AuthInfo(signer_infos=[], fee=tx.auth_info.fee),
+            signatures=[],
+        )
+        signDoc = SignDoc(
+            chain_id=options.chain_id,
+            account_number=options.account_number,
+            sequence=options.sequence,
+            auth_info=signedTx.auth_info,
+            tx_body=signedTx.body,
+        )
+
+        signature: SignatureV2 = self.create_signature(signDoc)
+
+        sigData: SingleDescriptor = signature.data.single
+        for sig in tx.signatures:
+            signedTx.signatures.append(sig)
+        signedTx.signatures.append(sigData.signature)
+        for infos in tx.auth_info.signer_infos:
+            signedTx.auth_info.signer_infos.append(infos)
+        signedTx.auth_info.signer_infos.append(
+            SignerInfo(
+                public_key=signature.public_key,
+                sequence=signature.sequence,
+                mode_info=ModeInfo(single=ModeInfoSingle(mode=sigData.mode)),
+            )
+        )
+        return signedTx

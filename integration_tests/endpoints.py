@@ -139,14 +139,13 @@ res = secret.tx.estimate_fee(
         memo=''
 )
 print(res)
-encode(tx: StdTx, options: BroadcastOptions = None)
-hash(tx: StdTx)
-_broadcast(tx: StdTx, mode: str, options: BroadcastOptions = None)
-broadcast_sync(tx: StdTx, options: BroadcastOptions = None)
-broadcast_async(tx: StdTx, options: BroadcastOptions = None)
-broadcast(tx: StdTx, options: BroadcastOptions = None)
 
-res = secret.tx.search(events={"tx.height": 5600362})
+
+res = secret.tx.search(
+    events = [
+        ["tx.height", 42508],
+    ])
+
 print(res)
 
 print("---------------------------")

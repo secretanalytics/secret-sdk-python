@@ -2,9 +2,11 @@ import base64
 import re
 import json
 from typing import List, Optional
+import copy
 
 import attr
 from multidict import CIMultiDict
+
 
 from secret_sdk.core import AccAddress, Coins, Dec, Numeric, PublicKey
 from secret_sdk.core import SearchTxsResponse, StdFee, StdSignMsg, StdTx, TxInfo
@@ -313,77 +315,51 @@ class AsyncTxAPI(BaseAsyncAPI):
         }
 
     async def create(
-        self,
-        sender: AccAddress,
-        msgs: List[Msg],
-        fee: Optional[StdFee] = None,
-        memo: str = "",
-        gas: Optional[int] = None,
-        gas_prices: Optional[Coins.Input] = None,
-        gas_adjustment: Optional[Numeric.Input] = None,
-        fee_denoms: Optional[List[str]] = None,
-        account_number: Optional[int] = None,
-        sequence: Optional[int] = None,
-    ) -> StdSignMsg:
+            self, signers: List[SignerOptions], options: CreateTxOptions
+    ) -> Tx:
         """Create a new unsigned transaction, with helpful utilities such as lookup of
         chain ID, account number, sequence and fee estimation.
 
         Args:
-            sender (AccAddress): transaction sender's account address
-            msgs (List[Msg]): list of messages to include
-            fee (Optional[StdFee], optional): fee to use (estimates if empty).
-            memo (str, optional): memo to use. Defaults to "".
-            gas (Optional[int]): gas
-            gas_prices (Optional[Coins.Input], optional): gas prices for fee estimation.
-            gas_adjustment (Optional[Numeric.Input], optional): gas adjustment for fee estimation.
-            fee_denoms (Optional[List[str]], optional): list of denoms to use for gas fee when estimating.
-            account_number (Optional[int], optional): account number to use.
-            sequence (Optional[int], optional): sequence number to use.
+            signers (List[SignerOptions]): options about signers
+            options (CreateTxOptions): options about creating a tx
 
         Returns:
-            StdSignMsg: unsigned tx
+            Tx: unsigned tx
         """
 
+        opt = copy.deepcopy(options)
+
         # create the fake fee
-        if fee is None:
-            fee = await BaseAsyncAPI._try_await(
-                self.estimate_fee(gas, gas_prices, gas_adjustment, fee_denoms)
-            )
+        if opt.fee is None:
+            opt.fee = await BaseAsyncAPI._try_await(self.estimate_fee(opt))
 
-        if account_number is None or sequence is None:
-            account = await BaseAsyncAPI._try_await(self._c.auth.account_info(sender))
-            if account_number is None:
-                account_number = account.account_number
-            if sequence is None:
-                sequence = account.sequence
-
-        return StdSignMsg(
-            self._c.chain_id, account_number or 0, sequence or 0, fee, msgs, memo  # type: ignore
+        return Tx(
+            TxBody(opt.msgs, opt.memo or "", opt.timeout_height or 0),
+            AuthInfo([], opt.fee),
+            [],
         )
 
     async def estimate_fee(
         self,
-        gas: Optional[int] = None,
-        gas_prices: Optional[Coins.Input] = None,
-        gas_adjustment: Optional[Numeric.Input] = None,
-        fee_denoms: Optional[List[str]] = None,
-    ) -> StdFee:
+        options: CreateTxOptions
+    ) -> Fee:
         """Estimates the proper fee to apply by simulating it within the node.
 
         Args:
-            gas (Optional[int]): gas
-            gas_prices (Optional[Coins.Input], optional): gas prices to use.
-            gas_adjustment (Optional[Numeric.Input], optional): gas adjustment to use.
-            fee_denoms (Optional[List[str]], optional): list of denoms to use to pay for gas.
+            signers ([SignerOptions]): signers
+            options (CreateTxOptions): transaction info to estimate fee
 
         Returns:
-            StdFee: estimated fee
+            Fee: estimated fee
         """
-        if gas is None or gas_prices is None:
-            return self._c.custom_fees["default"]
 
-        gas_prices = gas_prices or self._c.gas_prices
-        gas_adjustment = gas_adjustment or self._c.gas_adjustment
+        if options.gas is None or options.gas is None:
+            return self._c.custom_fees["default"]
+        gas_prices = options.gas_prices or self._c.gas_prices
+        fee_denoms = options.fee if options.fee_denoms else ["uscrt"]
+        gas = options.gas
+        gas_adjustment = options.gas_adjustment or self._c.gas_adjustment
 
         gas_prices_coins = None
         if gas_prices:
@@ -393,101 +369,107 @@ class AsyncTxAPI(BaseAsyncAPI):
                 gas_prices_coins = gas_prices_coins.filter(
                     lambda c: c.denom in _fee_denoms
                 )
-        fee_amount = gas_prices_coins.mul(gas * gas_adjustment)
-        return StdFee(gas, fee_amount)
+        fee_amount = gas_prices_coins.mul(gas * gas_adjustment).to_int_ceil_coins()
+        return Fee(Numeric.parse(gas), fee_amount, "", "")
 
-    async def encode(self, tx: StdTx, options: BroadcastOptions = None) -> str:
-        """Fetches a transaction's amino encoding.
+    async def estimate_gas(self, tx: Tx, options: Optional[CreateTxOptions]) -> int:
+        gas_adjustment = options.gas_adjustment if options else self._c.gas_adjustment
 
-        Args:
-            tx (StdTx): transaction to encode
+        res = await self._c._post(
+            "/cosmos/tx/v1beta1/simulate",
+            {"tx_bytes": await super()._try_await(self.encode(tx))},
+        )
+        simulated = SimulateResponse.from_data(res)
 
-        Returns:
-            str: base64 string containing amino-encoded tx
-        """
-        data = tx.to_data()
-        if options is not None:
-            if options.sequences is not None and len(options.sequences) > 0:
-                data["sequences"] = [str(i) for i in options.sequences]
-            if options.fee_granter is not None and len(options.fee_granter) > 0:
-                data["fee_granter"] = options.fee_granter
+        return int(Dec(gas_adjustment).mul(simulated.gas_info["gas_used"]))
 
-        res = await self._c._post("/txs/encode", data)
-        return res["tx"]
+    async def encode(self, tx: Tx) -> str:
+        """Encode a Tx to base64 encoded proto string"""
+        return base64.b64encode(bytes(tx.to_proto())).decode()
 
-    async def hash(self, tx: StdTx) -> str:
+    async def decode(self, tx: str) -> Tx:
+        """Decode base64 encoded proto string to a Tx"""
+        return Tx.from_bytes(base64.b64decode(tx))
+
+    async def hash(self, tx: Tx) -> str:
         """Compute hash for a transaction.
 
         Args:
-            tx (StdTx): transaction to hash
+            tx (Tx): transaction to hash
 
         Returns:
             str: transaction hash
         """
-        amino = await self.encode(tx)
+        amino = await super()._try_await(self.encode(tx))
         return hash_amino(amino)
 
     async def _broadcast(
-        self, tx: StdTx, mode: str, options: BroadcastOptions = None
+        self, tx: Tx, mode: str, options: BroadcastOptions = None
     ) -> dict:
-        data = {"tx": tx.to_data()["value"], "mode": mode}
+        data = {"tx_bytes": await super()._try_await(self.encode(tx)), "mode": mode}
         if options is not None:
             if options.sequences is not None and len(options.sequences) > 0:
                 data["sequences"] = [str(i) for i in options.sequences]
             if options.fee_granter is not None and len(options.fee_granter) > 0:
                 data["fee_granter"] = options.fee_granter
-        return await self._c._post("/txs", data)
+        return await self._c._post("/cosmos/tx/v1beta1/txs", data)
 
     async def broadcast_sync(
-        self, tx: StdTx, options: BroadcastOptions = None
+            self, tx: Tx, options: BroadcastOptions = None
     ) -> SyncTxBroadcastResult:
         """Broadcasts a transaction using the ``sync`` broadcast mode.
 
         Args:
-            tx (StdTx): transaction to broadcast
+            tx (Tx): transaction to broadcast
+            options (BroadcastOptions): broacast options, optional
 
         Returns:
             SyncTxBroadcastResult: result
         """
-        res = await self._broadcast(tx, "sync", options)
+        res = await self._broadcast(tx, "BROADCAST_MODE_SYNC", options)
+        res = res.get("tx_response")
         return SyncTxBroadcastResult(
-            txhash=res["txhash"],
+            txhash=res.get("txhash"),
             raw_log=res.get("raw_log"),
             code=res.get("code"),
             codespace=res.get("codespace"),
         )
 
     async def broadcast_async(
-        self, tx: StdTx, options: BroadcastOptions = None
+            self, tx: Tx, options: BroadcastOptions = None
     ) -> AsyncTxBroadcastResult:
         """Broadcasts a transaction using the ``async`` broadcast mode.
 
         Args:
-            tx (StdTx): transaction to broadcast
+            tx (Tx): transaction to broadcast
+            options (BroadcastOptions): broacast options, optional
 
         Returns:
             AsyncTxBroadcastResult: result
         """
-        res = await self._broadcast(tx, "async", options)
+        res = await self._broadcast(tx, "BROADCAST_MODE_ASYNC", options)
+        res = res.get("tx_response")
         return AsyncTxBroadcastResult(
-            txhash=res["txhash"],
+            txhash=res.get("txhash"),
         )
 
     async def broadcast(
-        self, tx: StdTx, options: BroadcastOptions = None
+            self, tx: Tx, options: BroadcastOptions = None
     ) -> BlockTxBroadcastResult:
         """Broadcasts a transaction using the ``block`` broadcast mode.
 
         Args:
-            tx (StdTx): transaction to broadcast
+            tx (Tx): transaction to broadcast
+            options (BroadcastOptions): broacast options, optional
 
         Returns:
             BlockTxBroadcastResult: result
         """
-        res = await self._broadcast(tx, "block", options)
+        res = await self._broadcast(tx, "BROADCAST_MODE_BLOCK", options)
+        res = res["tx_response"]
         return BlockTxBroadcastResult(
             height=res.get("height") or 0,
-            txhash=res["txhash"],
+            txhash=res.get("txhash"),
             raw_log=res.get("raw_log"),
             gas_wanted=res.get("gas_wanted") or 0,
             gas_used=res.get("gas_used") or 0,
@@ -502,7 +484,7 @@ class AsyncTxAPI(BaseAsyncAPI):
         """Searches for transactions given criteria.
 
         Args:
-            events (dict): dictionary containing options
+            events (List[list]): List of ("query_str", value)
             params (APIParams): optional parameters
 
         Returns:
@@ -513,9 +495,9 @@ class AsyncTxAPI(BaseAsyncAPI):
 
         for event in events:
             if event == "tx.height":
-                actual_params.add("events", f"{event}={events[event]}")
+                actual_params.add("events", f"{event[0]}={event[1]}")
             else:
-                actual_params.add("events", f"{event}='{events[event]}'")
+                actual_params.add("events", f"{event[0]}='{event[1]}'")
         if params:
             for p in params:
                 actual_params.add(p, params[p])
@@ -563,49 +545,48 @@ class TxAPI(AsyncTxAPI):
     tx_by_id.__doc__ = AsyncTxAPI.tx_by_id.__doc__
 
     @sync_bind(AsyncTxAPI.create)
-    def create(
-        self,
-        sender: AccAddress,
-        msgs: List[Msg],
-        fee: Optional[StdFee] = None,
-        memo: str = "",
-        gas_prices: Optional[Coins.Input] = None,
-        gas_adjustment: Optional[Numeric.Input] = None,
-        fee_denoms: Optional[List[str]] = None,
-        account_number: Optional[int] = None,
-        sequence: Optional[int] = None,
-    ) -> StdSignMsg:
+    def create(self, signers: List[SignerOptions], options: CreateTxOptions) -> Tx:
         pass
 
     create.__doc__ = AsyncTxAPI.create.__doc__
 
     @sync_bind(AsyncTxAPI.estimate_fee)
     def estimate_fee(
-        self,
-        gas: Optional[int] = None,
-        gas_prices: Optional[Coins.Input] = None,
-        gas_adjustment: Optional[Numeric.Input] = None,
-        fee_denoms: Optional[List[str]] = None,
-    ) -> StdFee:
+            self, signers: List[SignerOptions], options: CreateTxOptions
+    ) -> Fee:
         pass
 
     estimate_fee.__doc__ = AsyncTxAPI.estimate_fee.__doc__
 
+    @sync_bind(AsyncTxAPI.estimate_gas)
+    def estimate_gas(
+            self, tx: Tx, options: Optional[CreateTxOptions]
+    ) -> SimulateResponse:
+        pass
+
+    estimate_gas.__doc__ = AsyncTxAPI.estimate_gas.__doc__
+
     @sync_bind(AsyncTxAPI.encode)
-    def encode(self, tx: StdTx, options: BroadcastOptions = None) -> str:
+    def encode(self, tx: Tx) -> str:
         pass
 
     encode.__doc__ = AsyncTxAPI.encode.__doc__
 
+    @sync_bind(AsyncTxAPI.decode)
+    def decode(self, tx: str) -> Tx:
+        pass
+
+    decode.__doc__ = AsyncTxAPI.decode.__doc__
+
     @sync_bind(AsyncTxAPI.hash)
-    def hash(self, tx: StdTx) -> str:
+    def hash(self, tx: Tx) -> str:
         pass
 
     hash.__doc__ = AsyncTxAPI.hash.__doc__
 
     @sync_bind(AsyncTxAPI.broadcast_sync)
     def broadcast_sync(
-        self, tx: StdTx, options: BroadcastOptions = None
+            self, tx: Tx, options: BroadcastOptions = None
     ) -> SyncTxBroadcastResult:
         pass
 
@@ -613,7 +594,7 @@ class TxAPI(AsyncTxAPI):
 
     @sync_bind(AsyncTxAPI.broadcast_async)
     def broadcast_async(
-        self, tx: StdTx, options: BroadcastOptions = None
+            self, tx: Tx, options: BroadcastOptions = None
     ) -> AsyncTxBroadcastResult:
         pass
 
@@ -621,7 +602,7 @@ class TxAPI(AsyncTxAPI):
 
     @sync_bind(AsyncTxAPI.broadcast)
     def broadcast(
-        self, tx: StdTx, options: BroadcastOptions = None
+            self, tx: Tx, options: BroadcastOptions = None
     ) -> BlockTxBroadcastResult:
         pass
 

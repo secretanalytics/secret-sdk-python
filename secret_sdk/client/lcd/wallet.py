@@ -3,10 +3,10 @@ from __future__ import annotations
 from typing import Dict, List, Optional
 
 from secret_sdk.core import AccAddress, Coins, Numeric
-from secret_sdk.core import StdFee, StdSignMsg, StdTx
+from secret_sdk.core.tx import Tx
 from secret_sdk.core.bank import MsgSend
-from secret_sdk.core.msg import Msg
-from secret_sdk.key.key import Key
+from secret_sdk.key.key import Key, SignOptions
+from secret_sdk.client.lcd.api.tx import CreateTxOptions, SignerOptions
 
 __all__ = ["Wallet", "AsyncWallet"]
 
@@ -28,55 +28,35 @@ class AsyncWallet:
         res = await self.lcd.auth.account_info(self.key.acc_address)
         return {"account_number": res.account_number, "sequence": res.sequence}
 
-    async def create_tx(
-        self,
-        msgs: List[Msg],
-        fee: Optional[StdFee] = None,
-        memo: str = "",
-        gas: Optional[int] = None,
-        gas_prices: Optional[Coins.Input] = None,
-        gas_adjustment: Optional[Numeric.Input] = None,
-        fee_denoms: Optional[List[str]] = None,
-        account_number: Optional[int] = None,
-        sequence: Optional[int] = None,
-    ) -> StdSignMsg:
-        return await self.lcd.tx.create(
-            sender=self.key.acc_address,
-            msgs=msgs,
-            fee=fee,
-            memo=memo,
-            gas=gas,
-            gas_prices=gas_prices,
-            gas_adjustment=gas_adjustment,
-            fee_denoms=fee_denoms,
-            account_number=account_number,
-            sequence=sequence,
-        )
+    async def create_tx(self, options: CreateTxOptions) -> Tx:
+        sigOpt = [
+            SignerOptions(
+                address=self.key.acc_address,
+                sequence=options.sequence,
+                public_key=self.key.public_key,
+            )
+        ]
+        return await self.lcd.tx.create(sigOpt, options)
 
-    async def create_and_sign_tx(
-        self,
-        msgs: List[Msg],
-        fee: Optional[StdFee] = None,
-        memo: str = "",
-        gas: Optional[int] = None,
-        gas_prices: Optional[Coins.Input] = None,
-        gas_adjustment: Optional[Numeric.Input] = None,
-        fee_denoms: Optional[List[str]] = None,
-        account_number: Optional[int] = None,
-        sequence: Optional[int] = None,
-    ) -> StdTx:
-        tx = await self.create_tx(
-            msgs,
-            fee,
-            memo,
-            gas,
-            gas_prices,
-            gas_adjustment,
-            fee_denoms,
-            account_number,
-            sequence,
+    async def create_and_sign_tx(self, options: CreateTxOptions) -> Tx:
+        account_number = options.account_number
+        sequence = options.sequence
+        if account_number is None or sequence is None:
+            res = await self.account_number_and_sequence()
+            if account_number is None:
+                account_number = res.get("account_number")
+            if sequence is None:
+                sequence = res.get("sequence")
+        options.sequence = sequence
+        options.account_number = account_number
+        return self.key.sign_tx(
+            tx=(await self.create_tx(options)),
+            options=SignOptions(
+                account_number=account_number,
+                sequence=sequence,
+                chain_id=self.lcd.chain_id
+            ),
         )
-        return self.key.sign_tx(tx)
 
     async def execute_tx(
         self,
@@ -88,14 +68,13 @@ class AsyncWallet:
         gas_prices: Optional[Coins.Input] = None,
         gas_adjustment: Optional[Numeric.Input] = None,
         fee_denoms: Optional[List[str]] = None,
-    ) -> StdTx:
+    ):
         if gas is None or gas_prices is None:
             fee = self.lcd.custom_fees["exec"]
         else:
             fee = await self.lcd.tx.estimate_fee(
                 gas, gas_prices, gas_adjustment, fee_denoms
             )
-
         msg_list = []
         for msg in handle_msg:
             execute_msg = await self.lcd.wasm.contract_execute_msg(
@@ -154,96 +133,56 @@ class Wallet:
         res = self.lcd.auth.account_info(self.key.acc_address)
         return {"account_number": res.account_number, "sequence": res.sequence}
 
-    def create_tx(
-        self,
-        msgs: List[Msg],
-        fee: Optional[StdFee] = None,
-        memo: str = "",
-        gas: Optional[int] = None,
-        gas_prices: Optional[Coins.Input] = None,
-        gas_adjustment: Optional[Numeric.Input] = None,
-        fee_denoms: Optional[List[str]] = None,
-        account_number: Optional[int] = None,
-        sequence: Optional[int] = None,
-    ) -> StdSignMsg:
+    def create_tx(self, options: CreateTxOptions) -> Tx:
         """Builds an unsigned transaction object. The ``Wallet`` will first
         query the blockchain to fetch the latest ``account`` and ``sequence`` values for the
         account corresponding to its Key, unless the they are both provided. If no ``fee``
         parameter is set, automatic fee estimation will be used (see `fee_estimation`).
 
         Args:
-            msgs (List[Msg]): list of messages to include
-            fee (Optional[StdFee], optional): transaction fee. If ``None``, will be estimated.
-                See more on `fee estimation`_.
-            memo (str, optional): optional short string to include with transaction.
-            gas (Optional[int]) gas
-            gas_prices (Optional[Coins.Input], optional): gas prices for fee estimation.
-            gas_adjustment (Optional[Numeric.Input], optional): gas adjustment for fee estimation.
-            fee_denoms (Optional[List[str]], optional): list of denoms to use for fee after estimation.
-            account_number (Optional[int], optional): account number (overrides blockchain query if
-                provided)
-            sequence (Optional[int], optional): sequence (overrides blockchain qu ery if provided)
+            options (CreateTxOptions): Options to create a tx
 
         Returns:
-            StdSignMsg: unsigned transaction
+            Tx: unsigned transaction
         """
-        return self.lcd.tx.create(
-            sender=self.key.acc_address,
-            msgs=msgs,
-            fee=fee,
-            memo=memo,
-            gas=gas,
-            gas_prices=gas_prices,
-            gas_adjustment=gas_adjustment,
-            fee_denoms=fee_denoms,
-            account_number=account_number,
-            sequence=sequence,
-        )
+        sigOpt = [
+            SignerOptions(
+                address=self.key.acc_address,
+                sequence=options.sequence,
+                public_key=self.key.public_key,
+            )
+        ]
+        return self.lcd.tx.create(sigOpt, options)
 
-    def create_and_sign_tx(
-        self,
-        msgs: List[Msg],
-        fee: Optional[StdFee] = None,
-        memo: str = "",
-        gas: Optional[int] = None,
-        gas_prices: Optional[Coins.Input] = None,
-        gas_adjustment: Optional[Numeric.Input] = None,
-        fee_denoms: Optional[List[str]] = None,
-        account_number: Optional[int] = None,
-        sequence: Optional[int] = None,
-    ) -> StdTx:
-        """Creates and signs a :class:`StdTx` object in a single step. This is the recommended
+    def create_and_sign_tx(self, options: CreateTxOptions) -> Tx:
+        """Creates and signs a :class:`Tx` object in a single step. This is the recommended
         method for preparing transaction for immediate signing and broadcastring. The transaction
         is generated exactly as :meth:`create_tx`.
 
         Args:
-            msgs (List[Msg]): list of messages to include
-            fee (Optional[StdFee], optional): transaction fee. If ``None``, will be estimated.
-                See more on `fee estimation`_.
-            memo (str, optional): optional short string to include with transaction.
-            gas (Optional[int]) gas
-            gas_prices (Optional[Coins.Input], optional): gas prices for fee estimation.
-            gas_adjustment (Optional[Numeric.Input], optional): gas adjustment for fee estimation.
-            fee_denoms (Optional[List[str]], optional): list of denoms to use for fee after estimation.
-            account_number (Optional[int], optional): account number (overrides blockchain query if
-                provided)
-            sequence (Optional[int], optional): sequence (overrides blockchain qu ery if provided)
+            options (CreateTxOptions): Options to create a tx
 
         Returns:
-            StdTx: signed transaction
+            Tx: signed transaction
         """
+
+        account_number = options.account_number
+        sequence = options.sequence
+        if account_number is None or sequence is None:
+            res = self.account_number_and_sequence()
+            if account_number is None:
+                account_number = res.get("account_number")
+            if sequence is None:
+                sequence = res.get("sequence")
+        options.sequence = sequence
+        options.account_number = account_number
         return self.key.sign_tx(
-            self.create_tx(
-                msgs,
-                fee,
-                memo,
-                gas,
-                gas_prices,
-                gas_adjustment,
-                fee_denoms,
-                account_number,
-                sequence,
-            )
+            tx=self.create_tx(options),
+            options=SignOptions(
+                account_number=account_number,
+                sequence=sequence,
+                chain_id=self.lcd.chain_id,
+            ),
         )
 
     def execute_tx(

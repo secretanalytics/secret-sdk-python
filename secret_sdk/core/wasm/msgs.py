@@ -132,6 +132,7 @@ class MsgInstantiateContract(Msg):
     init_msg_encrypted: dict = None
     code_hash: str = None
     warn_code_hash: bool = False
+    _msg_str: str = ''
 
     def __attrs_post_init__(self):
         if self.code_hash:
@@ -140,25 +141,7 @@ class MsgInstantiateContract(Msg):
             self.code_hash = ''
             self.warn_code_hash = True
             # print('WARNING: MsgInstantiateContract was used without the "codeHash" parameter. This is discouraged and will result in much slower execution times for your app.')
-
-    def to_amino(self) -> dict:
-        if not self.init_msg_encrypted:
-            # The encryption uses a random nonce
-            # toProto() & toAmino() are called multiple times during signing
-            # so to keep the msg consistant across calls we encrypt the msg only once
-            pass
-            # self.init_msg_encrypted = await utils.encrypt(self.code_hash, self.init_msg)
-
-        return {
-            "type": self.type_amino,
-            "value": {
-                "sender": self.sender,
-                "code_id": str(self.code_id),
-                "label": self.label,
-                "init_msg": remove_none(self.init_msg_encrypted),
-                "init_funds": self.init_funds.to_amino(),
-            },
-        }
+        self._msg_str = json.dumps(self.msg, separators=(",", ":"))
 
     @classmethod
     def from_data(cls, data: dict) -> MsgInstantiateContract:
@@ -170,19 +153,17 @@ class MsgInstantiateContract(Msg):
             init_funds=Coins.from_data(data["init_funds"]),
         )
 
-    def to_proto(self) -> MsgInstantiateContract_pb:
-        if not self.init_msg_encrypted:
-            # The encryption uses a random nonce
-            # toProto() & toAmino() are called multiple times during signing
-            # so to keep the msg consistant across calls we encrypt the msg only once
-            pass
-            # self.init_msg_encrypted = await utils.encrypt(self.code_hash, self.init_msg)
+    def to_proto(self, encryption_utils: Optional[EncryptionUtils] = None) -> MsgInstantiateContract_pb:
+        if not self.msg_encrypted and not encryption_utils:
+            raise NotImplementedError('Cannot serialized MsgExecuteContract without encryption')
+        if not self.msg_encrypted:
+            self.msg_encrypted = bytes(encryption_utils.encrypt(self.code_hash, self._msg_str))
 
         return MsgInstantiateContract_pb(
             sender=address_to_bytes(self.sender),
             code_id=self.code_id,
             label=self.label,
-            init_msg=bytes(json.dumps(self.init_msg_encrypted), "utf-8"),
+            init_msg=self.msg_encrypted,
             init_funds=self.init_funds.to_proto(),
         )
 
@@ -249,7 +230,7 @@ class MsgExecuteContract(Msg):
             sent_funds=Coins.from_data(data["sent_funds"]),
         )
 
-    def to_proto(self, encryption_utils: Optional[EncryptionUtils]) -> MsgExecuteContract_pb:
+    def to_proto(self, encryption_utils: Optional[EncryptionUtils] = None) -> MsgExecuteContract_pb:
         if not self.msg_encrypted and not encryption_utils:
             raise NotImplementedError('Cannot serialized MsgExecuteContract without encryption')
         if not self.msg_encrypted:
