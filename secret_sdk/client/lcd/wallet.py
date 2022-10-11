@@ -231,7 +231,7 @@ class Wallet:
             memo=memo,
             gas=str(gas),
             gas_prices=gas_prices,
-            gas_adjustment=gas_adjustment,
+            gas_adjustment=gas_adjustment or 0,
             fee_denoms=fee_denoms
         )
 
@@ -272,5 +272,5 @@ class Wallet:
 
         signed_tx = self.create_and_sign_tx(create_tx_options)
         broadcast_mode = broadcast_mode if broadcast_mode else BroadcastMode.BROADCAST_MODE_BLOCK
-        tx = await self.lcd.tx.broadcast_adapter(signed_tx, mode=broadcast_mode)
+        tx = self.lcd.tx.broadcast_adapter(signed_tx, mode=broadcast_mode)
         return tx

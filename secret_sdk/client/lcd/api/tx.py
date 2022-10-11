@@ -151,21 +151,21 @@ class AsyncTxAPI(BaseAsyncAPI):
         if "tx" not in res:
             raise Exception("Unexpected response data format")
         # TODO: update TxInfo interface
-        return await self.decrypt_txs_response(res)
+        return self.decrypt_txs_response(res)
 
-    async def decrypt_data_field(self, data_field: str, nonces):
+    def decrypt_data_field(self, data_field: str, nonces):
         wasm_output_data_cipher_bz = bytearray.fromhex(data_field)
 
         for nonce in nonces:
             try:
                 return base64.b64decode(
-                    await self._c.utils.decrypt(wasm_output_data_cipher_bz, nonce)
+                    self._c.encrypt_utils.decrypt(wasm_output_data_cipher_bz, nonce)
                 )
             except Exception as e:
                 error = e
         raise error
 
-    async def decrypt_logs(self, logs, nonces):
+    def decrypt_logs(self, logs, nonces):
         for log in logs:
             for e in log["events"]:
                 if e["type"] == "wasm":
@@ -173,14 +173,14 @@ class AsyncTxAPI(BaseAsyncAPI):
                         nonce_ok = False
                         for a in e["attributes"]:
                             try:
-                                a["key"] = await self._c.utils.decrypt(
+                                a["key"] = self._c.encrypt_utils.decrypt(
                                     base64.b64decode(a["key"]), nonce
                                 )
                                 nonce_ok = True
                             except Exception:
                                 pass
                             try:
-                                a["value"] = await self._c.utils.decrypt(
+                                a["value"] = self._c.encrypt_utils.decrypt(
                                     base64.b64decode(a["value"], nonce)
                                 )
                                 nonce_ok = True
@@ -192,7 +192,7 @@ class AsyncTxAPI(BaseAsyncAPI):
 
         return logs
 
-    async def decrypt_txs_response(self, txs_response):
+    def decrypt_txs_response(self, txs_response):
         nonces = {}
 
         decoded_tx = Tx.from_data(txs_response['tx'])
@@ -211,9 +211,9 @@ class AsyncTxAPI(BaseAsyncAPI):
             # Check if the message needs decryption
             contract_input_msg_field_name = ''
             if msg_type == "/secret.compute.v1beta1.MsgInstantiateContract":
-                contract_input_msg_field_name = "initMsg";
+                contract_input_msg_field_name = "initMsg"
             elif msg_type == "/secret.compute.v1beta1.MsgExecuteContract":
-                contract_input_msg_field_name = "msg";
+                contract_input_msg_field_name = "msg"
 
             if contract_input_msg_field_name != '':
                 # Encrypted, try to decrypt
@@ -223,7 +223,7 @@ class AsyncTxAPI(BaseAsyncAPI):
                     account_pub_key = contract_input_msg_bytes[32:64]
                     ciphertext = contract_input_msg_bytes[64:]
 
-                    plaintext = await self._c.utils.decrypt(
+                    plaintext = self._c.encrypt_utils.decrypt(
                         ciphertext,
                         nonce
                     )
@@ -251,7 +251,7 @@ class AsyncTxAPI(BaseAsyncAPI):
                     # See https://github.com/cosmos/cosmos-sdk/pull/11147
                     json_log[i]['msg_index'] = i
 
-            array_log = await self.decrypt_logs(json_log, nonces)
+            array_log = self.decrypt_logs(json_log, nonces)
         elif code != 0 and raw_log != '':
             try:
                 error_message_rgx = re.compile(
@@ -262,7 +262,7 @@ class AsyncTxAPI(BaseAsyncAPI):
                     msg_index = int(rgx_matches[1])
                     error_cipher_b64 = rgx_matches[2]
                     error_cipher_bz = base64.b64decode(error_cipher_b64)
-                    error_plain_bz = await self._c.utils.decrypt(error_cipher_bz, nonces[msg_index])
+                    error_plain_bz = self._c.encrypt_utils.decrypt(error_cipher_bz, nonces[msg_index])
                     raw_log = raw_log.replace(
                         f'encrypted: {rgx_matches[2]}', error_plain_bz
                     )
@@ -283,14 +283,14 @@ class AsyncTxAPI(BaseAsyncAPI):
                     msg_type = decoded_tx.body.messages[i].type_url
                     if msg_type == '/secret.compute.v1beta1.MsgInstantiateContract':
                         decoded = MsgInstantiateContractResponse(data['data'])
-                        decrypted = await self.decrypt_data_field(data['data'], [nonce])
+                        decrypted = self.decrypt_data_field(data['data'], [nonce])
                         data[i] = MsgInstantiateContractResponse(
                             address=decoded.address,
                             data=decrypted
                         )
                     elif msg_type == '/secret.compute.v1beta1.MsgExecuteContract':
                         decoded = MsgExecuteContractResponse(data['data'])
-                        decrypted = await self.decrypt_data_field(data['data'], [nonce])
+                        decrypted = self.decrypt_data_field(data['data'], [nonce])
                         data[i] = MsgExecuteContractResponse(
                             data=decrypted
                         )
@@ -404,13 +404,14 @@ class AsyncTxAPI(BaseAsyncAPI):
         return hash_amino(amino)
 
     async def broadcast_adapter(self, tx: Tx, mode: BroadcastMode, options: BroadcastOptions = None):
+        broadcast_result = None
         if mode == BroadcastMode.BROADCAST_MODE_BLOCK:
-            return await self.broadcast(tx, options)
+            broadcast_result = await BaseAsyncAPI._try_await(self.broadcast(tx, options))
         if mode == BroadcastMode.BROADCAST_MODE_ASYNC:
-            return await self.broadcast_async(tx, options)
+            broadcast_result = await BaseAsyncAPI._try_await(self.broadcast_async(tx, options))
         if mode == BroadcastMode.BROADCAST_MODE_SYNC:
-            return await self.broadcast_sync(tx, options)
-
+            broadcast_result = await BaseAsyncAPI._try_await(self.broadcast_sync(tx, options))
+        return broadcast_result
 
     async def _broadcast(
         self, tx: Tx, mode: BroadcastMode, options: BroadcastOptions = None
