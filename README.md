@@ -37,7 +37,7 @@ The Secret Software Development Kit (SDK) in Python is a simple library toolkit 
 
 
 # API Reference
-An intricate reference to the APIs on the Secret SDK can be found <a href="https://secretapi.io/#/">here</a>.
+An intricate reference to the APIs on the Secret SDK can be found <a href="https://api.scrt.network/swagger/">here</a>.
 
 <br/>
 
