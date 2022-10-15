@@ -1,11 +1,11 @@
 from __future__ import annotations
-
+from functools import reduce
 from typing import Dict, List, Optional
 
 from secret_sdk.core.msg import Msg
 from secret_sdk.core import AccAddress, Coins, Numeric
 from secret_sdk.core.tx import Tx
-from secret_sdk.core.bank import MsgSend
+from secret_sdk.core.bank import MsgSend, MsgMultiSend
 from secret_sdk.key.key import Key, SignOptions
 from secret_sdk.client.lcd.api.tx import CreateTxOptions, SignerOptions
 from secret_sdk.protobuf.cosmos.tx.v1beta1 import BroadcastMode
@@ -119,6 +119,37 @@ class AsyncWallet:
             gas = self.lcd.custom_fees["send"].gas_limit
 
         return await self.create_and_broadcast_tx([send_msg], memo, gas, gas_prices, gas_adjustment, fee_denoms, broadcast_mode)
+
+    async def multi_send_tokens(
+        self,
+        recipient_addrs: List[AccAddress],
+        memo: str = "",
+        transfer_amounts: List[Coins] = None,
+        gas: Optional[int] = None,
+        gas_prices: Optional[Coins.Input] = None,
+        gas_adjustment: Optional[Numeric.Input] = None,
+        fee_denoms: Optional[List[str]] = None,
+        broadcast_mode: Optional[BroadcastMode] = None
+
+    ):
+        inputs = [
+            {
+                'address': self.key.acc_address,
+                'coins': reduce(lambda x, y: x + y, transfer_amounts),
+            },
+        ]
+        outputs = [{
+            'address': recipient_addr,
+            'coins': transfer_amount,
+        } for recipient_addr, transfer_amount in zip(recipient_addrs, transfer_amounts)]
+
+        multi_send_msg = MsgMultiSend(inputs, outputs)
+        if gas is None or gas_prices is None:
+            gas_prices = self.lcd.gas_prices
+            gas = self.lcd.custom_fees["send"].gas_limit
+
+        return await self.create_and_broadcast_tx([multi_send_msg], memo, gas, gas_prices, gas_adjustment, fee_denoms,
+                                            broadcast_mode)
 
     async def create_and_broadcast_tx(
             self,
@@ -286,6 +317,37 @@ class Wallet:
             gas = self.lcd.custom_fees["send"].gas_limit
 
         return self.create_and_broadcast_tx([send_msg], memo, gas, gas_prices, gas_adjustment, fee_denoms,
+                                            broadcast_mode)
+
+    def multi_send_tokens(
+        self,
+        recipient_addrs: List[AccAddress],
+        memo: str = "",
+        transfer_amounts: List[Coins] = None,
+        gas: Optional[int] = None,
+        gas_prices: Optional[Coins.Input] = None,
+        gas_adjustment: Optional[Numeric.Input] = None,
+        fee_denoms: Optional[List[str]] = None,
+        broadcast_mode: Optional[BroadcastMode] = None
+
+    ):
+        inputs = [
+            {
+                'address': self.key.acc_address,
+                'coins': reduce(lambda x, y: x + y, transfer_amounts),
+            },
+        ]
+        outputs = [{
+            'address': recipient_addr,
+            'coins': transfer_amount,
+        } for recipient_addr, transfer_amount in zip(recipient_addrs, transfer_amounts)]
+
+        multi_send_msg = MsgMultiSend(inputs, outputs)
+        if gas is None or gas_prices is None:
+            gas_prices = self.lcd.gas_prices
+            gas = self.lcd.custom_fees["send"].gas_limit
+
+        return self.create_and_broadcast_tx([multi_send_msg], memo, gas, gas_prices, gas_adjustment, fee_denoms,
                                             broadcast_mode)
 
     def create_and_broadcast_tx(
