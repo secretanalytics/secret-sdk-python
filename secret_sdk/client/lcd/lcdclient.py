@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import copy
-from asyncio import AbstractEventLoop, get_event_loop
+from asyncio import AbstractEventLoop, get_event_loop, TimeoutError
 from json import JSONDecodeError
 from threading import Lock
 from typing import Optional, Union, List
@@ -64,6 +64,11 @@ mainnetConsensusIoPubKey = bytes.fromhex(
   "083b1a03661211d5a4cc8d39a77795795862f7730645573b2bcc2c1920c53c04"
 )
 
+REQUEST_CONFIG = {
+    "GET_TIMEOUT": 15,
+    "POST_TIMEOUT": 30,
+    "GET_RETRY": 1
+}
 
 class AsyncLCDClient:
     def __init__(
@@ -75,7 +80,9 @@ class AsyncLCDClient:
         custom_fees: Optional[dict] = default_fees,
         loop: Optional[AbstractEventLoop] = None,
         _create_session: bool = True,  # don't create a session (used for sync LCDClient)
+        _request_config: Optional[dict] = REQUEST_CONFIG
     ):
+        self._request_config = _request_config
         if loop is None:
             loop = get_event_loop()
         self.loop = loop
@@ -125,7 +132,9 @@ class AsyncLCDClient:
     async def _get(
         self,
         endpoint: str,
-        params: Optional[Union[APIParams, CIMultiDict, list, dict]] = None
+        params: Optional[Union[APIParams, CIMultiDict, list, dict]] = None,
+        timeout: Optional[int] = None,
+        retry_attempts: Optional[int] = None
     ):
         if (
             params
@@ -138,16 +147,27 @@ class AsyncLCDClient:
         if 'block_height' in params:
             block_height = params.pop('block_height')
             self.session.headers['x-cosmos-block-height'] = str(block_height)
+        current_attempt = 0
 
-        async with self.session.get(
-            urljoin(self.url, endpoint), params=params
-        ) as response:
-            try:
-                result = await response.json(content_type=None)
-            except JSONDecodeError:
-                raise LCDResponseError(message=str(response.reason), response=response)
-            if not 200 <= response.status < 299:
-                raise LCDResponseError(message=str(result), response=response)
+        timeout, retry_attempts = timeout or self._request_config['GET_TIMEOUT'], retry_attempts or self._request_config['GET_RETRY']
+        while True:
+            current_attempt += 1
+            async with self.session.get(
+                urljoin(self.url, endpoint), params=params, timeout=timeout
+            ) as response:
+                try:
+                    result = await response.json(content_type=None)
+                except TimeoutError:
+                    if current_attempt < retry_attempts:
+                        continue
+                    raise TimeoutError(f'{urljoin(self.url, endpoint)}, time out after {str(current_attempt)} attempts')
+                except Exception as e:
+                    if current_attempt < retry_attempts:
+                        continue
+                    raise e
+                if not 200 <= response.status < 299:
+                    raise LCDResponseError(message=str(result), response=response)
+
         self.last_request_height = (
             result.get("height") if result else self.last_request_height
         )
@@ -156,53 +176,25 @@ class AsyncLCDClient:
         return result
 
     async def _post(
-        self, endpoint: str, data: Optional[dict] = None  # , raw: bool = False
-    ):
-        async with self.session.post(
-            urljoin(self.url, endpoint), json=data and dict_to_data(data)
-        ) as response:
-            try:
-                result = await response.json(content_type=None)
-            except JSONDecodeError:
-                raise LCDResponseError(message=str(response.reason), response=response)
-            if not 200 <= response.status < 299:
-                raise LCDResponseError(message=result.get("message"), response=response)
-        self.last_request_height = (
-            result.get("height") if result else self.last_request_height
-        )
-        return result  # if raw else result["result"]
-
-    async def _search(
         self,
-        events: List[list],
-        params: Optional[Union[APIParams, CIMultiDict, list, dict]] = None,
-        # raw: bool = False
+        endpoint: str,
+        data: Optional[dict] = None
     ):
 
-        actual_params: CIMultiDict = CIMultiDict()
-
-        for event in events:
-            if event[0] == "tx.height":
-                actual_params.add("events", f"{event[0]}={event[1]}")
-            else:
-                actual_params.add("events", f"{event[0]}='{event[1]}'")
-        if params:
-            for p in params:
-                actual_params.add(p, params[p])
-
-        async with self.session.get(
-            urljoin(self.url, "/cosmos/tx/v1beta1/txs"), params=actual_params
+        async with self.session.post(
+            urljoin(self.url, endpoint), json=data and dict_to_data(data), timeout=self._request_config["POST_TIMEOUT"]
         ) as response:
             try:
                 result = await response.json(content_type=None)
-            except JSONDecodeError:
-                raise LCDResponseError(message=str(response.reason), response=response)
+            except Exception as e:
+                raise LCDResponseError(message=str(e), response=str(e))
             if not 200 <= response.status < 299:
-                raise LCDResponseError(message=str(result), response=response)
+                raise LCDResponseError(message=result.get("error"), response=response)
         self.last_request_height = (
             result.get("height") if result else self.last_request_height
         )
-        return result  # if raw else result["result"]
+        return result
+
 
     async def __aenter__(self):
         return self
@@ -359,14 +351,3 @@ class LCDClient(AsyncLCDClient):
             await self.session.close()
         return result
 
-    async def _search(self, *args, **kwargs):
-        # session has to be manually created and torn down for each HTTP request in a
-        # synchronous client
-        self.session = ClientSession(
-            headers={"Accept": "application/json"}, loop=self.loop
-        )
-        try:
-            result = await super()._search(*args, **kwargs)
-        finally:
-            await self.session.close()
-        return result

@@ -85,7 +85,7 @@ class AsyncWasmAPI(BaseAsyncAPI):
 
     async def contract_query(
         self, contract_address: str, query: dict, contract_code_hash: Optional[str] = None,
-            height: Optional[int] = 0
+            height: Optional[int] = 0, timeout: Optional[int] = 15, retry_attempts: Optional[int] = 1
     ) -> Any:
         """Runs a QueryMsg on a contract.
 
@@ -117,7 +117,9 @@ class AsyncWasmAPI(BaseAsyncAPI):
             params['block_height'] = str(height)
 
         query_path = f"/compute/v1beta1/query/{contract_address}"
-        query_result = await BaseAsyncAPI._try_await(self._c._get(query_path, params=params))
+        query_result = await BaseAsyncAPI._try_await(
+            self._c._get(query_path, params=params, timeout=timeout, retry_attempts=retry_attempts)
+        )
 
         encoded_result = base64.b64decode(bytes(query_result["data"], "utf-8"))
         decrypted = self._c.encrypt_utils.decrypt(encoded_result, nonce)
@@ -183,7 +185,8 @@ class WasmAPI(AsyncWasmAPI):
 
     @sync_bind(AsyncWasmAPI.contract_query)
     def contract_query(
-        self, contract_address: str, query_msg: dict, contract_code_hash: Optional[str] = None, height: Optional[int] = 0
+        self, contract_address: str, query_msg: dict, contract_code_hash: Optional[str] = None,
+            height: Optional[int] = 0, timeout: Optional[int] = 15, retry_attempts: Optional[int] = 1
     ) -> Any:
         pass
 
