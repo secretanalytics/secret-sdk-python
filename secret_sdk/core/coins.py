@@ -144,8 +144,8 @@ class Coins(JSONSerializable, List[Coin_pb]):
     def to_proto(self) -> List[Coin_pb]:
         return [coin.to_proto() for coin in self]
 
-    def to_dict(self) -> List[dict]:
-        return [coin.to_dict for coin in self]
+    def to_dict(self) -> Dict:
+        return {coin.denom: coin.amount for coin in self}
 
     def denoms(self) -> List[str]:
         """Get the list of denoms for all Coin objects contained."""

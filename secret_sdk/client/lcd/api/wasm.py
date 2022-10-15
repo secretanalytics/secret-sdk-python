@@ -142,7 +142,8 @@ class AsyncWasmAPI(BaseAsyncAPI):
             else:
                 contract_code_hash = _contract_code_hash[contract_address]
         return MsgExecuteContract(
-            sender_address, contract_address, msg=handle_msg, sent_funds=transfer_amount, code_hash=contract_code_hash
+            sender_address, contract_address, msg=handle_msg, sent_funds=transfer_amount, code_hash=contract_code_hash,
+            encryption_utils=self._c.encrypt_utils
         )
 
 

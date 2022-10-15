@@ -57,38 +57,8 @@ class AsyncWallet:
                 account_number=account_number,
                 sequence=sequence,
                 chain_id=self.lcd.chain_id
-            ),
-            encryption_utils=self.lcd.encrypt_utils
+            )
         )
-
-    async def create_and_broadcast_tx(
-            self,
-            msg_list: List[Msg],
-            memo: str = "",
-            gas: Optional[int] = None,
-            gas_prices: Optional[Coins.Input] = None,
-            gas_adjustment: Optional[Numeric.Input] = None,
-            fee_denoms: Optional[List[str]] = None,
-            broadcast_mode: Optional[BroadcastMode] = None
-    ):
-        create_tx_options = CreateTxOptions(
-            msgs=msg_list,
-            memo=memo,
-            gas=str(gas),
-            gas_prices=gas_prices,
-            gas_adjustment=gas_adjustment,
-            fee_denoms=fee_denoms
-        )
-
-        if gas is None or gas_prices is None:
-            fee = self.lcd.custom_fees["exec"]
-            create_tx_options.fee = fee
-
-        signed_tx = await self.create_and_sign_tx(create_tx_options)
-        broadcast_mode = broadcast_mode if broadcast_mode else BroadcastMode.BROADCAST_MODE_BLOCK
-        tx = await self.lcd.tx.broadcast_adapter(signed_tx, mode=broadcast_mode)
-        return tx
-
 
     async def execute_tx(
         self,
@@ -98,11 +68,10 @@ class AsyncWallet:
         transfer_amount: Coins = None,
         gas: Optional[int] = None,
         gas_prices: Optional[Coins.Input] = None,
-        gas_adjustment: Optional[Numeric.Input] = None,
+        gas_adjustment: Optional[Numeric.Input] = 1,
         fee_denoms: Optional[List[str]] = None,
         broadcast_mode: Optional[BroadcastMode] = None
     ):
-
         execute_msg = await self.lcd.wasm.contract_execute_msg(
             self.key.acc_address, contract_addr, handle_msg, transfer_amount
         )
@@ -116,7 +85,7 @@ class AsyncWallet:
             memo: str = "",
             gas: Optional[int] = None,
             gas_prices: Optional[Coins.Input] = None,
-            gas_adjustment: Optional[Numeric.Input] = None,
+            gas_adjustment: Optional[Numeric.Input] = 1,
             fee_denoms: Optional[List[str]] = None,
             broadcast_mode: Optional[BroadcastMode] = None
     ):
@@ -140,13 +109,29 @@ class AsyncWallet:
         transfer_amount: Coins = None,
         gas: Optional[int] = None,
         gas_prices: Optional[Coins.Input] = None,
-        gas_adjustment: Optional[Numeric.Input] = None,
+        gas_adjustment: Optional[Numeric.Input] = 1,
         fee_denoms: Optional[List[str]] = None,
         broadcast_mode: Optional[BroadcastMode] = None
     ):
         send_msg = MsgSend(self.key.acc_address, recipient_addr, transfer_amount)
+        if gas is None or gas_prices is None:
+            gas_prices = self.lcd.gas_prices
+            gas = self.lcd.custom_fees["send"].gas_limit
+
+        return await self.create_and_broadcast_tx([send_msg], memo, gas, gas_prices, gas_adjustment, fee_denoms, broadcast_mode)
+
+    async def create_and_broadcast_tx(
+            self,
+            msg_list: List[Msg],
+            memo: str = "",
+            gas: Optional[int] = None,
+            gas_prices: Optional[Coins.Input] = None,
+            gas_adjustment: Optional[Numeric.Input] = 1,
+            fee_denoms: Optional[List[str]] = None,
+            broadcast_mode: Optional[BroadcastMode] = None
+    ):
         create_tx_options = CreateTxOptions(
-            msgs=[send_msg],
+            msgs=msg_list,
             memo=memo,
             gas=str(gas),
             gas_prices=gas_prices,
@@ -155,7 +140,7 @@ class AsyncWallet:
         )
 
         if gas is None or gas_prices is None:
-            fee = self.lcd.custom_fees["send"]
+            fee = self.lcd.custom_fees["exec"]
             create_tx_options.fee = fee
 
         signed_tx = await self.create_and_sign_tx(create_tx_options)
@@ -237,8 +222,7 @@ class Wallet:
                 account_number=account_number,
                 sequence=sequence,
                 chain_id=self.lcd.chain_id,
-            ),
-            encryption_utils=self.lcd.encrypt_utils
+            )
         )
 
     def execute_tx(
@@ -249,7 +233,7 @@ class Wallet:
             transfer_amount: Coins = None,
             gas: Optional[int] = None,
             gas_prices: Optional[Coins.Input] = None,
-            gas_adjustment: Optional[Numeric.Input] = None,
+            gas_adjustment: Optional[Numeric.Input] = 1,
             fee_denoms: Optional[List[str]] = None,
             broadcast_mode: Optional[BroadcastMode] = None
     ):
@@ -267,7 +251,7 @@ class Wallet:
             memo: str = "",
             gas: Optional[int] = None,
             gas_prices: Optional[Coins.Input] = None,
-            gas_adjustment: Optional[Numeric.Input] = None,
+            gas_adjustment: Optional[Numeric.Input] = 1,
             fee_denoms: Optional[List[str]] = None,
             broadcast_mode: Optional[BroadcastMode] = None
     ):
@@ -291,29 +275,19 @@ class Wallet:
         transfer_amount: Coins = None,
         gas: Optional[int] = None,
         gas_prices: Optional[Coins.Input] = None,
-        gas_adjustment: Optional[Numeric.Input] = None,
+        gas_adjustment: Optional[Numeric.Input] = 1,
         fee_denoms: Optional[List[str]] = None,
         broadcast_mode: Optional[BroadcastMode] = None
 
     ):
+
         send_msg = MsgSend(self.key.acc_address, recipient_addr, transfer_amount)
-        create_tx_options = CreateTxOptions(
-            msgs=[send_msg],
-            memo=memo,
-            gas=str(gas),
-            gas_prices=gas_prices,
-            gas_adjustment=gas_adjustment,
-            fee_denoms=fee_denoms
-        )
-
         if gas is None or gas_prices is None:
-            fee = self.lcd.custom_fees["send"]
-            create_tx_options.fee = fee
+            gas_prices = self.lcd.gas_prices
+            gas = self.lcd.custom_fees["send"].gas_limit
 
-        signed_tx = self.create_and_sign_tx(create_tx_options)
-        broadcast_mode = broadcast_mode if broadcast_mode else BroadcastMode.BROADCAST_MODE_BLOCK
-        tx = self.lcd.tx.broadcast_adapter(signed_tx, mode=broadcast_mode)
-        return tx
+        return self.create_and_broadcast_tx([send_msg], memo, gas, gas_prices, gas_adjustment, fee_denoms,
+                                            broadcast_mode)
 
     def create_and_broadcast_tx(
             self,
@@ -321,7 +295,7 @@ class Wallet:
             memo: str = "",
             gas: Optional[int] = None,
             gas_prices: Optional[Coins.Input] = None,
-            gas_adjustment: Optional[Numeric.Input] = None,
+            gas_adjustment: Optional[Numeric.Input] = 1,
             fee_denoms: Optional[List[str]] = None,
             broadcast_mode: Optional[BroadcastMode] = None
     ):

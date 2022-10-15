@@ -231,8 +231,6 @@ class SearchTxsResponse(JSONSerializable):
         )
 
 
-
-
 SignMode = SignMode_pb
 
 
@@ -364,9 +362,9 @@ class TxBody(JSONSerializable):
             "timeout_height": self.timeout_height,
         }
 
-    def to_proto(self, encryption_utils: Optional[EncryptionUtils] = None) -> TxBody_pb:
+    def to_proto(self) -> TxBody_pb:
         return TxBody_pb(
-            messages=[m.pack_any(encryption_utils) for m in self.messages],
+            messages=[m.pack_any() for m in self.messages],
             memo=self.memo,
             timeout_height=self.timeout_height,
         )

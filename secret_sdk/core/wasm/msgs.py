@@ -134,6 +134,8 @@ class MsgInstantiateContract(Msg):
     warn_code_hash: bool = False
     _msg_str: str = ''
 
+    encryption_utils: EncryptionUtils = None
+
     def __attrs_post_init__(self):
         if self.code_hash:
             self.code_hash = self.code_hash.replace('0x', '').lower()
@@ -153,11 +155,11 @@ class MsgInstantiateContract(Msg):
             init_funds=Coins.from_data(data["init_funds"]),
         )
 
-    def to_proto(self, encryption_utils: Optional[EncryptionUtils] = None) -> MsgInstantiateContract_pb:
-        if not self.msg_encrypted and not encryption_utils:
+    def to_proto(self) -> MsgInstantiateContract_pb:
+        if not self.msg_encrypted and not self.encryption_utils:
             raise NotImplementedError('Cannot serialized MsgExecuteContract without encryption')
         if not self.msg_encrypted:
-            self.msg_encrypted = bytes(encryption_utils.encrypt(self.code_hash, self._msg_str))
+            self.msg_encrypted = bytes(self.encryption_utils.encrypt(self.code_hash, self._msg_str))
 
         return MsgInstantiateContract_pb(
             sender=address_to_bytes(self.sender),
@@ -208,6 +210,8 @@ class MsgExecuteContract(Msg):
     warn_code_hash: bool = False
     _msg_str: str = ''
 
+    encryption_utils: Optional[EncryptionUtils] = None
+
     def __attrs_post_init__(self):
         if self.code_hash:
             self.code_hash = self.code_hash.replace('0x', '').lower()
@@ -230,11 +234,11 @@ class MsgExecuteContract(Msg):
             sent_funds=Coins.from_data(data["sent_funds"]),
         )
 
-    def to_proto(self, encryption_utils: Optional[EncryptionUtils] = None) -> MsgExecuteContract_pb:
-        if not self.msg_encrypted and not encryption_utils:
+    def to_proto(self) -> MsgExecuteContract_pb:
+        if not self.msg_encrypted and not self.encryption_utils:
             raise NotImplementedError('Cannot serialized MsgExecuteContract without encryption')
         if not self.msg_encrypted:
-            self.msg_encrypted  = bytes(encryption_utils.encrypt(self.code_hash, self._msg_str))
+            self.msg_encrypted = bytes(self.encryption_utils.encrypt(self.code_hash, self._msg_str))
 
         return MsgExecuteContract_pb(
             sender=address_to_bytes(self.sender),
