@@ -29,6 +29,7 @@ def setup_localsecret():
     print('Setting up LocalSecret...')
 
     teardown_network()
+    # 9091 grpc web, 1317 rest
     run_command('docker run -it -d -p 9091:9091 -p 1317:1317 --name localsecret ghcr.io/scrtlabs/localsecret:v1.4.0')
 
     print("Waiting for the network to start...")

@@ -53,6 +53,15 @@ ValPubKey.__doc__ = """Secret Bech32 Validator PubKey -- type alias of str."""
 #  """Secret Bech32 Validator Conensus PubKey -- type alias of str."""
 # )
 
+bech32_config = {
+    "acc_address": ("secret", 45),
+    "val_address": ("secretvaloper", 52),
+    "pubkey": ("secretpub", 77),
+    "val_pubkey": ("secretvaloperpub", 84),
+    "valcons_pubkey": ("secretvalconspub", 83)
+
+
+}
 
 def is_acc_address(data: str) -> bool:
     """Checks whether the given string is a properly formatted Secret account address.
@@ -63,7 +72,8 @@ def is_acc_address(data: str) -> bool:
     Returns:
         bool: whether the string is a proper account address
     """
-    return check_prefix_and_length("secret", data, 44)
+    prefix, length = bech32_config["acc_address"]
+    return check_prefix_and_length(prefix, data, length)
 
 
 def to_acc_address(data: ValAddress) -> AccAddress:
@@ -94,7 +104,8 @@ def is_val_address(data: str) -> bool:
     Returns:
         bool: whether the string is a proper validator address
     """
-    return check_prefix_and_length("secretvaloper", data, 51)
+    prefix, length = bech32_config["val_address"]
+    return check_prefix_and_length(prefix, data, length)
 
 
 def to_val_address(data: AccAddress) -> ValAddress:
@@ -124,7 +135,8 @@ def is_acc_pubkey(data: str) -> bool:
     Returns:
         bool: whether string is account pubkey
     """
-    return check_prefix_and_length("secretpub", data, 76)
+    prefix, length = bech32_config["pubkey"]
+    return check_prefix_and_length(prefix, data, length)
 
 
 def to_acc_pubkey(data: ValPubKey) -> AccPubKey:
@@ -154,7 +166,8 @@ def is_val_pubkey(data: str) -> bool:
     Returns:
         bool: whether string is validator pubkey
     """
-    return check_prefix_and_length("secretvaloperpub", data, 83)
+    prefix, length = bech32_config["val_pubkey"]
+    return check_prefix_and_length(prefix, data, length)
 
 
 def to_val_pubkey(data: AccPubKey) -> ValPubKey:
@@ -185,4 +198,5 @@ def is_valcons_pubkey(data: str) -> bool:  # -> ValConsPubKey:
     Returns:
         bool: whether string is validator consensus pubkey
     """
-    return check_prefix_and_length("secretvalconspub", data, 83)
+    prefix, length = bech32_config["valcons_pubkey"]
+    return check_prefix_and_length(prefix, data, length)
