@@ -53,6 +53,7 @@ class AsyncStakingAPI(BaseAsyncAPI):
         delegator: Optional[AccAddress] = None,
         validator: Optional[ValAddress] = None,
         params: Optional[APIParams] = None,
+        
     ) -> (List[Delegation], dict):
         """Fetches current delegations, filtering by delegator, validator, or both.
 
@@ -94,7 +95,8 @@ class AsyncStakingAPI(BaseAsyncAPI):
             raise TypeError("arguments delegator and validator cannot both be None")
 
     async def delegation(
-        self, delegator: AccAddress, validator: ValAddress
+        self, delegator: AccAddress, validator: ValAddress,
+            
     ) -> Delegation:
         """Fetch a single delegation via a delegator, validator pair.
 
@@ -116,6 +118,7 @@ class AsyncStakingAPI(BaseAsyncAPI):
         delegator: Optional[AccAddress] = None,
         validator: Optional[ValAddress] = None,
         params: Optional[APIParams] = None,
+        
     ) -> (List[UnbondingDelegation], dict):
         """Fetches current undelegations, filtering by delegator, validator, or both.
 
@@ -159,7 +162,8 @@ class AsyncStakingAPI(BaseAsyncAPI):
             raise TypeError("arguments delegator and validator cannot both be None")
 
     async def unbonding_delegation(
-        self, delegator: AccAddress, validator: ValAddress
+        self, delegator: AccAddress, validator: ValAddress,
+            
     ) -> UnbondingDelegation:
         """Fetch a single undelegation via a delegator, validator pair.
 
@@ -181,6 +185,7 @@ class AsyncStakingAPI(BaseAsyncAPI):
         validator_src: Optional[ValAddress] = None,
         validator_dst: Optional[ValAddress] = None,
         params: Optional[APIParams] = None,
+        
     ) -> (List[Redelegation], dict):
         """Fetch redelgations.
 
@@ -213,7 +218,8 @@ class AsyncStakingAPI(BaseAsyncAPI):
         ], res.get("pagination")
 
     async def bonded_validators(
-        self, delegator: AccAddress, params: Optional[PaginationOptions] = None
+        self, delegator: AccAddress, params: Optional[PaginationOptions] = None,
+            
     ) -> (List[Validator], dict):
         """Fetches the list of validators a delegator is currently delegating to.
 
@@ -233,7 +239,8 @@ class AsyncStakingAPI(BaseAsyncAPI):
         )
 
     async def validators(
-        self, params: Optional[APIParams] = None
+        self, params: Optional[APIParams] = None,
+            
     ) -> (List[Validator], dict):
         """Fetch information of all validators.
 
@@ -249,7 +256,8 @@ class AsyncStakingAPI(BaseAsyncAPI):
             "pagination"
         )
 
-    async def validator(self, validator: ValAddress) -> Validator:
+    async def validator(self, validator: ValAddress,
+                        ) -> Validator:
         """Fetch information about a single validator.
 
         Args:
@@ -298,13 +306,15 @@ class StakingAPI(AsyncStakingAPI):
         delegator: Optional[AccAddress] = None,
         validator: Optional[ValAddress] = None,
         params: Optional[APIParams] = None,
+        
     ) -> (List[Delegation], dict):
         pass
 
     delegations.__doc__ = AsyncStakingAPI.delegations.__doc__
 
     @sync_bind(AsyncStakingAPI.delegation)
-    def delegation(self, delegator: AccAddress, validator: ValAddress) -> Delegation:
+    def delegation(self, delegator: AccAddress, validator: ValAddress,
+                   ) -> Delegation:
         pass
 
     delegation.__doc__ = AsyncStakingAPI.delegation.__doc__
@@ -315,6 +325,7 @@ class StakingAPI(AsyncStakingAPI):
         delegator: Optional[AccAddress] = None,
         validator: Optional[ValAddress] = None,
         params: Optional[APIParams] = None,
+        
     ) -> (List[UnbondingDelegation], dict):
         pass
 
@@ -322,7 +333,8 @@ class StakingAPI(AsyncStakingAPI):
 
     @sync_bind(AsyncStakingAPI.unbonding_delegation)
     def unbonding_delegation(
-        self, delegator: AccAddress, validator: ValAddress
+        self, delegator: AccAddress, validator: ValAddress,
+            
     ) -> UnbondingDelegation:
         pass
 
@@ -335,6 +347,7 @@ class StakingAPI(AsyncStakingAPI):
         validator_src: Optional[ValAddress] = None,
         validator_dst: Optional[ValAddress] = None,
         params: Optional[APIParams] = None,
+        
     ) -> (List[Redelegation], dict):
         pass
 
@@ -342,14 +355,15 @@ class StakingAPI(AsyncStakingAPI):
 
     @sync_bind(AsyncStakingAPI.bonded_validators)
     def bonded_validators(
-        self, delegator: AccAddress, params: Optional[PaginationOptions] = None
+        self, delegator: AccAddress, params: Optional[PaginationOptions] = None,
+            
     ) -> (List[Validator], dict):
         pass
 
     bonded_validators.__doc__ = AsyncStakingAPI.bonded_validators.__doc__
 
     @sync_bind(AsyncStakingAPI.validators)
-    def validators(self, params: Optional[APIParams]) -> (List[Validator], dict):
+    def validators(self, params: Optional[APIParams], ) -> (List[Validator], dict):
         pass
 
     validators.__doc__ = AsyncStakingAPI.validators.__doc__

@@ -125,8 +125,7 @@ class AsyncLCDClient:
     async def _get(
         self,
         endpoint: str,
-        params: Optional[Union[APIParams, CIMultiDict, list, dict]] = None,
-        block_height: int = 0
+        params: Optional[Union[APIParams, CIMultiDict, list, dict]] = None
     ):
         if (
             params
@@ -135,7 +134,9 @@ class AsyncLCDClient:
         ):
             params = params.to_dict()
 
-        if block_height:
+        block_height = 0
+        if 'block_height' in params:
+            block_height = params.pop('block_height')
             self.session.headers['x-cosmos-block-height'] = str(block_height)
 
         async with self.session.get(
