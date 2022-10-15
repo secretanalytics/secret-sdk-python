@@ -1,10 +1,8 @@
 from __future__ import annotations
 
-import copy
 from asyncio import AbstractEventLoop, get_event_loop, TimeoutError
-from json import JSONDecodeError
 from threading import Lock
-from typing import Optional, Union, List
+from typing import Optional, Union
 
 import nest_asyncio
 from aiohttp import ClientSession
@@ -69,6 +67,7 @@ REQUEST_CONFIG = {
     "POST_TIMEOUT": 30,
     "GET_RETRY": 1
 }
+
 
 class AsyncLCDClient:
     def __init__(
@@ -142,6 +141,8 @@ class AsyncLCDClient:
             and callable(getattr(params, "to_dict"))
         ):
             params = params.to_dict()
+        else:
+            params = {}
 
         block_height = 0
         if 'block_height' in params:
@@ -168,12 +169,12 @@ class AsyncLCDClient:
                 if not 200 <= response.status < 299:
                     raise LCDResponseError(message=str(result), response=response)
 
-        self.last_request_height = (
-            result.get("height") if result else self.last_request_height
-        )
-        if block_height:
-            self.session.headers.pop('x-cosmos-block-height')
-        return result
+                self.last_request_height = (
+                    result.get("height") if result else self.last_request_height
+                )
+                if block_height:
+                    self.session.headers.pop('x-cosmos-block-height')
+                return result
 
     async def _post(
         self,
@@ -270,9 +271,10 @@ class LCDClient(AsyncLCDClient):
         self,
         url: str,
         chain_id: str = None,
-        gas_prices: Optional[Coins.Input] = None,
-        gas_adjustment: Optional[Numeric.Input] = None,
+        gas_prices: Optional[Coins.Input] = default_gas_prices,
+        gas_adjustment: Optional[Numeric.Input] = default_gas_adjustment,
         custom_fees: Optional[dict] = default_fees,
+        _request_config: Optional[dict] = REQUEST_CONFIG
     ):
         super().__init__(
             url,
@@ -282,6 +284,7 @@ class LCDClient(AsyncLCDClient):
             custom_fees,
             _create_session=False,
             loop=nest_asyncio.apply(get_event_loop()),
+            _request_config=_request_config
         )
         self.lock = Lock()
 

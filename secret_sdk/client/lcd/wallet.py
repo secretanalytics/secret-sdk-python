@@ -68,7 +68,7 @@ class AsyncWallet:
         transfer_amount: Coins = None,
         gas: Optional[int] = None,
         gas_prices: Optional[Coins.Input] = None,
-        gas_adjustment: Optional[Numeric.Input] = 1,
+        gas_adjustment: Optional[Numeric.Input] = None,
         fee_denoms: Optional[List[str]] = None,
         broadcast_mode: Optional[BroadcastMode] = None
     ):
@@ -85,7 +85,7 @@ class AsyncWallet:
             memo: str = "",
             gas: Optional[int] = None,
             gas_prices: Optional[Coins.Input] = None,
-            gas_adjustment: Optional[Numeric.Input] = 1,
+            gas_adjustment: Optional[Numeric.Input] = None,
             fee_denoms: Optional[List[str]] = None,
             broadcast_mode: Optional[BroadcastMode] = None
     ):
@@ -109,7 +109,7 @@ class AsyncWallet:
         transfer_amount: Coins = None,
         gas: Optional[int] = None,
         gas_prices: Optional[Coins.Input] = None,
-        gas_adjustment: Optional[Numeric.Input] = 1,
+        gas_adjustment: Optional[Numeric.Input] = None,
         fee_denoms: Optional[List[str]] = None,
         broadcast_mode: Optional[BroadcastMode] = None
     ):
@@ -126,7 +126,7 @@ class AsyncWallet:
             memo: str = "",
             gas: Optional[int] = None,
             gas_prices: Optional[Coins.Input] = None,
-            gas_adjustment: Optional[Numeric.Input] = 1,
+            gas_adjustment: Optional[Numeric.Input] = None,
             fee_denoms: Optional[List[str]] = None,
             broadcast_mode: Optional[BroadcastMode] = None
     ):
@@ -135,7 +135,7 @@ class AsyncWallet:
             memo=memo,
             gas=str(gas),
             gas_prices=gas_prices,
-            gas_adjustment=gas_adjustment,
+            gas_adjustment=gas_adjustment or self.lcd.gas_adjustment,
             fee_denoms=fee_denoms
         )
 
@@ -233,7 +233,7 @@ class Wallet:
             transfer_amount: Coins = None,
             gas: Optional[int] = None,
             gas_prices: Optional[Coins.Input] = None,
-            gas_adjustment: Optional[Numeric.Input] = 1,
+            gas_adjustment: Optional[Numeric.Input] = None,
             fee_denoms: Optional[List[str]] = None,
             broadcast_mode: Optional[BroadcastMode] = None
     ):
@@ -251,7 +251,7 @@ class Wallet:
             memo: str = "",
             gas: Optional[int] = None,
             gas_prices: Optional[Coins.Input] = None,
-            gas_adjustment: Optional[Numeric.Input] = 1,
+            gas_adjustment: Optional[Numeric.Input] = None,
             fee_denoms: Optional[List[str]] = None,
             broadcast_mode: Optional[BroadcastMode] = None
     ):
@@ -275,12 +275,11 @@ class Wallet:
         transfer_amount: Coins = None,
         gas: Optional[int] = None,
         gas_prices: Optional[Coins.Input] = None,
-        gas_adjustment: Optional[Numeric.Input] = 1,
+        gas_adjustment: Optional[Numeric.Input] = None,
         fee_denoms: Optional[List[str]] = None,
         broadcast_mode: Optional[BroadcastMode] = None
 
     ):
-
         send_msg = MsgSend(self.key.acc_address, recipient_addr, transfer_amount)
         if gas is None or gas_prices is None:
             gas_prices = self.lcd.gas_prices
@@ -295,7 +294,7 @@ class Wallet:
             memo: str = "",
             gas: Optional[int] = None,
             gas_prices: Optional[Coins.Input] = None,
-            gas_adjustment: Optional[Numeric.Input] = 1,
+            gas_adjustment: Optional[Numeric.Input] = None,
             fee_denoms: Optional[List[str]] = None,
             broadcast_mode: Optional[BroadcastMode] = None
     ):
@@ -304,7 +303,7 @@ class Wallet:
             memo=memo,
             gas=str(gas),
             gas_prices=gas_prices,
-            gas_adjustment=gas_adjustment,
+            gas_adjustment=gas_adjustment or self.lcd.gas_adjustment,
             fee_denoms=fee_denoms
         )
 
