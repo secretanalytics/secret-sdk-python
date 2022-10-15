@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import Dict, List, Optional
 
+from secret_sdk.core.msg import Msg
 from secret_sdk.core import AccAddress, Coins, Numeric
 from secret_sdk.core.tx import Tx
 from secret_sdk.core.bank import MsgSend
@@ -60,26 +61,16 @@ class AsyncWallet:
             encryption_utils=self.lcd.encrypt_utils
         )
 
-    async def execute_tx(
-        self,
-        contract_addr: str,
-        handle_msg: List[Dict],
-        memo: str = "",
-        transfer_amount: Coins = None,
-        gas: Optional[int] = None,
-        gas_prices: Optional[Coins.Input] = None,
-        gas_adjustment: Optional[Numeric.Input] = None,
-        fee_denoms: Optional[List[str]] = None,
-        broadcast_mode: Optional[BroadcastMode] = None
+    async def create_and_broadcast_tx(
+            self,
+            msg_list: List[Msg],
+            memo: str = "",
+            gas: Optional[int] = None,
+            gas_prices: Optional[Coins.Input] = None,
+            gas_adjustment: Optional[Numeric.Input] = None,
+            fee_denoms: Optional[List[str]] = None,
+            broadcast_mode: Optional[BroadcastMode] = None
     ):
-
-        msg_list = []
-        for msg in handle_msg:
-            execute_msg = await self.lcd.wasm.contract_execute_msg(
-                self.key.acc_address, contract_addr, msg, transfer_amount
-            )
-            msg_list.append(execute_msg)
-
         create_tx_options = CreateTxOptions(
             msgs=msg_list,
             memo=memo,
@@ -91,12 +82,56 @@ class AsyncWallet:
 
         if gas is None or gas_prices is None:
             fee = self.lcd.custom_fees["exec"]
-            create_tx_options.fee=fee
+            create_tx_options.fee = fee
 
         signed_tx = await self.create_and_sign_tx(create_tx_options)
         broadcast_mode = broadcast_mode if broadcast_mode else BroadcastMode.BROADCAST_MODE_BLOCK
-        tx = await self.lcd.tx.broadcast_adapter(signed_tx, mode = broadcast_mode)
+        tx = await self.lcd.tx.broadcast_adapter(signed_tx, mode=broadcast_mode)
         return tx
+
+
+    async def execute_tx(
+        self,
+        contract_addr: str,
+        handle_msg: Dict,
+        memo: str = "",
+        transfer_amount: Coins = None,
+        gas: Optional[int] = None,
+        gas_prices: Optional[Coins.Input] = None,
+        gas_adjustment: Optional[Numeric.Input] = None,
+        fee_denoms: Optional[List[str]] = None,
+        broadcast_mode: Optional[BroadcastMode] = None
+    ):
+
+        execute_msg = await self.lcd.wasm.contract_execute_msg(
+            self.key.acc_address, contract_addr, handle_msg, transfer_amount
+        )
+        return await self.create_and_broadcast_tx(
+            [execute_msg], memo, gas, gas_prices, gas_adjustment, fee_denoms, broadcast_mode
+        )
+
+    async def multi_execute_tx(
+            self,
+            input_msgs: List[Dict],
+            memo: str = "",
+            gas: Optional[int] = None,
+            gas_prices: Optional[Coins.Input] = None,
+            gas_adjustment: Optional[Numeric.Input] = None,
+            fee_denoms: Optional[List[str]] = None,
+            broadcast_mode: Optional[BroadcastMode] = None
+    ):
+        msgs = []
+        for input_msg in input_msgs:
+            # input_msg should be a Dict with contract_addr and handle_msg keys
+            contract_addr = input_msg['contract_addr']
+            handle_msg = input_msg['handle_msg']
+            transfer_amount = input_msg.get('transfer_amount', Coins())
+            execute_msg = await self.lcd.wasm.contract_execute_msg(self.key.acc_address, contract_addr, handle_msg,
+                                                                   transfer_amount)
+            msgs.append(execute_msg)
+        return await self.create_and_broadcast_tx(
+            msgs, memo, gas, gas_prices, gas_adjustment, fee_denoms, broadcast_mode
+        )
 
     async def send_tokens(
         self,
@@ -207,42 +242,47 @@ class Wallet:
         )
 
     def execute_tx(
-        self,
-        contract_addr: str,
-        handle_msg: List[Dict],
-        memo: str = "",
-        transfer_amount: Coins = None,
-        gas: Optional[int] = None,
-        gas_prices: Optional[Coins.Input] = None,
-        gas_adjustment: Optional[Numeric.Input] = None,
-        fee_denoms: Optional[List[str]] = None,
-        broadcast_mode: Optional[BroadcastMode] = None
-
+            self,
+            contract_addr: str,
+            handle_msg: Dict,
+            memo: str = "",
+            transfer_amount: Coins = None,
+            gas: Optional[int] = None,
+            gas_prices: Optional[Coins.Input] = None,
+            gas_adjustment: Optional[Numeric.Input] = None,
+            fee_denoms: Optional[List[str]] = None,
+            broadcast_mode: Optional[BroadcastMode] = None
     ):
-        msg_list = []
-        for msg in handle_msg:
-            execute_msg = self.lcd.wasm.contract_execute_msg(
-                self.key.acc_address, contract_addr, msg, transfer_amount
-            )
-            msg_list.append(execute_msg)
 
-        create_tx_options = CreateTxOptions(
-            msgs=msg_list,
-            memo=memo,
-            gas=str(gas),
-            gas_prices=gas_prices,
-            gas_adjustment=gas_adjustment or 0,
-            fee_denoms=fee_denoms
+        execute_msg = self.lcd.wasm.contract_execute_msg(
+            self.key.acc_address, contract_addr, handle_msg, transfer_amount
+        )
+        return self.create_and_broadcast_tx(
+            [execute_msg], memo, gas, gas_prices, gas_adjustment, fee_denoms, broadcast_mode
         )
 
-        if gas is None or gas_prices is None:
-            fee = self.lcd.custom_fees["exec"]
-            create_tx_options.fee = fee
-
-        signed_tx = self.create_and_sign_tx(create_tx_options)
-        broadcast_mode = broadcast_mode if broadcast_mode else BroadcastMode.BROADCAST_MODE_BLOCK
-        tx = self.lcd.tx.broadcast_adapter(signed_tx, mode=broadcast_mode)
-        return tx
+    def multi_execute_tx(
+            self,
+            input_msgs: List[Dict],
+            memo: str = "",
+            gas: Optional[int] = None,
+            gas_prices: Optional[Coins.Input] = None,
+            gas_adjustment: Optional[Numeric.Input] = None,
+            fee_denoms: Optional[List[str]] = None,
+            broadcast_mode: Optional[BroadcastMode] = None
+    ):
+        msgs = []
+        for input_msg in input_msgs:
+            # input_msg should be a Dict with contract_addr and handle_msg keys
+            contract_addr = input_msg['contract_addr']
+            handle_msg = input_msg['handle_msg']
+            transfer_amount = input_msg.get('transfer_amount', Coins())
+            execute_msg = self.lcd.wasm.contract_execute_msg(self.key.acc_address, contract_addr, handle_msg,
+                                                                   transfer_amount)
+            msgs.append(execute_msg)
+        return self.create_and_broadcast_tx(
+            msgs, memo, gas, gas_prices, gas_adjustment, fee_denoms, broadcast_mode
+        )
 
     def send_tokens(
         self,
@@ -274,3 +314,32 @@ class Wallet:
         broadcast_mode = broadcast_mode if broadcast_mode else BroadcastMode.BROADCAST_MODE_BLOCK
         tx = self.lcd.tx.broadcast_adapter(signed_tx, mode=broadcast_mode)
         return tx
+
+    def create_and_broadcast_tx(
+            self,
+            msg_list: List[Msg],
+            memo: str = "",
+            gas: Optional[int] = None,
+            gas_prices: Optional[Coins.Input] = None,
+            gas_adjustment: Optional[Numeric.Input] = None,
+            fee_denoms: Optional[List[str]] = None,
+            broadcast_mode: Optional[BroadcastMode] = None
+    ):
+        create_tx_options = CreateTxOptions(
+            msgs=msg_list,
+            memo=memo,
+            gas=str(gas),
+            gas_prices=gas_prices,
+            gas_adjustment=gas_adjustment,
+            fee_denoms=fee_denoms
+        )
+
+        if gas is None or gas_prices is None:
+            fee = self.lcd.custom_fees["exec"]
+            create_tx_options.fee = fee
+
+        signed_tx = self.create_and_sign_tx(create_tx_options)
+        broadcast_mode = broadcast_mode if broadcast_mode else BroadcastMode.BROADCAST_MODE_BLOCK
+        tx = self.lcd.tx.broadcast_adapter(signed_tx, mode=broadcast_mode)
+        return tx
+
