@@ -11,7 +11,6 @@ from aiohttp import ClientSession
 from multidict import CIMultiDict
 
 from secret_sdk.core import Coins, Dec, Numeric
-from secret_sdk.core import StdFee
 from secret_sdk.exceptions import LCDResponseError
 from secret_sdk.key.key import Key
 from secret_sdk.util.json import dict_to_data
