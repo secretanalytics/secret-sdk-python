@@ -54,7 +54,6 @@ clean-test: ## remove test and coverage artifacts
 	rm -fr .pytest_cache
 
 test: ## runs tests
-	export PYTHONPATH="/Users/stephaneguilhermegomes/Projects/Secret/repos/secretanalytics-secret-sdk-python/bip32utils:$PYTHONPATH"
 	poetry run pytest
 
 qa: ## runs static analysis with mypy and flake8
