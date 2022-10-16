@@ -63,7 +63,7 @@ mainnetConsensusIoPubKey = bytes.fromhex(
 )
 
 REQUEST_CONFIG = {
-    "GET_TIMEOUT": 15,
+    "GET_TIMEOUT": 20,
     "POST_TIMEOUT": 30,
     "GET_RETRY": 1
 }
@@ -135,14 +135,13 @@ class AsyncLCDClient:
         timeout: Optional[int] = None,
         retry_attempts: Optional[int] = None
     ):
+        params = params or {}
         if (
             params
             and hasattr(params, "to_dict")
             and callable(getattr(params, "to_dict"))
         ):
             params = params.to_dict()
-        else:
-            params = {}
 
         block_height = 0
         if 'block_height' in params:

@@ -58,7 +58,7 @@ class CreateTxOptions:
         fee (Optional[Fee], optional): transaction fee. If ``None``, will be estimated.
             See more on `fee estimation`_.
         memo (str, optional): optional short string to include with transaction.
-        gas (str, optional): gas limit to set per-transaction; set to "auto" to calculate sufficient gas automatically
+        gas (str, optional): gas limit to set per-transaction;
         gas_prices (Coins.Input, optional): gas prices for fee estimation.
         gas_adjustment (Numeric.Input, optional): gas adjustment for fee estimation.
         fee_denoms (List[str], optional): list of denoms to use for fee after estimation.
@@ -328,15 +328,15 @@ class AsyncTxAPI(BaseAsyncAPI):
             Tx: unsigned tx
         """
 
-        opt = copy.deepcopy(options)
 
         # create the fake fee
-        if opt.fee is None:
-            opt.fee = await BaseAsyncAPI._try_await(self.estimate_fee(opt))
+        fee = options.fee
+        if options.fee is None:
+            fee = await BaseAsyncAPI._try_await(self.estimate_fee(options))
 
         return Tx(
-            TxBody(opt.msgs, opt.memo or "", opt.timeout_height or 0),
-            AuthInfo([], opt.fee),
+            TxBody(options.msgs, options.memo or "", options.timeout_height or 0),
+            AuthInfo([], fee),
             [],
         )
 
@@ -357,7 +357,7 @@ class AsyncTxAPI(BaseAsyncAPI):
         if options.gas is None or options.gas is None:
             return self._c.custom_fees["default"]
         gas_prices = options.gas_prices or self._c.gas_prices
-        fee_denoms = options.fee if options.fee_denoms else ["uscrt"]
+        fee_denoms = options.fee_denoms if options.fee_denoms else ["uscrt"]
         gas = options.gas
         gas_adjustment = options.gas_adjustment or self._c.gas_adjustment
 
@@ -369,7 +369,7 @@ class AsyncTxAPI(BaseAsyncAPI):
                 gas_prices_coins = gas_prices_coins.filter(
                     lambda c: c.denom in _fee_denoms
                 )
-        fee_amount = gas_prices_coins.mul(gas * gas_adjustment).to_int_ceil_coins()
+        fee_amount = gas_prices_coins.mul(Numeric.parse(gas) * gas_adjustment).to_int_ceil_coins()
         return Fee(Numeric.parse(gas), fee_amount, "", "")
 
     async def estimate_gas(self, tx: Tx, options: Optional[CreateTxOptions]) -> int:

@@ -210,7 +210,7 @@ class MsgExecuteContract(Msg):
     warn_code_hash: bool = False
     _msg_str: str = ''
 
-    encryption_utils: Optional[EncryptionUtils] = None
+    encryption_utils: Optional[EncryptionUtils] = attr.ib(default=None)
 
     def __attrs_post_init__(self):
         if self.code_hash:

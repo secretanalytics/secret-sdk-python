@@ -56,7 +56,7 @@ def sign_tx(tx):
     account_number = wallet.account_number()
     sequence = wallet.sequence()
 
-    public_key = Any_pb(type_url='/cosmos.crypto.secp256k1.PubKey', value=bytes(PubKey(wallet.key.public_key)))
+    public_key = Any_pb(type_url='/cosmos.crypto.secp256k1.PubKey', value=bytes(wallet.key.public_key.to_proto()))
     mode_info = ModeInfo_pb(
         single=ModeInfoSingle_pb(mode=SignMode.SIGN_MODE_DIRECT)
     )

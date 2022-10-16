@@ -6,6 +6,6 @@ contract = 'secret1rgky3ns9ua09rt059049yl0zqf3xjqxne7ezhp'
 hash = '0dfd06c7c3c482c14d36ba9826b83d164003f2b0bb302f222db72361e0927490'
 query = {"pool":{}}
 height = 5589677
-a = secret.wasm.contract_query(contract, query)
-b = secret.wasm.contract_query(contract, query, height=height)
+a = secret.wasm.contract_query(contract, query, timeout=30)
+b = secret.wasm.contract_query(contract, query, height=height, timeout=30)
 assert a['assets'][0]['amount'] != b['assets'][0]['amount']
