@@ -1,6 +1,8 @@
 import pytest
 from secret_sdk.key.mnemonic import MnemonicKey
-from secret_sdk.core.coins import Coins
+from secret_sdk.core import Coins, TxResultCode
+from secret_sdk.core.wasm.msgs import MsgStoreCode
+from secret_sdk.util.tx import get_value_from_raw_log
 
 
 @pytest.fixture
@@ -108,3 +110,31 @@ def test_params():
     assert params.tx_sig_limit == 7
     assert params.sig_verify_cost_ed25519 == 590
     assert params.sig_verify_cost_secp256_k1 == 1000
+
+
+def test_store_code():
+    wallet = pytest.accounts[0]['wallet']
+
+    with open(r'tests/data/snip20-ibc.wasm.gz', 'rb') as fl:
+        wasm_byte_code = fl.read()
+
+    msg_store_code = MsgStoreCode(
+        sender=pytest.accounts[0]['address'],
+        wasm_byte_code=wasm_byte_code,
+        source='',
+        builder=''
+    )
+    tx_store = wallet.create_and_broadcast_tx(
+        [msg_store_code],
+        gas='3000000',
+        gas_prices=Coins('0.25uscrt')
+    )
+
+    if tx_store.code != TxResultCode.Success.value:
+        raise Exception(f"Failed MsgStoreCode: {tx_store.raw_log}")
+    assert tx_store.code == TxResultCode.Success.value
+
+    code_id = int(get_value_from_raw_log(tx_store.raw_log, 'message.code_id'))
+
+    code_info = pytest.secret.wasm.code_info(code_id)
+    print(code_info)

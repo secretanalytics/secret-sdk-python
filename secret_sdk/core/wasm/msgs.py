@@ -58,11 +58,11 @@ class MsgStoreCode(Msg):
     """"""
 
     sender: AccAddress = attr.ib()
-    wasm_byte_code: str = attr.ib(converter=str)
+    wasm_byte_code: bytes = attr.ib(converter=bytes)
     source: str = attr.ib(converter=str)
     builder: str = attr.ib(converter=str)
 
-    async def gzip_wasm(self):
+    def gzip_wasm(self):
         if not is_gz_file(self.wasm_byte_code):
             self.wasm_byte_code = gzip.compress(self.wasm_byte_code, compresslevel=9)
 
@@ -93,7 +93,7 @@ class MsgStoreCode(Msg):
 
         return MsgStoreCode_pb(
             sender=address_to_bytes(self.sender),
-            wasm_byte_code=base64.b64decode(self.wasm_byte_code),
+            wasm_byte_code=self.wasm_byte_code,
             source=self.source,
             builder=self.builder
         )

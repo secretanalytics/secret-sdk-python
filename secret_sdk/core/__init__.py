@@ -18,6 +18,7 @@ __all__ = [
     "Tx",
     "TxInfo",
     "TxLog",
+    "TxResultCode",
     "ModeInfo",
     "ModeInfoSingle",
     "ModeInfoMulti",
@@ -45,4 +46,4 @@ from .public_key import (
 from .sign_doc import SignDoc
 from .signature_v2 import SignatureV2
 from .tx import ModeInfo, ModeInfoMulti, ModeInfoSingle, Tx, TxInfo, TxLog
-
+from .tx_decoder import TxResultCode
