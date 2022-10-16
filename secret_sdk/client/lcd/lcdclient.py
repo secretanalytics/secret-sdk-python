@@ -63,7 +63,7 @@ mainnetConsensusIoPubKey = bytes.fromhex(
 )
 
 REQUEST_CONFIG = {
-    "GET_TIMEOUT": 20,
+    "GET_TIMEOUT": 30,
     "POST_TIMEOUT": 30,
     "GET_RETRY": 1
 }
