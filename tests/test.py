@@ -1,22 +1,24 @@
-from tests.setup_network import setup_localsecret
+import pytest
 from secret_sdk.key.mnemonic import MnemonicKey
-from secret_sdk.client.lcd import LCDClient
 from secret_sdk.core.coins import Coins
 
 
-def setup_localsecret_test():
-    setup_localsecret()
-    secret = LCDClient(url='http://localhost:1317', chain_id='secretdev-1')
-
-    accounts = []
-
+@pytest.fixture
+def mnemonics():
     # Initialize genesis accounts
-    mnemonics = [
+    return [
         "grant rice replace explain federal release fix clever romance raise often wild taxi quarter soccer fiber love must tape steak together observe swap guitar",
         "jelly shadow frog dirt dragon use armed praise universe win jungle close inmate rain oil canvas beauty pioneer chef soccer icon dizzy thunder meadow",
         "chair love bleak wonder skirt permit say assist aunt credit roast size obtain minute throw sand usual age smart exact enough room shadow charge",
         "word twist toast cloth movie predict advance crumble escape whale sail such angry muffin balcony keen move employ cook valve hurt glimpse breeze brick",
     ]
+
+
+def test_setup_accounts(mnemonics):
+    #setup_localsecret()
+    #secret = LCDClient(url='http://localhost:1317', chain_id='secretdev-1')
+    secret = pytest.secret
+    accounts = []
 
     for mnemonic in mnemonics:
         wallet = secret.wallet(MnemonicKey(mnemonic))
@@ -77,16 +79,27 @@ def setup_localsecret_test():
     for i in range(1, 20):
         assert balance_changes[i] == transfer_amount
 
-    # query auth
-    all_accounts, pagination = secret.auth.accounts()
+    pytest.accounts = accounts
+
+
+def test_accounts():
+    all_accounts, pagination = pytest.secret.auth.accounts()
 
     # 20 accounts with a balance and 7? module accounts - ordering of tests can affect this.
     #  it 's more robust to check eq&gt rather than flat equality
     assert len(all_accounts) >= 27
     assert len([acc for acc in all_accounts if acc.type_url == '/cosmos.auth.v1beta1.ModuleAccount']) >= 7
-    addrs = [accounts[0]['address'], accounts[1]['address']]
+    addrs = [pytest.accounts[0]['address'], pytest.accounts[1]['address']]
     assert len([acc for acc in all_accounts if acc.type_url == '/cosmos.auth.v1beta1.BaseAccount' and acc.address in addrs]) == 2
 
 
-if __name__ == '__main__':
-    setup_localsecret_test()
+def test_account():
+    addr = pytest.accounts[1]['address']
+    account = pytest.secret.auth.account_info(address=addr)
+    if not account:
+        raise Exception(f'Account {addr} should exist')
+
+    assert account.type_url == '/cosmos.auth.v1beta1.BaseAccount'
+    assert account.address == addr
+    assert account.account_number == 1
+    assert account.sequence == 0
