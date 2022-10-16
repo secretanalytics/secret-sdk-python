@@ -14,7 +14,6 @@ from secret_sdk.protobuf.secret.compute.v1beta1 import (
     MsgInstantiateContract as MsgInstantiateContract_pb,
 )
 from secret_sdk.protobuf.secret.compute.v1beta1 import MsgStoreCode as MsgStoreCode_pb
-
 from secret_sdk.core import AccAddress, Coins
 from secret_sdk.core.msg import Msg
 from secret_sdk.util.encrypt_utils import EncryptionUtils

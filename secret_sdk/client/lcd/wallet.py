@@ -75,6 +75,8 @@ class AsyncWallet:
         execute_msg = await self.lcd.wasm.contract_execute_msg(
             self.key.acc_address, contract_addr, handle_msg, transfer_amount
         )
+        if gas is None:
+            gas = self.lcd.custom_fees["exec"].gas_limit
         return await self.create_and_broadcast_tx(
             [execute_msg], memo, gas, gas_prices, gas_adjustment, fee_denoms, broadcast_mode
         )
@@ -98,6 +100,8 @@ class AsyncWallet:
             execute_msg = await self.lcd.wasm.contract_execute_msg(self.key.acc_address, contract_addr, handle_msg,
                                                                    transfer_amount)
             msgs.append(execute_msg)
+        if gas is None:
+            gas = self.lcd.custom_fees["exec"].gas_limit * len(input_msgs)
         return await self.create_and_broadcast_tx(
             msgs, memo, gas, gas_prices, gas_adjustment, fee_denoms, broadcast_mode
         )
@@ -114,8 +118,7 @@ class AsyncWallet:
         broadcast_mode: Optional[BroadcastMode] = None
     ):
         send_msg = MsgSend(self.key.acc_address, recipient_addr, transfer_amount)
-        if gas is None or gas_prices is None:
-            gas_prices = self.lcd.gas_prices
+        if gas is None:
             gas = self.lcd.custom_fees["send"].gas_limit
 
         return await self.create_and_broadcast_tx([send_msg], memo, gas, gas_prices, gas_adjustment, fee_denoms, broadcast_mode)
@@ -144,8 +147,7 @@ class AsyncWallet:
         } for recipient_addr, transfer_amount in zip(recipient_addrs, transfer_amounts)]
 
         multi_send_msg = MsgMultiSend(inputs, outputs)
-        if gas is None or gas_prices is None:
-            gas_prices = self.lcd.gas_prices
+        if gas is None:
             gas = self.lcd.custom_fees["send"].gas_limit
 
         return await self.create_and_broadcast_tx([multi_send_msg], memo, gas, gas_prices, gas_adjustment, fee_denoms,
@@ -170,8 +172,8 @@ class AsyncWallet:
             fee_denoms=fee_denoms
         )
 
-        if gas is None or gas_prices is None:
-            fee = self.lcd.custom_fees["exec"]
+        if gas is None:
+            fee = self.lcd.tx.estimate_fee(create_tx_options)
             create_tx_options.fee = fee
 
         signed_tx = await self.create_and_sign_tx(create_tx_options)
@@ -272,6 +274,8 @@ class Wallet:
         execute_msg = self.lcd.wasm.contract_execute_msg(
             self.key.acc_address, contract_addr, handle_msg, transfer_amount
         )
+        if gas is None:
+            gas = self.lcd.custom_fees["exec"].gas_limit
         return self.create_and_broadcast_tx(
             [execute_msg], memo, gas, gas_prices, gas_adjustment, fee_denoms, broadcast_mode
         )
@@ -295,6 +299,8 @@ class Wallet:
             execute_msg = self.lcd.wasm.contract_execute_msg(self.key.acc_address, contract_addr, handle_msg,
                                                                    transfer_amount)
             msgs.append(execute_msg)
+        if gas is None:
+            gas = self.lcd.custom_fees["exec"].gas_limit * len(input_msgs)
         return self.create_and_broadcast_tx(
             msgs, memo, gas, gas_prices, gas_adjustment, fee_denoms, broadcast_mode
         )
@@ -312,8 +318,7 @@ class Wallet:
 
     ):
         send_msg = MsgSend(self.key.acc_address, recipient_addr, transfer_amount)
-        if gas is None or gas_prices is None:
-            gas_prices = self.lcd.gas_prices
+        if gas is None:
             gas = self.lcd.custom_fees["send"].gas_limit
 
         return self.create_and_broadcast_tx([send_msg], memo, gas, gas_prices, gas_adjustment, fee_denoms,
@@ -343,8 +348,7 @@ class Wallet:
         } for recipient_addr, transfer_amount in zip(recipient_addrs, transfer_amounts)]
 
         multi_send_msg = MsgMultiSend(inputs, outputs)
-        if gas is None or gas_prices is None:
-            gas_prices = self.lcd.gas_prices
+        if gas is None:
             gas = self.lcd.custom_fees["send"].gas_limit
 
         return self.create_and_broadcast_tx([multi_send_msg], memo, gas, gas_prices, gas_adjustment, fee_denoms,
@@ -369,8 +373,8 @@ class Wallet:
             fee_denoms=fee_denoms
         )
 
-        if gas is None or gas_prices is None:
-            fee = self.lcd.custom_fees["exec"]
+        if gas is None:
+            fee = self.lcd.tx.estimate_fee(create_tx_options)
             create_tx_options.fee = fee
 
         signed_tx = self.create_and_sign_tx(create_tx_options)

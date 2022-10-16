@@ -168,8 +168,9 @@ class AsyncLCDClient:
                 if not 200 <= response.status < 299:
                     raise LCDResponseError(message=str(result), response=response)
 
+                request_height = response.headers.get('grpc-metadata-x-cosmos-block-height')
                 self.last_request_height = (
-                    result.get("height") if result else self.last_request_height
+                    request_height if result else self.last_request_height
                 )
                 if block_height:
                     self.session.headers.pop('x-cosmos-block-height')

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import base64
 import json
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Any
 
 import attr
 from secret_sdk.protobuf.cosmos.base.abci.v1beta1 import AbciMessageLog as AbciMessageLog_pb
@@ -610,11 +610,15 @@ class TxInfo(JSONSerializable):
     codespace: Optional[str] = attr.ib(default=None)
     """Error subspace (used alongside ``code``)."""
 
+    tx_bytes: Optional[str] = attr.ib(default=None)
+
+    data: Optional[Any] = attr.ib(default=None)
+
     def to_data(self) -> dict:
         data = {
             "height": str(self.height),
             "txhash": self.txhash,
-            "raw_log": self.rawlog,
+            "rawlog": self.rawlog,
             "logs": [log.to_data() for log in self.logs] if self.logs else None,
             "gas_wanted": str(self.gas_wanted),
             "gas_used": str(self.gas_used),
@@ -622,6 +626,8 @@ class TxInfo(JSONSerializable):
             "tx": self.tx.to_data(),
             "code": self.code,
             "codespace": self.codespace,
+            "tx_bytes": self.tx_bytes,
+            "data": self.data
         }
 
         return data
@@ -639,6 +645,8 @@ class TxInfo(JSONSerializable):
             data.get("timestamp"),
             data.get("code"),
             data.get("codespace"),
+            data.get("tx_bytes"),
+            data.get("data"),
         )
 
     def to_proto(self) -> TxResponse_pb:

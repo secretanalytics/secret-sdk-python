@@ -14,10 +14,11 @@ from secret_sdk.core.broadcast import (
     BlockTxBroadcastResult,
     SyncTxBroadcastResult,
 )
-from secret_sdk.core.tx_decoder import msg_decoder_mapper
+from secret_sdk.protobuf.cosmos.base.abci.v1beta1 import TxMsgData
+
 from secret_sdk.core.fee import Fee
 from secret_sdk.core.msg import Msg
-from secret_sdk.core.tx import AuthInfo, SignerData, SignMode, Tx, TxBody, TxInfo
+from secret_sdk.core.tx import AuthInfo, SignerData, SignMode, Tx, TxBody, TxInfo, TxLog
 from secret_sdk.util.hash import hash_amino
 from secret_sdk.util.json import JSONSerializable
 
@@ -136,25 +137,24 @@ class AsyncTxAPI(BaseAsyncAPI):
             TxInfo: transaction info
         """
         res = await self._c._get(f"/cosmos/tx/v1beta1/txs/{tx_hash}")
-        # if "tx" not in res:
-        #     raise Exception("Unexpected response data format")
+        if "tx" not in res:
+            raise Exception("Unexpected response data format")
         # # TODO: update TxInfo interface
-        # return self.decrypt_txs_response(res)
-        return TxInfo.from_data(res["tx_response"])
+        return self.decrypt_txs_response(res)
+        # return TxInfo.from_data(res["tx_response"])
 
-    def decrypt_data_field(self, data_field: str, nonces):
-        wasm_output_data_cipher_bz = bytearray.fromhex(data_field)
-
+    def decrypt_data_field(self, data_field: bytes, nonces):
         for nonce in nonces:
             try:
                 return base64.b64decode(
-                    self._c.encrypt_utils.decrypt(wasm_output_data_cipher_bz, nonce)
+                    self._c.encrypt_utils.decrypt(data_field, nonce)
                 )
             except Exception as e:
                 error = e
         raise error
 
-    def decrypt_logs(self, logs, nonces):
+    def decrypt_logs(self, logs, nonces) -> List[TxLog]:
+        _logs = []
         for log in logs:
             for e in log["events"]:
                 if e["type"] == "wasm":
@@ -178,24 +178,18 @@ class AsyncTxAPI(BaseAsyncAPI):
 
                         if nonce_ok:
                             continue
+            _local_log = TxLog(log['msg_index'], log=log.get('log'), events = log['events'])
+            _logs.append(_local_log)
 
-        return logs
+        return _logs
 
-    def decrypt_txs_response(self, txs_response):
-        nonces = {}
+    def decrypt_txs_response(self, txs_response) -> TxInfo:
 
         decoded_tx = Tx.from_data(txs_response['tx'])
+        nonces = [[]] * len(decoded_tx.body.messages)
+
         for i, message in enumerate(decoded_tx.body.messages):
             msg_type = message.type_url
-            msg_decoder = msg_decoder_mapper.get(msg_type)
-
-            if not msg_decoder:
-                continue
-
-            msg = {
-                'type_url': msg_type,
-                'value': msg_decoder(message)
-            }
 
             # Check if the message needs decryption
             contract_input_msg_field_name = ''
@@ -207,101 +201,100 @@ class AsyncTxAPI(BaseAsyncAPI):
             if contract_input_msg_field_name != '':
                 # Encrypted, try to decrypt
                 try:
-                    contract_input_msg_bytes = base64.b64decode(msg["value"][contract_input_msg_field_name])
+                    contract_input_msg_bytes = base64.b64decode(getattr(message, contract_input_msg_field_name))
                     nonce = contract_input_msg_bytes[0:32]
+                    nonces[i] = list(nonce)
                     account_pub_key = contract_input_msg_bytes[32:64]
                     ciphertext = contract_input_msg_bytes[64:]
 
                     plaintext = self._c.encrypt_utils.decrypt(
                         ciphertext,
-                        nonce
+                        list(nonce) # takes list of int repr for bytes
                     )
                     # first 64 chars is the code hash as hex string
-                    msg["value"][contract_input_msg_field_name] = plaintext[64:]
-
+                    msg = plaintext[64:].decode()
+                    setattr(message, contract_input_msg_field_name, msg)
+                    setattr(message, 'encryption_utils', self._c.encrypt_utils)
                     # Fill nonces array to later use it in output decryption
-                    nonces[i] = nonce
                 except:
                     pass
                     # Not encrypted or can't decrypt because not original sender
 
-            decoded_tx.body.messages[i] = msg
-
-        raw_log = txs_response['tx_response']['raw_log']
+        txs_response = txs_response['tx_response']
+        raw_log = txs_response['raw_log']
         json_log = None
         array_log = None
 
-        code = txs_response['tx_response']['code']
+        code = txs_response['code']
         if code == 0 and raw_log != '':
-            json_log = json.loads(raw_log)
-
-            for i, _ in enumerate(json_log):
-                if 'msg_index' not in json_log[i] or not json_log[i]['msg_index']:
+            _json_log = json.loads(raw_log)
+            json_log = []
+            for i, log in enumerate(_json_log):
+                if 'msg_index' not in log or not log['msg_index']:
                     # See https://github.com/cosmos/cosmos-sdk/pull/11147
-                    json_log[i]['msg_index'] = i
-
-            array_log = self.decrypt_logs(json_log, nonces)
+                    log['msg_index'] = i
+                json_log.append(TxLog(i, log.get('log'), log['events']))
+            array_log = self.decrypt_logs(_json_log, nonces)
         elif code != 0 and raw_log != '':
             try:
                 error_message_rgx = re.compile(
                     rf'; message index: (\d+):(?: dispatch: submessages:)* encrypted: (.+?): (?:instantiate|execute|query|reply to) contract failed'
                 )
                 rgx_matches = error_message_rgx.findall(raw_log)
-                if rgx_matches and len(rgx_matches) == 3:
-                    msg_index = int(rgx_matches[1])
-                    error_cipher_b64 = rgx_matches[2]
+                if rgx_matches:
+                    msg_index,error_cipher_b64 = rgx_matches[0]
                     error_cipher_bz = base64.b64decode(error_cipher_b64)
-                    error_plain_bz = self._c.encrypt_utils.decrypt(error_cipher_bz, nonces[msg_index])
+                    error_plain_bz = self._c.encrypt_utils.decrypt(error_cipher_bz, nonces[int(msg_index)])
                     raw_log = raw_log.replace(
-                        f'encrypted: {rgx_matches[2]}', error_plain_bz
+                        f'encrypted: {error_cipher_b64}', error_plain_bz
                     )
 
                     try:
-                        json_log = json.loads(error_plain_bz)
+                        json_log = TxLog(0, json.loads(error_plain_bz), [{}])
                     except:
                         pass
             except:
                 pass
 
-        tx_msg_data = [bytearray.fromhex(txs_response['tx_response']['data'])]
-        for i, data in enumerate(tx_msg_data):
-            nonce = nonces.get(i)
-            if nonce and len(nonces) == 32:
+        tx_msg_data = TxMsgData()
+        tx_msg_data = tx_msg_data.FromString(data=bytes.fromhex(txs_response['data']))
+        data = [[]] * len(tx_msg_data.data)
+        for i, tx_data in enumerate(tx_msg_data.data):
+            data[i] = tx_data
+            nonce = nonces[i]
+            if nonce and len(nonce) == 32:
                 # Check if the message needs decryption
                 try:
-                    msg_type = decoded_tx.body.messages[i].type_url
+                    _msg = decoded_tx.body.messages[i]
+                    msg_type = _msg.type_url
+
                     if msg_type == '/secret.compute.v1beta1.MsgInstantiateContract':
-                        decoded = MsgInstantiateContractResponse(data['data'])
-                        decrypted = self.decrypt_data_field(data['data'], [nonce])
+                        decrypted = self.decrypt_data_field(tx_data.data, [nonce])
                         data[i] = MsgInstantiateContractResponse(
-                            address=decoded.address,
+                            address=_msg.sender,
                             data=decrypted
                         )
                     elif msg_type == '/secret.compute.v1beta1.MsgExecuteContract':
-                        decoded = MsgExecuteContractResponse(data['data'])
-                        decrypted = self.decrypt_data_field(data['data'], [nonce])
+                        decrypted = self.decrypt_data_field(tx_data.data, [nonce])
                         data[i] = MsgExecuteContractResponse(
                             data=decrypted
                         )
                 except:
                     pass
 
-        tx_resp = txs_response['tx_response']
-        return {
-          'height': int(tx_resp['height']),
-          'timestamp': tx_resp['timestamp'],
-          'transactionHash': tx_resp['txhash'],
-          'code': tx_resp['code'],
-          'tx': decoded_tx,
-          'txBytes': tx_resp['tx'].get('value'),
-          'rawLog': raw_log,
-          'jsonLog': json_log,
-          'arrayLog': array_log,
-          'events': tx_resp['events'],
-          'data': data,
-          'gasUsed': int(tx_resp['gas_used']),
-          'gasWanted': int(tx_resp['gas_wanted']),
-        }
+        return TxInfo(
+            height=int(txs_response['height']),
+            timestamp=txs_response['timestamp'],
+            txhash=txs_response['txhash'],
+            code=txs_response['code'],
+            tx=decoded_tx,
+            tx_bytes=txs_response['tx'].get('value'),
+            rawlog=raw_log,
+            logs=array_log if array_log else json_log,
+            data=data,
+            gas_used=int(txs_response['gas_used']),
+            gas_wanted=int(txs_response['gas_wanted']),
+        )
 
     async def create(
             self, signers: List[SignerOptions], options: CreateTxOptions
@@ -329,7 +322,7 @@ class AsyncTxAPI(BaseAsyncAPI):
             [],
         )
 
-    async def estimate_fee(
+    def estimate_fee(
         self,
         options: CreateTxOptions
     ) -> Fee:
@@ -343,11 +336,9 @@ class AsyncTxAPI(BaseAsyncAPI):
             Fee: estimated fee
         """
 
-        if options.gas is None or options.gas is None:
-            return self._c.custom_fees["default"]
         gas_prices = options.gas_prices or self._c.gas_prices
         fee_denoms = options.fee_denoms if options.fee_denoms else ["uscrt"]
-        gas = options.gas
+        gas = Numeric.parse(options.gas) if options.gas else self._c.custom_fees["default"].gas_limit
         gas_adjustment = options.gas_adjustment or self._c.gas_adjustment
 
         gas_prices_coins = None
@@ -358,8 +349,8 @@ class AsyncTxAPI(BaseAsyncAPI):
                 gas_prices_coins = gas_prices_coins.filter(
                     lambda c: c.denom in _fee_denoms
                 )
-        fee_amount = gas_prices_coins.mul(Numeric.parse(gas) * gas_adjustment).to_int_ceil_coins()
-        return Fee(Numeric.parse(gas), fee_amount, "", "")
+        fee_amount = gas_prices_coins.mul(gas * gas_adjustment).to_int_ceil_coins()
+        return Fee(gas, fee_amount, "", "")
 
     async def estimate_gas(self, tx: Tx, options: Optional[CreateTxOptions]) -> int:
         gas_adjustment = options.gas_adjustment if options else self._c.gas_adjustment
@@ -502,8 +493,12 @@ class AsyncTxAPI(BaseAsyncAPI):
                 actual_params.add(p, params[p])
 
         res = await self._c._get("/cosmos/tx/v1beta1/txs", actual_params)
+        txs = []
+        for tx, tx_response in zip(res['txs'], res['tx_responses']):
+            decrypted_tx = self.decrypt_txs_response({'tx': tx, 'tx_response': tx_response})
+            txs.append(decrypted_tx)
         return {
-            "txs": [TxInfo.from_data(tx) for tx in res.get("tx_responses")],
+            "txs": txs,
             "pagination": res.get("pagination"),
         }
 
@@ -543,14 +538,6 @@ class TxAPI(AsyncTxAPI):
         pass
 
     create.__doc__ = AsyncTxAPI.create.__doc__
-
-    @sync_bind(AsyncTxAPI.estimate_fee)
-    def estimate_fee(
-            self, options: CreateTxOptions
-    ) -> Fee:
-        pass
-
-    estimate_fee.__doc__ = AsyncTxAPI.estimate_fee.__doc__
 
     @sync_bind(AsyncTxAPI.estimate_gas)
     def estimate_gas(
