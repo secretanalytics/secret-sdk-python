@@ -504,7 +504,7 @@ class AsyncTxAPI(BaseAsyncAPI):
         actual_params = CIMultiDict()
 
         for event in events:
-            if event == "tx.height":
+            if event[0] == "tx.height":
                 actual_params.add("events", f"{event[0]}={event[1]}")
             else:
                 actual_params.add("events", f"{event[0]}='{event[1]}'")
