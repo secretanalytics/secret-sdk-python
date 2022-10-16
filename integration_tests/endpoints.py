@@ -1,4 +1,5 @@
 from secret_sdk.client.localsecret import LocalSecret, main_net_chain_id
+from secret_sdk.client.lcd.api.tx import CreateTxOptions
 
 secret = LocalSecret(chain_id=main_net_chain_id)
 
@@ -12,7 +13,7 @@ print(res)
 print("---------------------------")
 
 print("Bank")
-res = secret.bank.balance(binance_account)
+res, _ = secret.bank.balance(binance_account)
 print(res)
 print("---------------------------")
 
@@ -123,27 +124,20 @@ for tx_hash in [
 ]:
     try:
         res = secret.tx.tx_info(tx_hash)
-        print(res)
+        # print(res)
     except Exception as e:
-        print(e)
+        print(tx_hash, e)
 
-    try:
-        res = secret.tx.tx_by_id(tx_hash)
-        print(res)
-    except Exception as e:
-        print(e)
-
+opt = CreateTxOptions(msgs = [])
 res = secret.tx.estimate_fee(
-        sender=delegator_address,
-        msgs=[],
-        memo=''
+        opt
 )
 print(res)
 
 
 res = secret.tx.search(
     events = [
-        ["tx.height", 42508],
+        ["tx.height", 5599260],
     ])
 
 print(res)
@@ -159,8 +153,6 @@ res = secret.wasm.contract_info(
 )
 print(res)
 
-res = secret.wasm.contract_hash_by_code_id(code_id=5)
-print(res)
 
 res = secret.wasm.contract_hash("secret1k0jntykt7e4g3y88ltc60czgjuqdy4c9e8fzek")
 print(res)
