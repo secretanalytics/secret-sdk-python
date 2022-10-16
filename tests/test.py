@@ -1,7 +1,9 @@
+import datetime
 import pytest
 from secret_sdk.key.mnemonic import MnemonicKey
 from secret_sdk.core import Coins, TxResultCode
-from secret_sdk.core.wasm.msgs import MsgStoreCode
+from secret_sdk.client.lcd.api.gov import ProposalStatus
+from secret_sdk.core.wasm.msgs import MsgStoreCode, MsgInstantiateContract
 from secret_sdk.util.tx import get_value_from_raw_log
 
 
@@ -129,7 +131,6 @@ def test_store_code():
         gas='3000000',
         gas_prices=Coins('0.25uscrt')
     )
-
     if tx_store.code != TxResultCode.Success.value:
         raise Exception(f"Failed MsgStoreCode: {tx_store.raw_log}")
     assert tx_store.code == TxResultCode.Success.value
@@ -137,4 +138,122 @@ def test_store_code():
     code_id = int(get_value_from_raw_log(tx_store.raw_log, 'message.code_id'))
 
     code_info = pytest.secret.wasm.code_info(code_id)
-    print(code_info)
+    code_hash = code_info['code_info']['code_hash']
+
+    msg_init = MsgInstantiateContract(
+        sender=pytest.accounts[0]['address'],
+        code_id=code_id,
+        code_hash=code_hash,
+        init_msg={
+            "name": "Secret SCRT",
+            "admin": pytest.accounts[0]['address'],
+            "symbol": "SSCRT",
+            "decimals": 6,
+            "initial_balances": [{"address": pytest.accounts[0]['address'], "amount": "1"}],
+            "prng_seed": "eW8=",
+            "config": {
+                "public_total_supply": True,
+                "enable_deposit": True,
+                "enable_redeem": True,
+                "enable_mint": False,
+                "enable_burn": False,
+            },
+            "supported_denoms": ["uscrt"],
+        },
+        label=f"Label {datetime.datetime.now()}",
+        init_funds=[],
+        encryption_utils=pytest.secret.encrypt_utils
+    )
+    tx_init = wallet.create_and_broadcast_tx(
+        [msg_init],
+        gas='5000000',
+        gas_prices=Coins('0.25uscrt')
+    )
+    if tx_init.code != TxResultCode.Success.value:
+        raise Exception(f"Failed MsgInstiateContract: {tx_init.raw_log}")
+    assert tx_init.code == TxResultCode.Success.value
+    assert get_value_from_raw_log(tx_init.raw_log, 'message.action') == "/secret.compute.v1beta1.MsgInstantiateContract"
+
+    contract_adress = get_value_from_raw_log(tx_init.raw_log, 'message.contract_address')
+    assert contract_adress == tx_init.data[0]['address']
+
+    # expect(contractAddress).toBe(
+    #       MsgInstantiateContractResponse.decode(txInit.data[0]).address,
+    #     );
+    # const
+    # tx = await secretjs.tx.broadcast(
+    #     [
+    #         new MsgExecuteContract({
+    #         sender: secretjs.address,
+    #         contractAddress,
+    #         msg: {
+    #                  create_viewing_key: {
+    #                      entropy: "bla bla",
+    #                  },
+    #              },
+    #              codeHash,
+    # }),
+    # ],
+    # {
+    #     broadcastCheckIntervalMs: 100,
+    #     gasLimit: 5_000_000,
+    # },
+    # );
+    # let
+    # txExec = await secretjs.query.getTx(tx.transactionHash);
+    # while (txExec === null) {
+    # sleep(100);
+    # txExec = await secretjs.query.getTx(tx.transactionHash);
+    # }
+    #
+    # expect(
+    #     fromUtf8(MsgExecuteContractResponse.decode(txExec.data[0]).data),
+    # ).toContain('{"create_viewing_key":{"key":"');
+
+
+#def test_gov_text_proposal():
+    # proposals_before = pytest.secret.gov.proposals(options={
+    #     "proposal_status": ProposalStatus.PROPOSAL_STATUS_UNSPECIFIED,
+    #     "voter": '',
+    #     "depositor": ''
+    # })
+    #
+    # tx = pytest.secret.gov.submit_proposal(
+    #     content={},
+    #     initial_deposit=Coins({'uscrt': 10000000}),
+    #     proposer=pytest.accounts[0]['address']
+    # )
+    # print(tx)
+    # const
+    # tx = await secretjs.tx.gov.submitProposal(
+    #     {
+    #         type: ProposalType.TextProposal,
+    #         proposer: accounts[0].address,
+    #         initialDeposit: [{amount: "10000000", denom: "uscrt"}],
+    #         content: {
+    #             title: "Hi",
+    #             description: "Hello",
+    #         },
+    #     },
+    #     {
+    #         broadcastCheckIntervalMs: 100,
+    #         gasLimit: 5_000_000,
+    #     },
+    # );
+    # if (tx.code !== TxResultCode.Success) {
+    # console.error(tx.rawLog);
+    # }
+    # expect(tx.code).toBe(TxResultCode.Success);
+    #
+    # expect(
+    # getValueFromRawLog(tx.rawLog, "submit_proposal.proposal_type"),
+    # ).toBe("Text");
+    #
+    # expect(
+    # Number(getValueFromRawLog(tx.rawLog, "submit_proposal.proposal_id")),
+    # ).toBeGreaterThanOrEqual(1);
+    #
+    # const proposalsAfter = await getAllProposals(secretjs);
+    #
+    # expect(proposalsAfter.length - proposalsBefore.length).toBe(1);
+    # });
