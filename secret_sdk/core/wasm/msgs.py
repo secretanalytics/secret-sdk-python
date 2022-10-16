@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import base64
 import json
+import gzip
 from typing import Optional, Union
 
 import attr
@@ -16,7 +17,6 @@ from secret_sdk.protobuf.secret.compute.v1beta1 import MsgStoreCode as MsgStoreC
 
 from secret_sdk.core import AccAddress, Coins
 from secret_sdk.core.msg import Msg
-from secret_sdk.util.remove_none import remove_none
 from secret_sdk.util.encrypt_utils import EncryptionUtils
 
 __all__ = [
@@ -24,6 +24,10 @@ __all__ = [
     "MsgInstantiateContract",
     "MsgExecuteContract"
 ]
+
+
+def is_gz_file(byte_code):
+    return byte_code[:2] == b'\x1f\x8b'
 
 
 def parse_msg(msg: Union[dict, str, bytes]) -> dict:
@@ -58,12 +62,12 @@ class MsgStoreCode(Msg):
     source: str = attr.ib(converter=str)
     builder: str = attr.ib(converter=str)
 
-    # async def gzip_wasm(self):
-    #     if not is_gzip(self.wasm_byte_code):
-    #         self.wasm_byte_code = gzip(self.wasm_byte_code, level=9)
+    async def gzip_wasm(self):
+        if not is_gz_file(self.wasm_byte_code):
+            self.wasm_byte_code = gzip.compress(self.wasm_byte_code, compresslevel=9)
 
     def to_amino(self) -> dict:
-        # await self.gzip_wasm()
+        self.gzip_wasm()
 
         return {
             "type": self.type_amino,
@@ -85,7 +89,7 @@ class MsgStoreCode(Msg):
         )
 
     def to_proto(self) -> MsgStoreCode_pb:
-        # await self.gzip_wasm()
+        self.gzip_wasm()
 
         return MsgStoreCode_pb(
             sender=address_to_bytes(self.sender),
