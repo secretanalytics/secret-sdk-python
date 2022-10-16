@@ -29,7 +29,7 @@ class AsyncWasmAPI(BaseAsyncAPI):
         Returns:
             dict: code information
         """
-        return await self._c._get(f"/compute/v1beta1/contracts/{code_id}")
+        return await self._c._get(f"/compute/v1beta1/code/{code_id}")
 
     async def list_contracts_by_code_id(self, code_id: int) -> list:
         """Fetches information about an uploaded code.
@@ -40,7 +40,7 @@ class AsyncWasmAPI(BaseAsyncAPI):
         Returns:
             dict: code information
         """
-        return await self._c._get(f"/compute/v1beta1/contracts/{code_id}") or []
+        return await self._c._get(f"/compute/v1beta1/code/{code_id}") or []
 
     async def contract_info(self, contract_address: str) -> dict:
         """Fetches information about an instantiated contract.
