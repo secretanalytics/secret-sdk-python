@@ -3,6 +3,7 @@ from .data import (
     BaseAccount,
     ContinuousVestingAccount,
     DelayedVestingAccount,
+    ModuleAccount
 )
 
 from .msgs import (
@@ -14,5 +15,6 @@ __all__ = [
     "BaseAccount",
     "ContinuousVestingAccount",
     "DelayedVestingAccount",
+    "ModuleAccount",
     "MsgCreateVestingAccount",
 ]

@@ -1,4 +1,4 @@
-from typing import Optional, Union
+from typing import Optional, Union, List
 
 from ..params import APIParams
 from secret_sdk.core import AccAddress
@@ -7,6 +7,7 @@ from secret_sdk.core.auth import (
     BaseAccount,
     ContinuousVestingAccount,
     DelayedVestingAccount,
+    ModuleAccount
 )
 
 from ._base import BaseAsyncAPI, sync_bind
@@ -21,6 +22,7 @@ class AsyncAuthAPI(BaseAsyncAPI):
         BaseAccount,
         ContinuousVestingAccount,
         DelayedVestingAccount,
+        ModuleAccount
     ]:
         """Fetches the account information.
 
@@ -29,10 +31,29 @@ class AsyncAuthAPI(BaseAsyncAPI):
             params (APIParams): optional parameters
 
         Returns:
-            Union[BaseAccount, ContinuousVestingAccount, DelayedVestingAccount, PeriodicVestingAccount]: account information
+            Union[BaseAccount, ContinuousVestingAccount, DelayedVestingAccount, ModuleAccount]: account information
         """
         result = await self._c._get(f"/cosmos/auth/v1beta1/accounts/{address}", params)
         return Account.from_data(result["account"])
+
+    async def accounts(
+        self, params: Optional[APIParams] = None
+    ) -> Union[
+        BaseAccount,
+        ContinuousVestingAccount,
+        DelayedVestingAccount,
+        ModuleAccount
+    ]:
+        """Fetches all accounts
+
+        Args:
+            params (APIParams): optional parameters
+
+        Returns:
+            List[Union[BaseAccount, ContinuousVestingAccount, DelayedVestingAccount, ModuleAccount]]: accounts information, pagination
+        """
+        result = await self._c._get(f"/cosmos/auth/v1beta1/accounts", params)
+        return [Account.from_data(account) for account in result['accounts']], result['pagination']
 
 
 class AuthAPI(AsyncAuthAPI):
@@ -43,7 +64,21 @@ class AuthAPI(AsyncAuthAPI):
         BaseAccount,
         ContinuousVestingAccount,
         DelayedVestingAccount,
+        ModuleAccount
     ]:
         pass
 
     account_info.__doc__ = AsyncAuthAPI.account_info.__doc__
+
+    @sync_bind(AsyncAuthAPI.accounts)
+    def accounts(
+            self, params: Optional[APIParams] = None
+    ) -> List[Union[
+        BaseAccount,
+        ContinuousVestingAccount,
+        DelayedVestingAccount,
+        ModuleAccount
+    ]]:
+        pass
+
+    accounts.__doc__ = AsyncAuthAPI.accounts.__doc__

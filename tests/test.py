@@ -28,7 +28,7 @@ def setup_localsecret_test():
         })
 
     # Generate a bunch of accounts because tx.staking tests require creating a bunch of validators
-    for i in range(4, 19):
+    for i in range(4, 20):
         wallet = secret.wallet(MnemonicKey())
         accounts.append({
             'address': wallet.key.acc_address,
@@ -37,7 +37,7 @@ def setup_localsecret_test():
             'secret': secret
         })
 
-    # Send 100k SCRT from account 0 to each of accounts 1 - 19
+    # Send 100k SCRT from account 0 to each of accounts 1 - 20
     for account in accounts:
         account['balances'], _ = account['wallet'].lcd.bank.balance(account['address'])
 
@@ -74,8 +74,18 @@ def setup_localsecret_test():
 
     balance_changes = update_balance(accounts)
     print(balance_changes)
-    for i in range(1, 19):
+    for i in range(1, 20):
         assert balance_changes[i] == transfer_amount
+
+    # query auth
+    all_accounts, pagination = secret.auth.accounts()
+
+    # 20 accounts with a balance and 7? module accounts - ordering of tests can affect this.
+    #  it 's more robust to check eq&gt rather than flat equality
+    assert len(all_accounts) >= 27
+    assert len([acc for acc in all_accounts if acc.type_url == '/cosmos.auth.v1beta1.ModuleAccount']) >= 7
+    addrs = [accounts[0]['address'], accounts[1]['address']]
+    assert len([acc for acc in all_accounts if acc.type_url == '/cosmos.auth.v1beta1.BaseAccount' and acc.address in addrs]) == 2
 
 
 if __name__ == '__main__':
