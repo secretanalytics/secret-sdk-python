@@ -15,8 +15,6 @@ def mnemonics():
 
 
 def test_setup_accounts(mnemonics):
-    #setup_localsecret()
-    #secret = LCDClient(url='http://localhost:1317', chain_id='secretdev-1')
     secret = pytest.secret
     accounts = []
 
@@ -75,7 +73,6 @@ def test_setup_accounts(mnemonics):
         return {i: new[i]-old[i] for i, _ in enumerate(accounts)}
 
     balance_changes = update_balance(accounts)
-    print(balance_changes)
     for i in range(1, 20):
         assert balance_changes[i] == transfer_amount
 
@@ -103,3 +100,13 @@ def test_account():
     assert account.address == addr
     assert account.account_number == 1
     assert account.sequence == 0
+
+
+def test_params():
+    params = pytest.secret.auth.params()
+    assert params.max_memo_characters == 256
+    assert params.tx_sig_limit == 7
+    assert params.sig_verify_cost_ed25519 == 590
+    assert params.sig_verify_cost_secp256_k1 == 1000
+
+def test_

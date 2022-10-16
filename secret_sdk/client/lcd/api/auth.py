@@ -7,7 +7,8 @@ from secret_sdk.core.auth import (
     BaseAccount,
     ContinuousVestingAccount,
     DelayedVestingAccount,
-    ModuleAccount
+    ModuleAccount,
+    Params
 )
 
 from ._base import BaseAsyncAPI, sync_bind
@@ -55,6 +56,10 @@ class AsyncAuthAPI(BaseAsyncAPI):
         result = await self._c._get(f"/cosmos/auth/v1beta1/accounts", params)
         return [Account.from_data(account) for account in result['accounts']], result['pagination']
 
+    async def params(self):
+        result = await self._c._get(f'/cosmos/auth/v1beta1/params')
+        return Params.from_data(result['params'])
+
 
 class AuthAPI(AsyncAuthAPI):
     @sync_bind(AsyncAuthAPI.account_info)
@@ -82,3 +87,11 @@ class AuthAPI(AsyncAuthAPI):
         pass
 
     accounts.__doc__ = AsyncAuthAPI.accounts.__doc__
+
+    @sync_bind(AsyncAuthAPI.params)
+    def params(
+            self
+    ):
+        pass
+
+    params.__doc__ = AsyncAuthAPI.params.__doc__
