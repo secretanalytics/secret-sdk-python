@@ -136,22 +136,11 @@ class AsyncTxAPI(BaseAsyncAPI):
             TxInfo: transaction info
         """
         res = await self._c._get(f"/cosmos/tx/v1beta1/txs/{tx_hash}")
+        # if "tx" not in res:
+        #     raise Exception("Unexpected response data format")
+        # # TODO: update TxInfo interface
+        # return self.decrypt_txs_response(res)
         return TxInfo.from_data(res["tx_response"])
-
-    async def tx_by_id(self, id: str) -> TxInfo:
-        """Fetches information for an included transaction given a tx hash.
-
-        Args:
-            tx_hash (str): hash of transaction to lookup
-
-        Returns:
-            TxInfo: transaction info
-        """
-        res = await self._c._get(f"/cosmos/tx/v1beta1/txs/{id}")
-        if "tx" not in res:
-            raise Exception("Unexpected response data format")
-        # TODO: update TxInfo interface
-        return self.decrypt_txs_response(res)
 
     def decrypt_data_field(self, data_field: str, nonces):
         wasm_output_data_cipher_bz = bytearray.fromhex(data_field)
@@ -548,11 +537,6 @@ class TxAPI(AsyncTxAPI):
 
     tx_info.__doc__ = AsyncTxAPI.tx_info.__doc__
 
-    @sync_bind(AsyncTxAPI.tx_by_id)
-    def tx_by_id(self, tx_hash: str) -> TxInfo:
-        pass
-
-    tx_by_id.__doc__ = AsyncTxAPI.tx_by_id.__doc__
 
     @sync_bind(AsyncTxAPI.create)
     def create(self, signers: List[SignerOptions], options: CreateTxOptions) -> Tx:
