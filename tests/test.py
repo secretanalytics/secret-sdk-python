@@ -108,5 +108,3 @@ def test_params():
     assert params.tx_sig_limit == 7
     assert params.sig_verify_cost_ed25519 == 590
     assert params.sig_verify_cost_secp256_k1 == 1000
-
-def test_
