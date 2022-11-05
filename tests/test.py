@@ -177,6 +177,7 @@ def test_store_code():
 
     contract_adress = get_value_from_raw_log(tx_init.rawlog, 'message.contract_address')
     assert contract_adress == tx_init.data[0].address
+    pytest.sscrt_contract_address = contract_adress
 
     msg_execute = MsgExecuteContract(
         sender=pytest.accounts[0]['address'],
@@ -213,3 +214,8 @@ def test_store_code():
         raise Exception(f"Failed MsgExecuteContract: {tx_execute.raw_log}")
     assert tx_execute.code == TxResultCode.Success.value
     assert '{"create_viewing_key":{"key":"' in tx_execute.data[0].data.decode('utf-8')
+
+
+def test_query_compute():
+    res = pytest.secret.wasm.contract_query(contract_address=pytest.sscrt_contract_address, query={'token_info': {}})
+    assert res == {'token_info': {'name': 'Secret SCRT', 'symbol': 'SSCRT', 'decimals': 6, 'total_supply': '1'}}
