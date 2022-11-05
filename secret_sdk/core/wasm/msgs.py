@@ -35,7 +35,8 @@ def parse_msg(msg: Union[dict, str, bytes]) -> dict:
     try:
         msg = json.loads(msg)
     except:
-        pass
+        if isinstance(msg, str):
+            msg = base64.b64decode(msg)
     return msg
 
 
@@ -101,7 +102,7 @@ class MsgStoreCode(Msg):
     def from_proto(cls, proto: MsgStoreCode_pb) -> MsgStoreCode:
         return cls(
             sender=AccAddress(bytes_to_address(proto.sender)),
-            wasm_byte_code=base64.b64encode(proto.wasm_byte_code).decode(),
+            wasm_byte_code=base64.b64encode(proto.wasm_byte_code),
             source=proto.source,
             builder=proto.builder
         )
@@ -147,7 +148,9 @@ class MsgInstantiateContract(Msg):
             self.code_hash = ''
             self.warn_code_hash = True
             # print('WARNING: MsgInstantiateContract was used without the "codeHash" parameter. This is discouraged and will result in much slower execution times for your app.')
-        self._msg_str = json.dumps(self.init_msg, separators=(",", ":"))
+
+        if isinstance(self.init_msg, dict):
+            self._msg_str = json.dumps(self.init_msg, separators=(",", ":"))
 
     @classmethod
     def from_data(cls, data: dict) -> MsgInstantiateContract:

@@ -194,14 +194,14 @@ class AsyncTxAPI(BaseAsyncAPI):
             # Check if the message needs decryption
             contract_input_msg_field_name = ''
             if msg_type == "/secret.compute.v1beta1.MsgInstantiateContract":
-                contract_input_msg_field_name = "initMsg"
+                contract_input_msg_field_name = "init_msg"
             elif msg_type == "/secret.compute.v1beta1.MsgExecuteContract":
                 contract_input_msg_field_name = "msg"
 
             if contract_input_msg_field_name != '':
                 # Encrypted, try to decrypt
                 try:
-                    contract_input_msg_bytes = base64.b64decode(getattr(message, contract_input_msg_field_name))
+                    contract_input_msg_bytes = getattr(message, contract_input_msg_field_name)
                     nonce = contract_input_msg_bytes[0:32]
                     nonces[i] = list(nonce)
                     account_pub_key = contract_input_msg_bytes[32:64]
@@ -269,13 +269,15 @@ class AsyncTxAPI(BaseAsyncAPI):
                     msg_type = _msg.type_url
 
                     if msg_type == '/secret.compute.v1beta1.MsgInstantiateContract':
-                        decrypted = self.decrypt_data_field(tx_data.data, [nonce])
+                        decoded = MsgInstantiateContractResponse.FromString(tx_data.data)
+                        decrypted = self.decrypt_data_field(decoded.data, [nonce])
                         data[i] = MsgInstantiateContractResponse(
-                            address=_msg.sender,
+                            address=decoded.address,
                             data=decrypted
                         )
                     elif msg_type == '/secret.compute.v1beta1.MsgExecuteContract':
-                        decrypted = self.decrypt_data_field(tx_data.data, [nonce])
+                        decoded = MsgExecuteContractResponse.FromString(tx_data.data)
+                        decrypted = self.decrypt_data_field(decoded.data, [nonce])
                         data[i] = MsgExecuteContractResponse(
                             data=decrypted
                         )
@@ -288,7 +290,7 @@ class AsyncTxAPI(BaseAsyncAPI):
             txhash=txs_response['txhash'],
             code=txs_response['code'],
             tx=decoded_tx,
-            tx_bytes=txs_response['tx'].get('value'),
+            tx_bytes=txs_response['tx'].get('value') if txs_response['tx'] else None,
             rawlog=raw_log,
             logs=array_log if array_log else json_log,
             data=data,
@@ -309,8 +311,6 @@ class AsyncTxAPI(BaseAsyncAPI):
         Returns:
             Tx: unsigned tx
         """
-
-
         # create the fake fee
         fee = options.fee
         if options.fee is None:
@@ -385,18 +385,22 @@ class AsyncTxAPI(BaseAsyncAPI):
 
     async def broadcast_adapter(self, tx: Tx, mode: BroadcastMode, options: BroadcastOptions = None):
         broadcast_result = None
+        tx_encoded = await super()._try_await(self.encode(tx))
         if mode == BroadcastMode.BROADCAST_MODE_BLOCK:
-            broadcast_result = await BaseAsyncAPI._try_await(self.broadcast(tx, options))
+            broadcast_result = await BaseAsyncAPI._try_await(self.broadcast(tx_encoded, options))
         if mode == BroadcastMode.BROADCAST_MODE_ASYNC:
-            broadcast_result = await BaseAsyncAPI._try_await(self.broadcast_async(tx, options))
+            broadcast_result = await BaseAsyncAPI._try_await(self.broadcast_async(tx_encoded, options))
         if mode == BroadcastMode.BROADCAST_MODE_SYNC:
-            broadcast_result = await BaseAsyncAPI._try_await(self.broadcast_sync(tx, options))
+            broadcast_result = await BaseAsyncAPI._try_await(self.broadcast_sync(tx_encoded, options))
+            if not broadcast_result.code != 0:
+                raise Exception(f"Broadcasting transaction failed with code {broadcast_result.code} (codespace: ${broadcast_result.codespace}).Log: {broadcast_result.raw_log}")
+
         return broadcast_result
 
     async def _broadcast(
         self, tx: Tx, mode: BroadcastMode, options: BroadcastOptions = None
     ) -> dict:
-        data = {"tx_bytes": await super()._try_await(self.encode(tx)), "mode": mode.name}
+        data = {"tx_bytes": tx, "mode": mode.name}
         if options is not None:
             if options.sequences is not None and len(options.sequences) > 0:
                 data["sequences"] = [str(i) for i in options.sequences]
@@ -456,17 +460,8 @@ class AsyncTxAPI(BaseAsyncAPI):
             BlockTxBroadcastResult: result
         """
         res = await self._broadcast(tx, BroadcastMode.BROADCAST_MODE_BLOCK, options)
-        res = res["tx_response"]
-        return BlockTxBroadcastResult(
-            height=res.get("height") or 0,
-            txhash=res.get("txhash"),
-            raw_log=res.get("raw_log"),
-            gas_wanted=res.get("gas_wanted") or 0,
-            gas_used=res.get("gas_used") or 0,
-            logs=res.get("logs"),
-            code=res.get("code"),
-            codespace=res.get("codespace"),
-        )
+        res.update({'tx': self.decode(tx).to_data()})
+        return self.decrypt_txs_response(res)
 
     async def search(
         self, events: List[list], params: Optional[APIParams] = None
@@ -501,6 +496,10 @@ class AsyncTxAPI(BaseAsyncAPI):
             "txs": txs,
             "pagination": res.get("pagination"),
         }
+
+    async def get_tx(self, hash: str) -> Optional[TxInfo]:
+        res = self.search(events=[["tx.hash", hash]])
+        return res['txs'][0] if len(res['txs']) else None
 
     async def tx_infos_by_height(self, height: Optional[int] = None) -> List[TxInfo]:
         """Fetches information for an included transaction given block height or latest
@@ -600,6 +599,12 @@ class TxAPI(AsyncTxAPI):
         pass
 
     search.__doc__ = AsyncTxAPI.search.__doc__
+
+    @sync_bind(AsyncTxAPI.get_tx)
+    def get_tx(self, hash: str) -> Optional[TxInfo]:
+        pass
+
+    get_tx.__doc__ = AsyncTxAPI.get_tx.__doc__
 
     @sync_bind(AsyncTxAPI.tx_infos_by_height)
     def tx_infos_by_height(self, height: Optional[int] = None) -> List[TxInfo]:
