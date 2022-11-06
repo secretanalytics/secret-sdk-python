@@ -242,15 +242,15 @@ class AsyncTxAPI(BaseAsyncAPI):
                 )
                 rgx_matches = error_message_rgx.findall(raw_log)
                 if rgx_matches:
-                    msg_index,error_cipher_b64 = rgx_matches[0]
+                    msg_index, error_cipher_b64 = rgx_matches[0]
                     error_cipher_bz = base64.b64decode(error_cipher_b64)
                     error_plain_bz = self._c.encrypt_utils.decrypt(error_cipher_bz, nonces[int(msg_index)])
                     raw_log = raw_log.replace(
-                        f'encrypted: {error_cipher_b64}', error_plain_bz
+                        f'encrypted: {error_cipher_b64}', error_plain_bz.decode('utf-8')
                     )
 
                     try:
-                        json_log = TxLog(0, json.loads(error_plain_bz), [{}])
+                        json_log = TxLog(0, json.loads(error_plain_bz), [])
                     except:
                         pass
             except:

@@ -139,6 +139,8 @@ def test_store_code():
 
     code_info = pytest.secret.wasm.code_info(code_id)
     code_hash = code_info['code_info']['code_hash']
+    pytest.sscrt_code_info = code_info
+    pytest.sscrt_code_hash = code_hash
 
     msg_init = MsgInstantiateContract(
         sender=pytest.accounts[0]['address'],
@@ -216,6 +218,55 @@ def test_store_code():
     assert '{"create_viewing_key":{"key":"' in tx_execute.data[0].data.decode('utf-8')
 
 
+def test_get_tx_error():
+    msg_execute = MsgExecuteContract(
+        sender=pytest.accounts[0]['address'],
+        contract=pytest.sscrt_contract_address,
+        code_hash=pytest.sscrt_code_hash,
+        msg={
+            'transfer': {
+                'recipient': pytest.accounts[1]['address'],
+                'amount': '2'
+            }
+        },
+        encryption_utils=pytest.secret.encrypt_utils
+    )
+    tx_execute = pytest.accounts[0]['wallet'].create_and_broadcast_tx(
+        [msg_execute],
+        gas='5000000',
+        gas_prices=Coins('0.25uscrt')
+    )
+    assert 'failed to execute message; message index: 0' in tx_execute.rawlog
+    assert tx_execute.logs.log == {'generic_err': {'msg': 'insufficient funds: balance=1, required=2'}}
+
+
 def test_query_compute():
+    res = pytest.secret.wasm.contract_query(
+        contract_address=pytest.sscrt_contract_address,
+        query={'token_info': {}},
+        contract_code_hash=pytest.sscrt_code_hash
+    )
+    assert res == {'token_info': {'name': 'Secret SCRT', 'symbol': 'SSCRT', 'decimals': 6, 'total_supply': '1'}}
+
+
+def test_query_compute_without_code_hash():
     res = pytest.secret.wasm.contract_query(contract_address=pytest.sscrt_contract_address, query={'token_info': {}})
     assert res == {'token_info': {'name': 'Secret SCRT', 'symbol': 'SSCRT', 'decimals': 6, 'total_supply': '1'}}
+
+
+def test_query_compute_std_error():
+    res = pytest.secret.wasm.contract_query(
+        contract_address=pytest.sscrt_contract_address,
+        query={'balance': {'address': pytest.accounts[0]['address'], 'key': 'wrong'}}
+    )
+    assert res == {'viewing_key_error': {'msg': 'Wrong viewing key for this address or viewing key not set'}}
+
+
+# raise LCDError and not decrypting error message
+# <class 'dict'>: {'code': 3, 'message': 'encrypted: 8RyuV/YLcY9TccteFzCBB1i2YBj4r3wTfP/xa87SDpO9w++j1sUNQI6uF6jp4mX+zoNq0fl3RcILgwt+YkYgnUZmYGsyMbuF/fdsKeGJYzjUuuPORlRmI9kxfrXI47CNR1G58OXn34QBAKXUGDpiPkh4kcODlDZThclCiTKJDatVivnfS/HEt6AggaDKOMMZohvB/hCAX9MFrnqtQDEekV80+fWhbsSWgbEkXDpcLaLpwdgsJHDovDwDXg1u2MPtUHFQJrVNwmmbX0/5sopn3owEN4BobjMywlRcVAynJgusJS8ewfcNilonUHR3Ycw3fq4gvdOU6Yad6ZVhq2O4fdOTU1ukRU1XqJ9QOC1TrgbgdjI5y4AKqkRrIgXb/j5KxkyxGNeVFKEmmDw=: query contract failed: invalid request', 'details': []}
+# def test_query_compute_vm_error():
+#     res = pytest.secret.wasm.contract_query(
+#         contract_address=pytest.sscrt_contract_address,
+#         query={'non_existent_query': {}}
+#     )
+#     assert res == {"parse_err": {"msg": "unknown variant `non_existent_query`, expected one of `token_info`, `token_config`, `contract_status`, `exchange_rate`, `allowance`, `balance`, `transfer_history`, `transaction_history`, `minters`, `with_permit`", "target": "snip20_reference_impl::msg::QueryMsg"}}
