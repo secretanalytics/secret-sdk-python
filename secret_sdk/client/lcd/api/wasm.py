@@ -54,6 +54,15 @@ class AsyncWasmAPI(BaseAsyncAPI):
         res = await self._c._get(f"/compute/v1beta1/info/{contract_address}")
         return res
 
+    async def code_hash_by_code_id(self, code_id: int) -> dict:
+        """ Query code hash by code id
+        :param code_id: int
+        :return: query code hash response
+        """
+        res = await self._c._get(f"/compute/v1beta1/code_hash/by_code_id/{code_id}")
+        return res
+
+
     async def contract_hash(self, contract_address: str) -> str:
         """Fetches information about an instantiated contract.
 
@@ -66,7 +75,7 @@ class AsyncWasmAPI(BaseAsyncAPI):
 
         if contract_address not in _contract_code_hash:
             contract_code_hash = await self._c._get(
-                f"/compute/v1beta1/code_hash/{contract_address}"
+                f"/compute/v1beta1/code_hash/by_contract_address/{contract_address}"
             )
             _contract_code_hash[contract_address] = contract_code_hash['code_hash']
         return _contract_code_hash[contract_address]
@@ -165,6 +174,12 @@ class WasmAPI(AsyncWasmAPI):
         pass
 
     contract_hash.__doc__ = AsyncWasmAPI.contract_hash.__doc__
+
+    @sync_bind(AsyncWasmAPI.code_hash_by_code_id)
+    def code_hash_by_code_id(self, code_info: int) -> dict:
+        pass
+
+    code_hash_by_code_id.__doc__ = AsyncWasmAPI.code_hash_by_code_id.__doc__
 
     @sync_bind(AsyncWasmAPI.contract_query)
     def contract_query(
