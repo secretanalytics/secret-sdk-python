@@ -39,7 +39,6 @@ mypy = { version = "^0.900", optional = true}
 Sphinx = { version = "^3.4.3", optional = true}
 grpcio-tools = "^1.45.0"
 grpclib = "^0.4.2"
-betterproto = "2.0.0b5"
 cryptography = "^37.0.2"
 pyhumps = "^3.7.1"
 
@@ -59,7 +58,7 @@ wheel = "^0.36.2"
 sphinx-rtd-theme = "^0.5.1"
 sphinx-autodoc-typehints = "^1.11.1"
 sphinx-autobuild = "^2020.9.1"
-uvloop = "^0.15.0"
+uvloop = "^0.14.0"
 aioresponses = "^0.7.2"
 asynctest = "^0.13.0"
 
