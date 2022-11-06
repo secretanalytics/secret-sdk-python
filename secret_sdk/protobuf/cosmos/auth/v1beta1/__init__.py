@@ -124,6 +124,26 @@ class QueryParamsResponse(betterproto.Message):
 
 
 @dataclass(eq=False, repr=False)
+class QueryModuleAccountByNameRequest(betterproto.Message):
+    """
+    QueryModuleAccountByNameRequest is the request type for the
+    Query/ModuleAccountByName RPC method.
+    """
+
+    name: str = betterproto.string_field(1)
+
+
+@dataclass(eq=False, repr=False)
+class QueryModuleAccountByNameResponse(betterproto.Message):
+    """
+    QueryModuleAccountByNameResponse is the response type for the
+    Query/ModuleAccountByName RPC method.
+    """
+
+    account: "betterproto_lib_google_protobuf.Any" = betterproto.message_field(1)
+
+
+@dataclass(eq=False, repr=False)
 class GenesisState(betterproto.Message):
     """GenesisState defines the auth module's genesis state."""
 
@@ -186,6 +206,23 @@ class QueryStub(betterproto.ServiceStub):
             metadata=metadata,
         )
 
+    async def module_account_by_name(
+        self,
+        query_module_account_by_name_request: "QueryModuleAccountByNameRequest",
+        *,
+        timeout: Optional[float] = None,
+        deadline: Optional["Deadline"] = None,
+        metadata: Optional["MetadataLike"] = None
+    ) -> "QueryModuleAccountByNameResponse":
+        return await self._unary_unary(
+            "/cosmos.auth.v1beta1.Query/ModuleAccountByName",
+            query_module_account_by_name_request,
+            QueryModuleAccountByNameResponse,
+            timeout=timeout,
+            deadline=deadline,
+            metadata=metadata,
+        )
+
 
 class QueryBase(ServiceBase):
     async def accounts(
@@ -201,6 +238,11 @@ class QueryBase(ServiceBase):
     async def params(
         self, query_params_request: "QueryParamsRequest"
     ) -> "QueryParamsResponse":
+        raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
+
+    async def module_account_by_name(
+        self, query_module_account_by_name_request: "QueryModuleAccountByNameRequest"
+    ) -> "QueryModuleAccountByNameResponse":
         raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
 
     async def __rpc_accounts(
@@ -225,6 +267,14 @@ class QueryBase(ServiceBase):
         response = await self.params(request)
         await stream.send_message(response)
 
+    async def __rpc_module_account_by_name(
+        self,
+        stream: "grpclib.server.Stream[QueryModuleAccountByNameRequest, QueryModuleAccountByNameResponse]",
+    ) -> None:
+        request = await stream.recv_message()
+        response = await self.module_account_by_name(request)
+        await stream.send_message(response)
+
     def __mapping__(self) -> Dict[str, grpclib.const.Handler]:
         return {
             "/cosmos.auth.v1beta1.Query/Accounts": grpclib.const.Handler(
@@ -244,5 +294,11 @@ class QueryBase(ServiceBase):
                 grpclib.const.Cardinality.UNARY_UNARY,
                 QueryParamsRequest,
                 QueryParamsResponse,
+            ),
+            "/cosmos.auth.v1beta1.Query/ModuleAccountByName": grpclib.const.Handler(
+                self.__rpc_module_account_by_name,
+                grpclib.const.Cardinality.UNARY_UNARY,
+                QueryModuleAccountByNameRequest,
+                QueryModuleAccountByNameResponse,
             ),
         }

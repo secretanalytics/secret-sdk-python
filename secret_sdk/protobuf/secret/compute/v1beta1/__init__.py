@@ -355,13 +355,14 @@ class QueryStub(betterproto.ServiceStub):
 
     async def contracts_by_code_id(
         self,
+        query_by_code_id_request: "QueryByCodeIdRequest",
         *,
         timeout: Optional[float] = None,
         deadline: Optional["Deadline"] = None,
         metadata: Optional["MetadataLike"] = None
     ) -> "QueryContractsByCodeIdResponse":
         return await self._unary_unary(
-            "/secret.compute.v1beta1.Query/ContractsByCodeID",
+            "/secret.compute.v1beta1.Query/ContractsByCodeId",
             query_by_code_id_request,
             QueryContractsByCodeIdResponse,
             timeout=timeout,
@@ -388,6 +389,7 @@ class QueryStub(betterproto.ServiceStub):
 
     async def code(
         self,
+        query_by_code_id_request: "QueryByCodeIdRequest",
         *,
         timeout: Optional[float] = None,
         deadline: Optional["Deadline"] = None,
@@ -438,13 +440,14 @@ class QueryStub(betterproto.ServiceStub):
 
     async def code_hash_by_code_id(
         self,
+        query_by_code_id_request: "QueryByCodeIdRequest",
         *,
         timeout: Optional[float] = None,
         deadline: Optional["Deadline"] = None,
         metadata: Optional["MetadataLike"] = None
     ) -> "QueryCodeHashResponse":
         return await self._unary_unary(
-            "/secret.compute.v1beta1.Query/CodeHashByCodeID",
+            "/secret.compute.v1beta1.Query/CodeHashByCodeId",
             query_by_code_id_request,
             QueryCodeHashResponse,
             timeout=timeout,
@@ -546,7 +549,9 @@ class QueryBase(ServiceBase):
     ) -> "QueryContractInfoResponse":
         raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
 
-    async def contracts_by_code_id(self) -> "QueryContractsByCodeIdResponse":
+    async def contracts_by_code_id(
+        self, query_by_code_id_request: "QueryByCodeIdRequest"
+    ) -> "QueryContractsByCodeIdResponse":
         raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
 
     async def query_secret_contract(
@@ -554,7 +559,9 @@ class QueryBase(ServiceBase):
     ) -> "QuerySecretContractResponse":
         raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
 
-    async def code(self) -> "QueryCodeResponse":
+    async def code(
+        self, query_by_code_id_request: "QueryByCodeIdRequest"
+    ) -> "QueryCodeResponse":
         raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
 
     async def codes(
@@ -568,7 +575,9 @@ class QueryBase(ServiceBase):
     ) -> "QueryCodeHashResponse":
         raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
 
-    async def code_hash_by_code_id(self) -> "QueryCodeHashResponse":
+    async def code_hash_by_code_id(
+        self, query_by_code_id_request: "QueryByCodeIdRequest"
+    ) -> "QueryCodeHashResponse":
         raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
 
     async def label_by_address(
@@ -660,7 +669,7 @@ class QueryBase(ServiceBase):
                 QueryByContractAddressRequest,
                 QueryContractInfoResponse,
             ),
-            "/secret.compute.v1beta1.Query/ContractsByCodeID": grpclib.const.Handler(
+            "/secret.compute.v1beta1.Query/ContractsByCodeId": grpclib.const.Handler(
                 self.__rpc_contracts_by_code_id,
                 grpclib.const.Cardinality.UNARY_UNARY,
                 QueryByCodeIdRequest,
@@ -690,7 +699,7 @@ class QueryBase(ServiceBase):
                 QueryByContractAddressRequest,
                 QueryCodeHashResponse,
             ),
-            "/secret.compute.v1beta1.Query/CodeHashByCodeID": grpclib.const.Handler(
+            "/secret.compute.v1beta1.Query/CodeHashByCodeId": grpclib.const.Handler(
                 self.__rpc_code_hash_by_code_id,
                 grpclib.const.Cardinality.UNARY_UNARY,
                 QueryByCodeIdRequest,
