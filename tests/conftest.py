@@ -1,3 +1,4 @@
+import time
 import json
 from pathlib import Path
 
@@ -34,3 +35,4 @@ def pytest_configure():
     setup_localsecret()
     secret = LCDClient(url='http://localhost:1317', chain_id='secretdev-1')
     pytest.secret = secret
+    time.sleep(1)
