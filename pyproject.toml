@@ -17,7 +17,7 @@ license = "MIT"
 packages = [{ include = "secret_sdk" }]
 readme = "README.md"
 repository = "https://github.com/stephanegg/secret-sdk-python"
-version = "1.4.0"
+version = "1.5.0"
 
 [tool.poetry.dependencies]
 aiohttp = "^3.7.3"
