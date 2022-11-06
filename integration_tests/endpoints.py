@@ -148,6 +148,9 @@ print("Wasm")
 res = secret.wasm.code_info(code_id=5)
 print(res)
 
+res = secret.wasm.code_hash_by_code_id(code_id=5)
+print(res)
+
 res = secret.wasm.contract_info(
     contract_address="secret1k0jntykt7e4g3y88ltc60czgjuqdy4c9e8fzek"
 )

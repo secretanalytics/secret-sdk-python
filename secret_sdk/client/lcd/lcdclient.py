@@ -196,7 +196,6 @@ class AsyncLCDClient:
         )
         return result
 
-
     async def __aenter__(self):
         return self
 
@@ -276,6 +275,7 @@ class LCDClient(AsyncLCDClient):
         custom_fees: Optional[dict] = default_fees,
         _request_config: Optional[dict] = REQUEST_CONFIG
     ):
+        self.lock = Lock()
         super().__init__(
             url,
             chain_id,
@@ -286,7 +286,6 @@ class LCDClient(AsyncLCDClient):
             loop=nest_asyncio.apply(get_event_loop()),
             _request_config=_request_config
         )
-        self.lock = Lock()
 
         self.auth = AuthAPI(self)
         self.bank = BankAPI(self)
@@ -309,7 +308,6 @@ class LCDClient(AsyncLCDClient):
         else:
             consensus_io_pub_key = self.registration.consensus_io_pub_key()
         self.encrypt_utils = EncryptionUtils(consensus_io_pub_key)
-        self.lock = Lock()
 
     async def __aenter__(self):
         raise NotImplementedError(
@@ -333,24 +331,26 @@ class LCDClient(AsyncLCDClient):
     async def _get(self, *args, **kwargs):
         # session has to be manually created and torn down for each HTTP request in a
         # synchronous client
-        self.session = ClientSession(
-            headers={"Accept": "application/json"}, loop=self.loop
-        )
-        try:
-            result = await super()._get(*args, **kwargs)
-        finally:
-            await self.session.close()
+        with self.lock:
+            self.session = ClientSession(
+                headers={"Accept": "application/json"}, loop=self.loop
+            )
+            try:
+                result = await super()._get(*args, **kwargs)
+            finally:
+                await self.session.close()
         return result
 
     async def _post(self, *args, **kwargs):
         # session has to be manually created and torn down for each HTTP request in a
         # synchronous client
-        self.session = ClientSession(
-            headers={"Accept": "application/json"}, loop=self.loop
-        )
-        try:
-            result = await super()._post(*args, **kwargs)
-        finally:
-            await self.session.close()
+        with self.lock:
+            self.session = ClientSession(
+                headers={"Accept": "application/json"}, loop=self.loop
+            )
+            try:
+                result = await super()._post(*args, **kwargs)
+            finally:
+                await self.session.close()
         return result
 

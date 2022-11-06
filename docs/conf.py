@@ -24,7 +24,7 @@ copyright = "2022, SCRT LabRador, Secret analytics"
 author = "SCRT LabRador, Secret analytics"
 
 # The full version, including alpha/beta/rc tags
-release = "1.4.0"
+release = "1.5.0"
 
 
 # -- General configuration ---------------------------------------------------
