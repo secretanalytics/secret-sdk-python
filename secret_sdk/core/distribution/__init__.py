@@ -1,13 +1,15 @@
 from .msgs import (
     MsgFundCommunityPool,
-    MsgModifyWithdrawAddress,
-    MsgWithdrawDelegationReward,
+    MsgSetWithdrawAddress,
+    MsgWithdrawDelegatorReward,
     MsgWithdrawValidatorCommission,
 )
+from .proposals import CommunityPoolSpendProposal
 
 __all__ = [
     "MsgFundCommunityPool",
-    "MsgModifyWithdrawAddress",
-    "MsgWithdrawDelegationReward",
+    "MsgSetWithdrawAddress",
+    "MsgWithdrawDelegatorReward",
     "MsgWithdrawValidatorCommission",
+    "CommunityPoolSpendProposal",
 ]

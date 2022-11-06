@@ -10,7 +10,7 @@ test_net_chain_id = "pulsar-2"
 main_net_chain_id = "secret-4"
 
 test_net_api = "http://testnet.securesecrets.org:1317"
-main_net_api = "https://api.scrt.network"
+main_net_api = "https://secret-4.api.trivium.network:1317"
 
 LOCAL_MNEMONICS = {
     "holodeck-2": {

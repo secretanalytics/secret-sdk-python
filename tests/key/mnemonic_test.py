@@ -1,6 +1,11 @@
-from secret_sdk.core.auth import StdFee, StdSignMsg
 from secret_sdk.core.bank import MsgSend
 from secret_sdk.key.mnemonic import MnemonicKey
+from secret_sdk.core import SignDoc
+import base64
+
+from secret_sdk.core.tx import AuthInfo, TxBody
+from secret_sdk.core.fee import Fee
+from secret_sdk.core import Coins, Numeric
 
 
 def test_derivation():
@@ -36,11 +41,19 @@ def test_signature():
         dict(uscrt="1000000"),
     )
 
-    fee = StdFee(46467, dict(uscrt=698))
+    tx_body = TxBody([send])
 
-    stdsignmsg = StdSignMsg("holodeck-2", 45, 0, fee, [send], "")
-    signature = mk.create_signature(stdsignmsg).signature
+    auth_info = AuthInfo(signer_infos=[], fee=Fee(Numeric.parse(46467), Coins('698uscrt')))
+
+    signDoc = SignDoc(
+        chain_id="holodeck-2",
+        account_number=45,
+        sequence=0,
+        auth_info=auth_info,
+        tx_body=tx_body,
+    )
+    signature = mk.create_signature(signDoc)
     assert (
-        signature
-        == "kQU4QYxIlMRL+441WJqHSbYKufctVeACi5bRjbxPZltqjdaKuxDVOsY/rDM3TKYqBFk7dueEXQmCle/D1K0puw=="
+        base64.b64encode(signature.data.single.signature).decode('utf-8')
+        == "67xBRB2QYsPYl4wPvlYYcOKoJaMHS08R1dfNJU5YIdcf8EFsEmRwpFSI6/LtUuk+r6uAiuWN6+sNF+LPeQdpUg=="
     )

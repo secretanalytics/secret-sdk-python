@@ -1,4 +1,4 @@
-from secret_sdk.core.strings import (
+from secret_sdk.core.bech32 import (
     is_acc_address,
     is_acc_pubkey,
     is_val_address,
@@ -9,7 +9,6 @@ from secret_sdk.core.strings import (
     to_val_address,
     to_val_pubkey,
 )
-
 
 def test_validates_acc_address():
     assert not is_acc_address("secretvaloper1xey4ymz4tmlgy6pp54e2ccj307ff6kx647p3hq")

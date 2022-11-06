@@ -14,12 +14,12 @@ def main():
     community_result = secret_client.distribution.community_pool()
     community_amount = community_result.get("uscrt").amount / 10**6
 
-    supply_result = secret_client.bank.total_denom("uscrt")
-    supply = supply_result.amount / 10**6
+    supply_result, pagination = secret_client.bank.total()
+    supply = supply_result.get("uscrt").amount / 10**6
 
     ratio = bonded / (supply - community_amount)
     staking_apr = float(network_inflation / ratio)
-    print("staking_apr: ", staking_apr)
+    print(f"staking_apr: {staking_apr:.2f}%")
 
 
 main()
