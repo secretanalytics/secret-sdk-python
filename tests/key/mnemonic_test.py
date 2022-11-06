@@ -3,7 +3,7 @@ from secret_sdk.key.mnemonic import MnemonicKey
 from secret_sdk.core import SignDoc
 import base64
 
-from secret_sdk.core.tx import AuthInfo, SignerInfo, SignMode, Tx, TxBody
+from secret_sdk.core.tx import AuthInfo, TxBody
 from secret_sdk.core.fee import Fee
 from secret_sdk.core import Coins, Numeric
 
@@ -41,9 +41,9 @@ def test_signature():
         dict(uscrt="1000000"),
     )
 
-    tx_body=TxBody([send])
+    tx_body = TxBody([send])
 
-    auth_info=AuthInfo(signer_infos=[], fee=Fee(Numeric.parse(46467), Coins('698uscrt')))
+    auth_info = AuthInfo(signer_infos=[], fee=Fee(Numeric.parse(46467), Coins('698uscrt')))
 
     signDoc = SignDoc(
         chain_id="holodeck-2",

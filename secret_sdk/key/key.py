@@ -1,7 +1,5 @@
 import abc
-import base64
 import copy
-import hashlib
 from typing import Optional
 import attr
 
@@ -26,8 +24,6 @@ from secret_sdk.core.public_key import (
 from secret_sdk.core.tx import AuthInfo, SignerInfo, SignMode, Tx
 from secret_sdk.core.signature_v2 import Descriptor
 from secret_sdk.core.signature_v2 import Single as SingleDescriptor
-from secret_sdk.util.encrypt_utils import EncryptionUtils
-
 
 
 __all__ = ["Key"]

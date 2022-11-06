@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from bip32utils import BIP32_HARDEN, BIP32Key
+from .bip32utils.BIP32Key import BIP32Key, BIP32_HARDEN
 from mnemonic import Mnemonic
 
 from .raw import RawKey
