@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from bip32utils.BIP32Key import BIP32_HARDEN, BIP32Key
+from .bip32utils.BIP32Key import BIP32Key, BIP32_HARDEN
 from mnemonic import Mnemonic
 
 from .raw import RawKey
@@ -55,9 +55,7 @@ class MnemonicKey(RawKey):
         if mnemonic is None:
             mnemonic = Mnemonic("english").generate(256)
         seed = Mnemonic("english").to_seed(mnemonic)
-        root = BIP32Key.fromEntropy(
-            seed
-        )  # this fails the tests because 'ripemd160 doesn't exist on my computer'
+        root = BIP32Key.fromEntropy(seed)
         # derive from hdpath
         child = (
             root.ChildKey(44 + BIP32_HARDEN)

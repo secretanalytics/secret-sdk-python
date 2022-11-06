@@ -5,7 +5,7 @@ import json
 from typing import Dict, List, Union
 
 from secret_sdk.core import AccAddress
-from secret_sdk.core.auth import TxInfo
+from secret_sdk.core import TxInfo
 from secret_sdk.core.broadcast import BlockTxBroadcastResult
 from secret_sdk.util.json import dict_to_data
 
@@ -53,7 +53,8 @@ def get_code_id(
         str: extracted code id
     """
     if tx_result.logs:
-        code_id = tx_result.logs[msg_index].events_by_type["message"]["code_id"][0]
+        # code_id = tx_result.logs[msg_index].events_by_type["message"]["code_id"][0]
+        code_id = tx_result.logs[msg_index].events_by_type["store_code"]["code_id"][0]
         return code_id
     else:
         raise ValueError("could not parse code id -- tx logs are empty.")
@@ -73,9 +74,12 @@ def get_contract_address(
         str: extracted contract address
     """
     if tx_result.logs:
-        contract_address = tx_result.logs[msg_index].events_by_type[
-            "instantiate_contract"
-        ]["contract_address"][0]
+        # contract_address = tx_result.logs[msg_index].events_by_type[
+        #     "instantiate_contract"
+        # ]["contract_address"][0]
+        contract_address = tx_result.logs[msg_index].events_by_type["wasm"][
+            "_contract_address"
+        ][0]
         return AccAddress(contract_address)
     else:
         raise ValueError("could not parse code id -- tx logs are empty.")

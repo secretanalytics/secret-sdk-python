@@ -20,6 +20,7 @@ class APIParams(ABC):
 
 class PaginationOptions(APIParams):
     """This could be used when you need pagination options for APIs
+
     Args:
         key (str): key is a value returned in PageResponse.next_key to begin
             querying the next page most efficiently. Only one of offset or key

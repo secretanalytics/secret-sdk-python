@@ -4,15 +4,16 @@ import hashlib
 
 from ecdsa import SECP256k1, SigningKey
 from ecdsa.util import sigencode_string_canonize
+from ..core import PublicKey, SimplePublicKey
 
 from .key import Key
 
 __all__ = ["RawKey"]
 
 
-def compute_public_key(private_key: bytes) -> bytes:
-    return (
-        SigningKey.from_string(private_key, curve=SECP256k1)
+def compute_public_key(private_key: bytes) -> PublicKey:
+    return SimplePublicKey(
+        key=SigningKey.from_string(private_key, curve=SECP256k1)
         .get_verifying_key()
         .to_string("compressed")
     )

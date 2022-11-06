@@ -1,53 +1,56 @@
-"""Data objects pertaining to accounts."""
+from abc import ABC, abstractmethod
 
-from __future__ import annotations
-
-from typing import Optional
-
-import attr
-
-from secret_sdk.core import AccAddress
+from secret_sdk.core.public_key import PublicKey
 from secret_sdk.util.json import JSONSerializable
 
-from .public_key import PublicKey
+from .base_account import BaseAccount
+from .continuous_vesting_account import ContinuousVestingAccount
+from .delayed_vesting_account import DelayedVestingAccount
+from .module_account import ModuleAccount
 
-__all__ = ["Account"]
 
+class Account(JSONSerializable, ABC):
+    @abstractmethod
+    def get_account_number(self) -> int:
+        pass
 
-@attr.s
-class Account(JSONSerializable):
-    """Stores information about an account."""
+    @abstractmethod
+    def get_sequence(self) -> int:
+        pass
 
-    address: AccAddress = attr.ib()
-    """"""
-
-    public_key: Optional[PublicKey] = attr.ib()
-    """"""
-
-    account_number: int = attr.ib(converter=int)
-    """"""
-
-    sequence: int = attr.ib(converter=int)
-    """"""
-
-    def to_data(self) -> dict:
-        return {
-            "type": "cosmos-sdk/BaseAccount",
-            "value": {
-                "address": self.address,
-                "public_key": self.public_key and self.public_key.to_data(),
-                "account_number": str(self.account_number),
-                "sequence": str(self.sequence),
-            },
-        }
+    @abstractmethod
+    def get_public_key(self) -> PublicKey:
+        pass
 
     @classmethod
-    def from_data(cls, data: dict) -> Account:
-        data = data["value"]
-        return cls(
-            address=data["address"],
-            public_key=data.get("public_key")
-            and PublicKey.from_data(data["public_key"]),
-            account_number=data.get("account_number") or 0,
-            sequence=data.get("sequence") or 0,
-        )
+    def from_amino(cls, amino: dict):  # -> Account:
+        if amino["type"] == BaseAccount.type_amino:
+            return BaseAccount.from_amino(amino)
+        elif amino["type"] == ContinuousVestingAccount.type_amino:
+            return ContinuousVestingAccount.from_amino(amino)
+        elif amino["type"] == DelayedVestingAccount.type_amino:
+            return DelayedVestingAccount.from_amino(amino)
+        elif amino["type"] == ModuleAccount.type_amino:
+            return ModuleAccount.from_amino(amino)
+
+    @classmethod
+    def from_data(cls, data: dict):  # -> Account:
+        if data["@type"] == BaseAccount.type_url:
+            return BaseAccount.from_data(data)
+        elif data["@type"] == ContinuousVestingAccount.type_url:
+            return ContinuousVestingAccount.from_data(data)
+        elif data["@type"] == DelayedVestingAccount.type_url:
+            return DelayedVestingAccount.from_data(data)
+        elif data["@type"] == ModuleAccount.type_url:
+            return ModuleAccount.from_data(data)
+
+    @classmethod
+    def from_proto(cls, data: dict):  # -> Account:
+        if data["@type"] == BaseAccount.type_url:
+            return BaseAccount.from_proto(data)
+        elif data["@type"] == ContinuousVestingAccount.type_url:
+            return ContinuousVestingAccount.from_proto(data)
+        elif data["@type"] == DelayedVestingAccount.type_url:
+            return DelayedVestingAccount.from_proto(data)
+        elif data["@type"] == ModuleAccount.type_url:
+            return ModuleAccount.from_proto(data)

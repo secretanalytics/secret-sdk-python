@@ -17,12 +17,13 @@ license = "MIT"
 packages = [{ include = "secret_sdk" }]
 readme = "README.md"
 repository = "https://github.com/stephanegg/secret-sdk-python"
-version = "1.0"
+version = "1.5.0"
 
 [tool.poetry.dependencies]
 aiohttp = "^3.7.3"
 attrs = "^20.3.0"
 bech32 = "^1.2.0"
+betterproto = "2.0.0b5"
 bip32utils = "^0.3.post4"
 ecdsa = "^0.16.1"
 mnemonic = "^0.19"

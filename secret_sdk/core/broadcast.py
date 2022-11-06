@@ -6,7 +6,7 @@ from typing import List, Optional, Union
 
 import attr
 
-from secret_sdk.core.auth import TxLog, parse_tx_logs
+from secret_sdk.core.tx import TxLog, parse_tx_logs
 from secret_sdk.util.json import JSONSerializable
 
 __all__ = [
@@ -38,6 +38,12 @@ class BlockTxBroadcastResult(JSONSerializable):
     """If this is present, the transaction failed."""
     codespace: Optional[str] = attr.ib(default=None)
     """Error subspace name: used alongside ``code``."""
+    info: Optional[str] = attr.ib(default=None)
+    """"""
+    data: Optional[str] = attr.ib(default=None)
+    """"""
+    timestamp: Optional[str] = attr.ib(default=None)
+    """timestamp"""
 
     def is_tx_error(self) -> bool:
         """Returns whether the transaction failed."""
@@ -46,7 +52,7 @@ class BlockTxBroadcastResult(JSONSerializable):
 
 @attr.s
 class SyncTxBroadcastResult(JSONSerializable):
-    """Data object that contains the response result from node after transaction
+    """Data object that contains the response result from node after transactionco
     has been broadcasted with the ``sync`` broadcast mode."""
 
     txhash: str = attr.ib()
@@ -74,4 +80,4 @@ class AsyncTxBroadcastResult(JSONSerializable):
 
 def is_tx_error(result: Union[BlockTxBroadcastResult, SyncTxBroadcastResult]):
     """Returns whether the transaction failed."""
-    return result.code is not None
+    return result.code != 0

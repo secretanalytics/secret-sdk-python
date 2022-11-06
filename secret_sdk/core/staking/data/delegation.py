@@ -1,16 +1,34 @@
 from __future__ import annotations
 
+from datetime import datetime
 from typing import List
 
 import attr
+from dateutil import parser
+from secret_sdk.protobuf.cosmos.staking.v1beta1 import Delegation as Delegation_pb
+from secret_sdk.protobuf.cosmos.staking.v1beta1 import (
+    DelegationResponse as DelegationResponse_pb,
+)
+from secret_sdk.protobuf.cosmos.staking.v1beta1 import Redelegation as Redelegation_pb
+from secret_sdk.protobuf.cosmos.staking.v1beta1 import RedelegationEntry as RedelegationEntry_pb
+from secret_sdk.protobuf.cosmos.staking.v1beta1 import (
+    RedelegationEntryResponse as RedelegationEntryResponse_pb,
+)
+from secret_sdk.protobuf.cosmos.staking.v1beta1 import (
+    UnbondingDelegation as UnbondingDelegation_pb,
+)
+from secret_sdk.protobuf.cosmos.staking.v1beta1 import (
+    UnbondingDelegationEntry as UnbondingDelegationEntry_pb,
+)
 
 from secret_sdk.core import AccAddress, Coin, Dec, ValAddress
+from secret_sdk.util.converter import to_isoformat
 from secret_sdk.util.json import JSONSerializable
 
 __all__ = [
     "Delegation",
     "UnbondingDelegation",
-    "UnbondingEntry",
+    "UnbondingDelegationEntry",
     "Redelegation",
     "RedelegationEntry",
 ]
@@ -30,6 +48,16 @@ class Delegation(JSONSerializable):
     delegation: DelegationInfo = attr.ib()
     balance: Coin = attr.ib(converter=Coin.parse)  # type: ignore
 
+    def to_amino(self) -> dict:
+        return {
+            "delegation": {
+                "delegator_address": self.delegation.delegator_address,
+                "validator_address": self.delegation.validator_address,
+                "shares": str(self.delegation.shares),
+            },
+            "balance": self.balance.to_amino(),
+        }
+
     @classmethod
     def from_data(cls, data: dict) -> Delegation:
         return cls(
@@ -41,10 +69,20 @@ class Delegation(JSONSerializable):
             balance=Coin.from_data(data["balance"]),
         )
 
+    def to_proto(self) -> DelegationResponse_pb:
+        return DelegationResponse_pb(
+            delegation=Delegation_pb(
+                delegator_address=self.delegation.delegator_address,
+                validator_address=self.delegation.validator_address,
+                shares=str(self.delegation.shares),
+            ),
+            balance=self.balance.to_proto(),
+        )
+
 
 @attr.s
-class UnbondingEntry(JSONSerializable):
-    """Contains information about an active unbonding lot of SCRT."""
+class UnbondingDelegationEntry(JSONSerializable):
+    """Contains information about an active unbonding lot of Luna."""
 
     initial_balance: int = attr.ib(converter=int)
     """"""
@@ -52,24 +90,40 @@ class UnbondingEntry(JSONSerializable):
     """"""
     creation_height: int = attr.ib(converter=int)
     """"""
-    completion_time: str = attr.ib()
+    completion_time: datetime = attr.ib(converter=parser.parse)
     """"""
+
+    def to_amino(self) -> dict:
+        return {
+            "initial_balance": str(self.initial_balance),
+            "balance": str(self.balance),
+            "creation_height": str(self.creation_height),
+            "completion_time": to_isoformat(self.completion_time),
+        }
 
     def to_data(self) -> dict:
         return {
             "initial_balance": str(self.initial_balance),
             "balance": str(self.balance),
             "creation_height": str(self.creation_height),
-            "completion_time": self.completion_time,
+            "completion_time": to_isoformat(self.completion_time),
         }
 
     @classmethod
-    def from_data(cls, data: dict) -> UnbondingEntry:
+    def from_data(cls, data: dict) -> UnbondingDelegationEntry:
         return cls(
             initial_balance=data["initial_balance"],
             balance=data["balance"],
             creation_height=data["creation_height"],
             completion_time=data["completion_time"],
+        )
+
+    def to_proto(self) -> UnbondingDelegationEntry_pb:
+        return UnbondingDelegationEntry_pb(
+            initial_balance=str(self.initial_balance),
+            balance=str(self.balance),
+            creation_height=self.creation_height,
+            completion_time=self.completion_time,
         )
 
 
@@ -81,16 +135,32 @@ class UnbondingDelegation(JSONSerializable):
     """"""
     validator_address: ValAddress = attr.ib()
     """"""
-    entries: List[UnbondingEntry] = attr.ib()
+    entries: List[UnbondingDelegationEntry] = attr.ib()
     """"""
 
+    def to_amino(self) -> dict:
+        return {
+            "delegator_address": self.delegator_address,
+            "validator_address": self.validator_address,
+            "entries": [entry.to_amino() for entry in self.entries],
+        }
+
     @classmethod
-    def from_data(cls, data) -> UnbondingDelegation:
-        entries = [UnbondingEntry.from_data(entry) for entry in data["entries"]]
+    def from_data(cls, data: dict) -> UnbondingDelegation:
+        entries = [
+            UnbondingDelegationEntry.from_data(entry) for entry in data["entries"]
+        ]
         return cls(
             delegator_address=data["delegator_address"],
             validator_address=data["validator_address"],
             entries=entries,
+        )
+
+    def to_proto(self) -> UnbondingDelegation_pb:
+        return UnbondingDelegation_pb(
+            delegator_address=self.delegator_address,
+            validator_address=self.validator_address,
+            entries=[entry.to_proto() for entry in self.entries],
         )
 
 
@@ -102,18 +172,57 @@ class RedelegationEntryInfo(JSONSerializable):
     """"""
     creation_height: int = attr.ib(converter=int)
     """"""
-    completion_time: str = attr.ib()
+    completion_time: datetime = attr.ib(converter=parser.parse)
     """"""
+
+    def to_amino(self) -> dict:
+        return {
+            "initial_balance": str(self.initial_balance),
+            "shares_dst": str(self.shares_dst),
+            "creation_height": str(self.creation_height),
+            "completion_time": to_isoformat(self.completion_time),
+        }
+
+    @classmethod
+    def from_data(cls, data: dict) -> RedelegationEntryInfo:
+        return cls(
+            initial_balance=data["initial_balance"],
+            shares_dst=Dec.from_data(data("shares_dst")),
+            creation_height=data["creation_height"],
+            completion_time=data["completion_time"],
+        )
+
+    def to_data(self) -> dict:
+        return {
+            "initial_balance": self.initial_balance,
+            "shares_dst": self.shares_dst.to_data(),
+            "creation_height": self.creation_height,
+            "completion_time": to_isoformat(self.completion_time),
+        }
+
+    def to_proto(self) -> RedelegationEntry_pb:
+        return RedelegationEntry_pb(
+            initial_balance=str(self.initial_balance),
+            shares_dst=str(self.shares_dst),
+            creation_height=self.creation_height,
+            completion_time=self.completion_time,
+        )
 
 
 @attr.s
 class RedelegationEntry(JSONSerializable):
-    """Contains information about an active redelegated lot of SCRT."""
+    """Contains information about an active redelegated lot of Luna."""
 
     redelegation_entry: RedelegationEntryInfo = attr.ib()
     """"""
     balance: int = attr.ib(converter=int)
     """"""
+
+    def to_amino(self) -> dict:
+        return {
+            "redelegation_entry": self.redelegation_entry.to_amino(),
+            "balance": str(self.balance),
+        }
 
     def to_data(self) -> dict:
         return {
@@ -138,6 +247,12 @@ class RedelegationEntry(JSONSerializable):
             balance=data["balance"],
         )
 
+    def to_proto(self) -> RedelegationEntryResponse_pb:
+        return RedelegationEntryResponse_pb(
+            redelegation_entry=self.redelegation_entry.to_proto(),
+            balance=str(self.balance),
+        )
+
 
 @attr.s
 class RedelegationInfo(JSONSerializable):
@@ -147,7 +262,35 @@ class RedelegationInfo(JSONSerializable):
     """"""
     validator_dst_address: ValAddress = attr.ib()
     """"""
-    entries = attr.ib()  # duplicated entries to remove
+
+    def to_amino(self) -> dict:
+        return {
+            "delegator_address": self.delegator_address,
+            "validator_src_address": self.validator_src_address,
+            "validator_dst_address": self.validator_dst_address,
+        }
+
+    def to_data(self) -> dict:
+        return {
+            "delegator_address": self.delegator_address,
+            "validator_src_address": self.validator_src_address,
+            "validator_dst_address": self.validator_dst_address,
+        }
+
+    @classmethod
+    def from_data(cls, data: dict) -> RedelegationInfo:
+        return cls(
+            delegator_address=data["delegator_address"],
+            validator_src_address=data["validator_src_address"],
+            validator_dst_address=data["validator_dst_address"],
+        )
+
+    def to_proto(self) -> Redelegation_pb:
+        return Redelegation_pb(
+            delegator_address=self.delegator_address,
+            validator_src_address=self.validator_src_address,
+            validator_dst_address=self.validator_dst_address,
+        )
 
 
 @attr.s
@@ -159,6 +302,12 @@ class Redelegation(JSONSerializable):
     entries: List[RedelegationEntry] = attr.ib()
     """"""
 
+    def to_amino(self) -> dict:
+        return {
+            "redelegation": self.redelegation.to_amino(),
+            "entries": [entry.to_amino() for entry in self.entries],
+        }
+
     @classmethod
     def from_data(cls, data: dict) -> Redelegation:
         entries = [RedelegationEntry.from_data(re) for re in data["entries"]]
@@ -167,7 +316,14 @@ class Redelegation(JSONSerializable):
                 delegator_address=data["redelegation"]["delegator_address"],
                 validator_src_address=data["redelegation"]["validator_src_address"],
                 validator_dst_address=data["redelegation"]["validator_dst_address"],
-                entries=data["redelegation"]["entries"],
             ),
             entries=entries,
+        )
+
+    def to_proto(self) -> Redelegation_pb:
+        return Redelegation_pb(
+            delegator_address=self.redelegation.delegator_address,
+            validator_src_address=self.redelegation.validator_src_address,
+            validator_dst_address=self.redelegation.validator_dst_address,
+            entries=[entry.to_proto() for entry in self.entries],
         )
