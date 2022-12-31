@@ -460,7 +460,8 @@ class AsyncTxAPI(BaseAsyncAPI):
             BlockTxBroadcastResult: result
         """
         res = await self._broadcast(tx, BroadcastMode.BROADCAST_MODE_BLOCK, options)
-        res.update({'tx': self.decode(tx).to_data()})
+        decoded_tx = await super()._try_await(self.decode(tx))
+        res.update({'tx': decoded_tx.to_data()})
         return self.decrypt_txs_response(res)
 
     async def search(
