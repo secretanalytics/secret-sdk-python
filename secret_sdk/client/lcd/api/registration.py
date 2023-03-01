@@ -24,7 +24,8 @@ class AsyncRegistrationAPI(BaseAsyncAPI):
     async def consensus_io_pub_key(self):
         """Returns the consensus_io_pub_key"""
         result = await self._c._get(f"/registration/v1beta1/tx-key")
-        return extract_consensus_io_pub_key(base64.b64decode(result['key']))
+        # return extract_consensus_io_pub_key(base64.b64decode(result['key']))
+        return base64.b64decode(result['key'])
 
 
 class RegistrationAPI(AsyncRegistrationAPI):
