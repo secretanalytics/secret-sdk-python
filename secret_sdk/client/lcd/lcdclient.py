@@ -58,9 +58,12 @@ default_gas_adjustment = 1
 
 mainnet_chain_ids = {"secret-2", "secret-3", "secret-4"}
 
+# mainnetConsensusIoPubKey = bytes.fromhex(
+#   "083b1a03661211d5a4cc8d39a77795795862f7730645573b2bcc2c1920c53c04"
+# )
 mainnetConsensusIoPubKey = bytes.fromhex(
-  "083b1a03661211d5a4cc8d39a77795795862f7730645573b2bcc2c1920c53c04"
-)
+    "efdfbee583877e6d12c219695030a5bfb72e0a3abdc416655aa4a30c95a4446f"
+)  # == base64.b64decode("79++5YOHfm0SwhlpUDClv7cuCjq9xBZlWqSjDJWkRG8=")
 
 REQUEST_CONFIG = {
     "GET_TIMEOUT": 30,
