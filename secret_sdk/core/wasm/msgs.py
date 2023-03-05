@@ -164,7 +164,7 @@ class MsgInstantiateContract(Msg):
 
     def to_proto(self) -> MsgInstantiateContract_pb:
         if not self.init_msg_encrypted and not self.encryption_utils:
-            raise NotImplementedError('Cannot serialized MsgExecuteContract without encryption')
+            raise NotImplementedError('Cannot serialized MsgInstantiateContract without encryption')
         if not self.init_msg_encrypted:
             self.init_msg_encrypted = bytes(self.encryption_utils.encrypt(self.code_hash, self._msg_str))
 
