@@ -1,6 +1,8 @@
 import base64
 import json
+import re
 from typing import Any, Optional
+from secret_sdk.exceptions import LCDResponseError
 
 from secret_sdk.client.lcd.api._base import BaseAsyncAPI, sync_bind
 from secret_sdk.core.coins import Coins
@@ -62,7 +64,6 @@ class AsyncWasmAPI(BaseAsyncAPI):
         res = await self._c._get(f"/compute/v1beta1/code_hash/by_code_id/{code_id}")
         return res
 
-
     async def contract_hash(self, contract_address: str) -> str:
         """Fetches information about an instantiated contract.
 
@@ -81,7 +82,7 @@ class AsyncWasmAPI(BaseAsyncAPI):
         return _contract_code_hash[contract_address]
 
     async def contract_query(
-        self, contract_address: str, query: dict, contract_code_hash: Optional[str] = None,
+            self, contract_address: str, query: dict, contract_code_hash: Optional[str] = None,
             height: Optional[int] = 0, timeout: Optional[int] = 15, retry_attempts: Optional[int] = 1
     ) -> Any:
         """Runs a QueryMsg on a contract.
@@ -114,21 +115,33 @@ class AsyncWasmAPI(BaseAsyncAPI):
             params['block_height'] = str(height)
 
         query_path = f"/compute/v1beta1/query/{contract_address}"
-        query_result = await BaseAsyncAPI._try_await(
-            self._c._get(query_path, params=params, timeout=timeout, retry_attempts=retry_attempts)
-        )
+        try:
+            query_result = await BaseAsyncAPI._try_await(
+                self._c._get(query_path, params=params, timeout=timeout, retry_attempts=retry_attempts)
+            )
+        except LCDResponseError as lcd_error:
+            # trying to decrypt error
+            error_json = json.loads(lcd_error.message.replace("'", '"'))
+            error_msg = error_json.get('message','')
+            encrypted_error = re.findall('encrypted: (.+?):', error_msg)
+            if encrypted_error:
+                decrypted_error = self._c.encrypt_utils.decrypt(base64.b64decode(bytes(encrypted_error[0], 'utf-8')), nonce)
+                lcd_error.message = decrypted_error.decode('utf-8')
+            raise lcd_error
+        except:
+            raise
 
         encoded_result = base64.b64decode(bytes(query_result["data"], "utf-8"))
         decrypted = self._c.encrypt_utils.decrypt(encoded_result, nonce)
         return json.loads(base64.b64decode(decrypted))
 
     async def contract_execute_msg(
-        self,
-        sender_address: AccAddress,
-        contract_address: AccAddress,
-        handle_msg: dict,
-        transfer_amount: Optional[Coins] = None,
-        contract_code_hash: Optional[str] = None
+            self,
+            sender_address: AccAddress,
+            contract_address: AccAddress,
+            handle_msg: dict,
+            transfer_amount: Optional[Coins] = None,
+            contract_code_hash: Optional[str] = None
     ) -> MsgExecuteContract:
         if not contract_code_hash:
             if contract_address not in _contract_code_hash:
@@ -183,7 +196,7 @@ class WasmAPI(AsyncWasmAPI):
 
     @sync_bind(AsyncWasmAPI.contract_query)
     def contract_query(
-        self, contract_address: str, query_msg: dict, contract_code_hash: Optional[str] = None,
+            self, contract_address: str, query_msg: dict, contract_code_hash: Optional[str] = None,
             height: Optional[int] = 0, timeout: Optional[int] = 15, retry_attempts: Optional[int] = 1
     ) -> Any:
         pass
@@ -192,12 +205,12 @@ class WasmAPI(AsyncWasmAPI):
 
     @sync_bind(AsyncWasmAPI.contract_execute_msg)
     def contract_execute_msg(
-        self,
-        sender_address: AccAddress,
-        contract_address: AccAddress,
-        handle_msg: dict,
-        transfer_amount: Coins,
-        contract_code_hash: str
+            self,
+            sender_address: AccAddress,
+            contract_address: AccAddress,
+            handle_msg: dict,
+            transfer_amount: Coins,
+            contract_code_hash: str
     ) -> MsgExecuteContract:
         pass
 
