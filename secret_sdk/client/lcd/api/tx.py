@@ -452,7 +452,7 @@ class AsyncTxAPI(BaseAsyncAPI):
             broadcast_result = await BaseAsyncAPI._try_await(self.broadcast_async(tx_encoded, options))
         if mode == BroadcastMode.BROADCAST_MODE_SYNC:
             broadcast_result = await BaseAsyncAPI._try_await(self.broadcast_sync(tx_encoded, options))
-            if not broadcast_result.code != 0:
+            if broadcast_result.code != 0:
                 raise Exception(f"Broadcasting transaction failed with code {broadcast_result.code} (codespace: ${broadcast_result.codespace}).Log: {broadcast_result.raw_log}")
 
         return broadcast_result

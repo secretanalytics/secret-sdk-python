@@ -27,6 +27,54 @@ if TYPE_CHECKING:
 
 
 @dataclass(eq=False, repr=False)
+class ValidatorSigningInfo(betterproto.Message):
+    """
+    ValidatorSigningInfo defines a validator's signing info for monitoring
+    their liveness activity.
+    """
+
+    address: str = betterproto.string_field(1)
+    start_height: int = betterproto.int64_field(2)
+    """Height at which validator was first a candidate OR was un-jailed"""
+
+    index_offset: int = betterproto.int64_field(3)
+    """
+    Index which is incremented every time a validator is bonded in a block and
+    _may_ have signed a pre-commit or not. This in conjunction with the
+    signed_blocks_window param determines the index in the missed block bitmap.
+    """
+
+    jailed_until: datetime = betterproto.message_field(4)
+    """
+    Timestamp until which the validator is jailed due to liveness downtime.
+    """
+
+    tombstoned: bool = betterproto.bool_field(5)
+    """
+    Whether or not a validator has been tombstoned (killed out of validator
+    set). It is set once the validator commits an equivocation or for any other
+    configured misbehavior.
+    """
+
+    missed_blocks_counter: int = betterproto.int64_field(6)
+    """
+    A counter of missed (unsigned) blocks. It is used to avoid unnecessary
+    reads in the missed block bitmap.
+    """
+
+
+@dataclass(eq=False, repr=False)
+class Params(betterproto.Message):
+    """Params represents the parameters used for by the slashing module."""
+
+    signed_blocks_window: int = betterproto.int64_field(1)
+    min_signed_per_window: bytes = betterproto.bytes_field(2)
+    downtime_jail_duration: timedelta = betterproto.message_field(3)
+    slash_fraction_double_sign: bytes = betterproto.bytes_field(4)
+    slash_fraction_downtime: bytes = betterproto.bytes_field(5)
+
+
+@dataclass(eq=False, repr=False)
 class MsgUnjail(betterproto.Message):
     """MsgUnjail defines the Msg/Unjail request type"""
 
@@ -41,52 +89,33 @@ class MsgUnjailResponse(betterproto.Message):
 
 
 @dataclass(eq=False, repr=False)
-class ValidatorSigningInfo(betterproto.Message):
+class MsgUpdateParams(betterproto.Message):
     """
-    ValidatorSigningInfo defines a validator's signing info for monitoring
-    their liveness activity.
-    """
-
-    address: str = betterproto.string_field(1)
-    start_height: int = betterproto.int64_field(2)
-    """Height at which validator was first a candidate OR was unjailed"""
-
-    index_offset: int = betterproto.int64_field(3)
-    """
-    Index which is incremented each time the validator was a bonded in a block
-    and may have signed a precommit or not. This in conjunction with the
-    `SignedBlocksWindow` param determines the index in the
-    `MissedBlocksBitArray`.
+    MsgUpdateParams is the Msg/UpdateParams request type. Since: cosmos-sdk
+    0.47
     """
 
-    jailed_until: datetime = betterproto.message_field(4)
+    authority: str = betterproto.string_field(1)
     """
-    Timestamp until which the validator is jailed due to liveness downtime.
-    """
-
-    tombstoned: bool = betterproto.bool_field(5)
-    """
-    Whether or not a validator has been tombstoned (killed out of validator
-    set). It is set once the validator commits an equivocation or for any other
-    configured misbehiavor.
+    authority is the address that controls the module (defaults to x/gov unless
+    overwritten).
     """
 
-    missed_blocks_counter: int = betterproto.int64_field(6)
+    params: "Params" = betterproto.message_field(2)
     """
-    A counter kept to avoid unnecessary array reads. Note that
-    `Sum(MissedBlocksBitArray)` always equals `MissedBlocksCounter`.
+    params defines the x/slashing parameters to update. NOTE: All parameters
+    must be supplied.
     """
 
 
 @dataclass(eq=False, repr=False)
-class Params(betterproto.Message):
-    """Params represents the parameters used for by the slashing module."""
+class MsgUpdateParamsResponse(betterproto.Message):
+    """
+    MsgUpdateParamsResponse defines the response structure for executing a
+    MsgUpdateParams message. Since: cosmos-sdk 0.47
+    """
 
-    signed_blocks_window: int = betterproto.int64_field(1)
-    min_signed_per_window: bytes = betterproto.bytes_field(2)
-    downtime_jail_duration: timedelta = betterproto.message_field(3)
-    slash_fraction_double_sign: bytes = betterproto.bytes_field(4)
-    slash_fraction_downtime: bytes = betterproto.bytes_field(5)
+    pass
 
 
 @dataclass(eq=False, repr=False)
@@ -157,7 +186,7 @@ class GenesisState(betterproto.Message):
     """GenesisState defines the slashing module's genesis state."""
 
     params: "Params" = betterproto.message_field(1)
-    """params defines all the paramaters of related to deposit."""
+    """params defines all the parameters of the module."""
 
     signing_infos: List["SigningInfo"] = betterproto.message_field(2)
     """
@@ -228,6 +257,23 @@ class MsgStub(betterproto.ServiceStub):
             metadata=metadata,
         )
 
+    async def update_params(
+        self,
+        msg_update_params: "MsgUpdateParams",
+        *,
+        timeout: Optional[float] = None,
+        deadline: Optional["Deadline"] = None,
+        metadata: Optional["MetadataLike"] = None
+    ) -> "MsgUpdateParamsResponse":
+        return await self._unary_unary(
+            "/cosmos.slashing.v1beta1.Msg/UpdateParams",
+            msg_update_params,
+            MsgUpdateParamsResponse,
+            timeout=timeout,
+            deadline=deadline,
+            metadata=metadata,
+        )
+
 
 class QueryStub(betterproto.ServiceStub):
     async def params(
@@ -283,7 +329,13 @@ class QueryStub(betterproto.ServiceStub):
 
 
 class MsgBase(ServiceBase):
+
     async def unjail(self, msg_unjail: "MsgUnjail") -> "MsgUnjailResponse":
+        raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
+
+    async def update_params(
+        self, msg_update_params: "MsgUpdateParams"
+    ) -> "MsgUpdateParamsResponse":
         raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
 
     async def __rpc_unjail(
@@ -291,6 +343,13 @@ class MsgBase(ServiceBase):
     ) -> None:
         request = await stream.recv_message()
         response = await self.unjail(request)
+        await stream.send_message(response)
+
+    async def __rpc_update_params(
+        self, stream: "grpclib.server.Stream[MsgUpdateParams, MsgUpdateParamsResponse]"
+    ) -> None:
+        request = await stream.recv_message()
+        response = await self.update_params(request)
         await stream.send_message(response)
 
     def __mapping__(self) -> Dict[str, grpclib.const.Handler]:
@@ -301,10 +360,17 @@ class MsgBase(ServiceBase):
                 MsgUnjail,
                 MsgUnjailResponse,
             ),
+            "/cosmos.slashing.v1beta1.Msg/UpdateParams": grpclib.const.Handler(
+                self.__rpc_update_params,
+                grpclib.const.Cardinality.UNARY_UNARY,
+                MsgUpdateParams,
+                MsgUpdateParamsResponse,
+            ),
         }
 
 
 class QueryBase(ServiceBase):
+
     async def params(
         self, query_params_request: "QueryParamsRequest"
     ) -> "QueryParamsResponse":

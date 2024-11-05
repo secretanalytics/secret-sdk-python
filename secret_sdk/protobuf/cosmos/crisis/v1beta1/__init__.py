@@ -28,14 +28,49 @@ class MsgVerifyInvariant(betterproto.Message):
     """
 
     sender: str = betterproto.string_field(1)
+    """
+    sender is the account address of private key to send coins to fee collector
+    account.
+    """
+
     invariant_module_name: str = betterproto.string_field(2)
+    """name of the invariant module."""
+
     invariant_route: str = betterproto.string_field(3)
+    """invariant_route is the msg's invariant route."""
 
 
 @dataclass(eq=False, repr=False)
 class MsgVerifyInvariantResponse(betterproto.Message):
     """
     MsgVerifyInvariantResponse defines the Msg/VerifyInvariant response type.
+    """
+
+    pass
+
+
+@dataclass(eq=False, repr=False)
+class MsgUpdateParams(betterproto.Message):
+    """
+    MsgUpdateParams is the Msg/UpdateParams request type. Since: cosmos-sdk
+    0.47
+    """
+
+    authority: str = betterproto.string_field(1)
+    """
+    authority is the address that controls the module (defaults to x/gov unless
+    overwritten).
+    """
+
+    constant_fee: "__base_v1_beta1__.Coin" = betterproto.message_field(2)
+    """constant_fee defines the x/crisis parameter."""
+
+
+@dataclass(eq=False, repr=False)
+class MsgUpdateParamsResponse(betterproto.Message):
+    """
+    MsgUpdateParamsResponse defines the response structure for executing a
+    MsgUpdateParams message. Since: cosmos-sdk 0.47
     """
 
     pass
@@ -69,11 +104,34 @@ class MsgStub(betterproto.ServiceStub):
             metadata=metadata,
         )
 
+    async def update_params(
+        self,
+        msg_update_params: "MsgUpdateParams",
+        *,
+        timeout: Optional[float] = None,
+        deadline: Optional["Deadline"] = None,
+        metadata: Optional["MetadataLike"] = None
+    ) -> "MsgUpdateParamsResponse":
+        return await self._unary_unary(
+            "/cosmos.crisis.v1beta1.Msg/UpdateParams",
+            msg_update_params,
+            MsgUpdateParamsResponse,
+            timeout=timeout,
+            deadline=deadline,
+            metadata=metadata,
+        )
+
 
 class MsgBase(ServiceBase):
+
     async def verify_invariant(
         self, msg_verify_invariant: "MsgVerifyInvariant"
     ) -> "MsgVerifyInvariantResponse":
+        raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
+
+    async def update_params(
+        self, msg_update_params: "MsgUpdateParams"
+    ) -> "MsgUpdateParamsResponse":
         raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
 
     async def __rpc_verify_invariant(
@@ -84,6 +142,13 @@ class MsgBase(ServiceBase):
         response = await self.verify_invariant(request)
         await stream.send_message(response)
 
+    async def __rpc_update_params(
+        self, stream: "grpclib.server.Stream[MsgUpdateParams, MsgUpdateParamsResponse]"
+    ) -> None:
+        request = await stream.recv_message()
+        response = await self.update_params(request)
+        await stream.send_message(response)
+
     def __mapping__(self) -> Dict[str, grpclib.const.Handler]:
         return {
             "/cosmos.crisis.v1beta1.Msg/VerifyInvariant": grpclib.const.Handler(
@@ -91,5 +156,11 @@ class MsgBase(ServiceBase):
                 grpclib.const.Cardinality.UNARY_UNARY,
                 MsgVerifyInvariant,
                 MsgVerifyInvariantResponse,
+            ),
+            "/cosmos.crisis.v1beta1.Msg/UpdateParams": grpclib.const.Handler(
+                self.__rpc_update_params,
+                grpclib.const.Cardinality.UNARY_UNARY,
+                MsgUpdateParams,
+                MsgUpdateParamsResponse,
             ),
         }

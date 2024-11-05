@@ -16,6 +16,6 @@ class LegacyAminoPubKey(betterproto.Message):
     """
 
     threshold: int = betterproto.uint32_field(1)
-    public_keys: List[
-        "betterproto_lib_google_protobuf.Any"
-    ] = betterproto.message_field(2)
+    public_keys: List["betterproto_lib_google_protobuf.Any"] = (
+        betterproto.message_field(2)
+    )

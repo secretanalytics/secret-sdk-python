@@ -58,7 +58,7 @@ class PageResponse(betterproto.Message):
     next_key: bytes = betterproto.bytes_field(1)
     """
     next_key is the key to be passed to PageRequest.key to query the next page
-    most efficiently
+    most efficiently. It will be empty if there are no more results.
     """
 
     total: int = betterproto.uint64_field(2)

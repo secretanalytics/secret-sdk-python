@@ -39,7 +39,7 @@ class ResponsePing(betterproto.Message):
 @dataclass(eq=False, repr=False)
 class ResponseBroadcastTx(betterproto.Message):
     check_tx: "__abci__.ResponseCheckTx" = betterproto.message_field(1)
-    deliver_tx: "__abci__.ResponseDeliverTx" = betterproto.message_field(2)
+    tx_result: "__abci__.ExecTxResult" = betterproto.message_field(2)
 
 
 class BroadcastApiStub(betterproto.ServiceStub):
@@ -79,6 +79,7 @@ class BroadcastApiStub(betterproto.ServiceStub):
 
 
 class BroadcastApiBase(ServiceBase):
+
     async def ping(self, request_ping: "RequestPing") -> "ResponsePing":
         raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
 

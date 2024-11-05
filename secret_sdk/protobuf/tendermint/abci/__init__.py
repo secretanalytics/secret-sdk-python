@@ -31,7 +31,7 @@ class CheckTxType(betterproto.Enum):
     RECHECK = 1
 
 
-class EvidenceType(betterproto.Enum):
+class MisbehaviorType(betterproto.Enum):
     UNKNOWN = 0
     DUPLICATE_VOTE = 1
     LIGHT_CLIENT_ATTACK = 2
@@ -55,18 +55,32 @@ class ResponseApplySnapshotChunkResult(betterproto.Enum):
     REJECT_SNAPSHOT = 5
 
 
+class ResponseProcessProposalProposalStatus(betterproto.Enum):
+    UNKNOWN = 0
+    ACCEPT = 1
+    REJECT = 2
+
+
+class ResponseVerifyVoteExtensionVerifyStatus(betterproto.Enum):
+    UNKNOWN = 0
+    ACCEPT = 1
+    REJECT = 2
+    """
+    Rejecting the vote extension will reject the entire precommit by the
+    sender. Incorrectly implementing this thus has liveness implications as it
+    may affect CometBFT's ability to receive 2/3+ valid votes to finalize the
+    block. Honest nodes should never be rejected.
+    """
+
+
 @dataclass(eq=False, repr=False)
 class Request(betterproto.Message):
     echo: "RequestEcho" = betterproto.message_field(1, group="value")
     flush: "RequestFlush" = betterproto.message_field(2, group="value")
     info: "RequestInfo" = betterproto.message_field(3, group="value")
-    set_option: "RequestSetOption" = betterproto.message_field(4, group="value")
     init_chain: "RequestInitChain" = betterproto.message_field(5, group="value")
     query: "RequestQuery" = betterproto.message_field(6, group="value")
-    begin_block: "RequestBeginBlock" = betterproto.message_field(7, group="value")
     check_tx: "RequestCheckTx" = betterproto.message_field(8, group="value")
-    deliver_tx: "RequestDeliverTx" = betterproto.message_field(9, group="value")
-    end_block: "RequestEndBlock" = betterproto.message_field(10, group="value")
     commit: "RequestCommit" = betterproto.message_field(11, group="value")
     list_snapshots: "RequestListSnapshots" = betterproto.message_field(
         12, group="value"
@@ -79,6 +93,19 @@ class Request(betterproto.Message):
     )
     apply_snapshot_chunk: "RequestApplySnapshotChunk" = betterproto.message_field(
         15, group="value"
+    )
+    prepare_proposal: "RequestPrepareProposal" = betterproto.message_field(
+        16, group="value"
+    )
+    process_proposal: "RequestProcessProposal" = betterproto.message_field(
+        17, group="value"
+    )
+    extend_vote: "RequestExtendVote" = betterproto.message_field(18, group="value")
+    verify_vote_extension: "RequestVerifyVoteExtension" = betterproto.message_field(
+        19, group="value"
+    )
+    finalize_block: "RequestFinalizeBlock" = betterproto.message_field(
+        20, group="value"
     )
 
 
@@ -97,21 +124,14 @@ class RequestInfo(betterproto.Message):
     version: str = betterproto.string_field(1)
     block_version: int = betterproto.uint64_field(2)
     p2_p_version: int = betterproto.uint64_field(3)
-
-
-@dataclass(eq=False, repr=False)
-class RequestSetOption(betterproto.Message):
-    """nondeterministic"""
-
-    key: str = betterproto.string_field(1)
-    value: str = betterproto.string_field(2)
+    abci_version: str = betterproto.string_field(4)
 
 
 @dataclass(eq=False, repr=False)
 class RequestInitChain(betterproto.Message):
     time: datetime = betterproto.message_field(1)
     chain_id: str = betterproto.string_field(2)
-    consensus_params: "ConsensusParams" = betterproto.message_field(3)
+    consensus_params: "_types__.ConsensusParams" = betterproto.message_field(3)
     validators: List["ValidatorUpdate"] = betterproto.message_field(4)
     app_state_bytes: bytes = betterproto.bytes_field(5)
     initial_height: int = betterproto.int64_field(6)
@@ -126,27 +146,9 @@ class RequestQuery(betterproto.Message):
 
 
 @dataclass(eq=False, repr=False)
-class RequestBeginBlock(betterproto.Message):
-    hash: bytes = betterproto.bytes_field(1)
-    header: "_types__.Header" = betterproto.message_field(2)
-    last_commit_info: "LastCommitInfo" = betterproto.message_field(3)
-    byzantine_validators: List["Evidence"] = betterproto.message_field(4)
-
-
-@dataclass(eq=False, repr=False)
 class RequestCheckTx(betterproto.Message):
     tx: bytes = betterproto.bytes_field(1)
     type: "CheckTxType" = betterproto.enum_field(2)
-
-
-@dataclass(eq=False, repr=False)
-class RequestDeliverTx(betterproto.Message):
-    tx: bytes = betterproto.bytes_field(1)
-
-
-@dataclass(eq=False, repr=False)
-class RequestEndBlock(betterproto.Message):
-    height: int = betterproto.int64_field(1)
 
 
 @dataclass(eq=False, repr=False)
@@ -188,18 +190,105 @@ class RequestApplySnapshotChunk(betterproto.Message):
 
 
 @dataclass(eq=False, repr=False)
+class RequestPrepareProposal(betterproto.Message):
+    max_tx_bytes: int = betterproto.int64_field(1)
+    """the modified transactions cannot exceed this size."""
+
+    txs: List[bytes] = betterproto.bytes_field(2)
+    """
+    txs is an array of transactions that will be included in a block, sent to
+    the app for possible modifications.
+    """
+
+    local_last_commit: "ExtendedCommitInfo" = betterproto.message_field(3)
+    misbehavior: List["Misbehavior"] = betterproto.message_field(4)
+    height: int = betterproto.int64_field(5)
+    time: datetime = betterproto.message_field(6)
+    next_validators_hash: bytes = betterproto.bytes_field(7)
+    proposer_address: bytes = betterproto.bytes_field(8)
+    """address of the public key of the validator proposing the block."""
+
+
+@dataclass(eq=False, repr=False)
+class RequestProcessProposal(betterproto.Message):
+    txs: List[bytes] = betterproto.bytes_field(1)
+    proposed_last_commit: "CommitInfo" = betterproto.message_field(2)
+    misbehavior: List["Misbehavior"] = betterproto.message_field(3)
+    hash: bytes = betterproto.bytes_field(4)
+    """hash is the merkle root hash of the fields of the proposed block."""
+
+    height: int = betterproto.int64_field(5)
+    time: datetime = betterproto.message_field(6)
+    next_validators_hash: bytes = betterproto.bytes_field(7)
+    proposer_address: bytes = betterproto.bytes_field(8)
+    """address of the public key of the original proposer of the block."""
+
+
+@dataclass(eq=False, repr=False)
+class RequestExtendVote(betterproto.Message):
+    """Extends a vote with application-injected data"""
+
+    hash: bytes = betterproto.bytes_field(1)
+    """the hash of the block that this vote may be referring to"""
+
+    height: int = betterproto.int64_field(2)
+    """the height of the extended vote"""
+
+    time: datetime = betterproto.message_field(3)
+    """info of the block that this vote may be referring to"""
+
+    txs: List[bytes] = betterproto.bytes_field(4)
+    proposed_last_commit: "CommitInfo" = betterproto.message_field(5)
+    misbehavior: List["Misbehavior"] = betterproto.message_field(6)
+    next_validators_hash: bytes = betterproto.bytes_field(7)
+    proposer_address: bytes = betterproto.bytes_field(8)
+    """address of the public key of the original proposer of the block."""
+
+
+@dataclass(eq=False, repr=False)
+class RequestVerifyVoteExtension(betterproto.Message):
+    """Verify the vote extension"""
+
+    hash: bytes = betterproto.bytes_field(1)
+    """the hash of the block that this received vote corresponds to"""
+
+    validator_address: bytes = betterproto.bytes_field(2)
+    """the validator that signed the vote extension"""
+
+    height: int = betterproto.int64_field(3)
+    vote_extension: bytes = betterproto.bytes_field(4)
+
+
+@dataclass(eq=False, repr=False)
+class RequestFinalizeBlock(betterproto.Message):
+    txs: List[bytes] = betterproto.bytes_field(1)
+    decided_last_commit: "CommitInfo" = betterproto.message_field(2)
+    misbehavior: List["Misbehavior"] = betterproto.message_field(3)
+    hash: bytes = betterproto.bytes_field(4)
+    """hash is the merkle root hash of the fields of the decided block."""
+
+    height: int = betterproto.int64_field(5)
+    time: datetime = betterproto.message_field(6)
+    next_validators_hash: bytes = betterproto.bytes_field(7)
+    proposer_address: bytes = betterproto.bytes_field(8)
+    """
+    proposer_address is the address of the public key of the original proposer
+    of the block.
+    """
+
+    encrypted_random: "_types__.EncryptedRandom" = betterproto.message_field(9)
+    commit: "_types__.Commit" = betterproto.message_field(10)
+
+
+@dataclass(eq=False, repr=False)
 class Response(betterproto.Message):
     exception: "ResponseException" = betterproto.message_field(1, group="value")
     echo: "ResponseEcho" = betterproto.message_field(2, group="value")
     flush: "ResponseFlush" = betterproto.message_field(3, group="value")
     info: "ResponseInfo" = betterproto.message_field(4, group="value")
-    set_option: "ResponseSetOption" = betterproto.message_field(5, group="value")
     init_chain: "ResponseInitChain" = betterproto.message_field(6, group="value")
     query: "ResponseQuery" = betterproto.message_field(7, group="value")
-    begin_block: "ResponseBeginBlock" = betterproto.message_field(8, group="value")
     check_tx: "ResponseCheckTx" = betterproto.message_field(9, group="value")
-    deliver_tx: "ResponseDeliverTx" = betterproto.message_field(10, group="value")
-    end_block: "ResponseEndBlock" = betterproto.message_field(11, group="value")
     commit: "ResponseCommit" = betterproto.message_field(12, group="value")
     list_snapshots: "ResponseListSnapshots" = betterproto.message_field(
         13, group="value"
@@ -212,6 +301,19 @@ class Response(betterproto.Message):
     )
     apply_snapshot_chunk: "ResponseApplySnapshotChunk" = betterproto.message_field(
         16, group="value"
+    )
+    prepare_proposal: "ResponsePrepareProposal" = betterproto.message_field(
+        17, group="value"
+    )
+    process_proposal: "ResponseProcessProposal" = betterproto.message_field(
+        18, group="value"
+    )
+    extend_vote: "ResponseExtendVote" = betterproto.message_field(19, group="value")
+    verify_vote_extension: "ResponseVerifyVoteExtension" = betterproto.message_field(
+        20, group="value"
+    )
+    finalize_block: "ResponseFinalizeBlock" = betterproto.message_field(
+        21, group="value"
     )
 
 
@@ -242,19 +344,8 @@ class ResponseInfo(betterproto.Message):
 
 
 @dataclass(eq=False, repr=False)
-class ResponseSetOption(betterproto.Message):
-    """nondeterministic"""
-
-    code: int = betterproto.uint32_field(1)
-    log: str = betterproto.string_field(3)
-    """bytes data = 2;"""
-
-    info: str = betterproto.string_field(4)
-
-
-@dataclass(eq=False, repr=False)
 class ResponseInitChain(betterproto.Message):
-    consensus_params: "ConsensusParams" = betterproto.message_field(1)
+    consensus_params: "_types__.ConsensusParams" = betterproto.message_field(1)
     validators: List["ValidatorUpdate"] = betterproto.message_field(2)
     app_hash: bytes = betterproto.bytes_field(3)
 
@@ -275,11 +366,6 @@ class ResponseQuery(betterproto.Message):
 
 
 @dataclass(eq=False, repr=False)
-class ResponseBeginBlock(betterproto.Message):
-    events: List["Event"] = betterproto.message_field(1)
-
-
-@dataclass(eq=False, repr=False)
 class ResponseCheckTx(betterproto.Message):
     code: int = betterproto.uint32_field(1)
     data: bytes = betterproto.bytes_field(2)
@@ -292,29 +378,7 @@ class ResponseCheckTx(betterproto.Message):
 
 
 @dataclass(eq=False, repr=False)
-class ResponseDeliverTx(betterproto.Message):
-    code: int = betterproto.uint32_field(1)
-    data: bytes = betterproto.bytes_field(2)
-    log: str = betterproto.string_field(3)
-    info: str = betterproto.string_field(4)
-    gas_wanted: int = betterproto.int64_field(5)
-    gas_used: int = betterproto.int64_field(6)
-    events: List["Event"] = betterproto.message_field(7)
-    codespace: str = betterproto.string_field(8)
-
-
-@dataclass(eq=False, repr=False)
-class ResponseEndBlock(betterproto.Message):
-    validator_updates: List["ValidatorUpdate"] = betterproto.message_field(1)
-    consensus_param_updates: "ConsensusParams" = betterproto.message_field(2)
-    events: List["Event"] = betterproto.message_field(3)
-
-
-@dataclass(eq=False, repr=False)
 class ResponseCommit(betterproto.Message):
-    data: bytes = betterproto.bytes_field(2)
-    """reserve 1"""
-
     retain_height: int = betterproto.int64_field(3)
 
 
@@ -341,41 +405,86 @@ class ResponseApplySnapshotChunk(betterproto.Message):
 
 
 @dataclass(eq=False, repr=False)
-class ConsensusParams(betterproto.Message):
-    """
-    ConsensusParams contains all consensus-relevant parameters that can be
-    adjusted by the abci app
-    """
-
-    block: "BlockParams" = betterproto.message_field(1)
-    evidence: "_types__.EvidenceParams" = betterproto.message_field(2)
-    validator: "_types__.ValidatorParams" = betterproto.message_field(3)
-    version: "_types__.VersionParams" = betterproto.message_field(4)
+class ResponsePrepareProposal(betterproto.Message):
+    txs: List[bytes] = betterproto.bytes_field(1)
 
 
 @dataclass(eq=False, repr=False)
-class BlockParams(betterproto.Message):
-    """BlockParams contains limits on the block size."""
-
-    max_bytes: int = betterproto.int64_field(1)
-    """Note: must be greater than 0"""
-
-    max_gas: int = betterproto.int64_field(2)
-    """Note: must be greater or equal to -1"""
+class ResponseProcessProposal(betterproto.Message):
+    status: "ResponseProcessProposalProposalStatus" = betterproto.enum_field(1)
 
 
 @dataclass(eq=False, repr=False)
-class LastCommitInfo(betterproto.Message):
+class ResponseExtendVote(betterproto.Message):
+    vote_extension: bytes = betterproto.bytes_field(1)
+
+
+@dataclass(eq=False, repr=False)
+class ResponseVerifyVoteExtension(betterproto.Message):
+    status: "ResponseVerifyVoteExtensionVerifyStatus" = betterproto.enum_field(1)
+
+
+@dataclass(eq=False, repr=False)
+class ResponseFinalizeBlock(betterproto.Message):
+    events: List["Event"] = betterproto.message_field(1)
+    """set of block events emmitted as part of executing the block"""
+
+    tx_results: List["ExecTxResult"] = betterproto.message_field(2)
+    """
+    the result of executing each transaction including the events the
+    particular transction emitted. This should match the order of the
+    transactions delivered in the block itself
+    """
+
+    validator_updates: List["ValidatorUpdate"] = betterproto.message_field(3)
+    """
+    a list of updates to the validator set. These will reflect the validator
+    set at current height + 2.
+    """
+
+    consensus_param_updates: "_types__.ConsensusParams" = betterproto.message_field(4)
+    """updates to the consensus params, if any."""
+
+    app_hash: bytes = betterproto.bytes_field(5)
+    """
+    app_hash is the hash of the applications' state which is used to confirm
+    that execution of the transactions was deterministic. It is up to the
+    application to decide which algorithm to use.
+    """
+
+
+@dataclass(eq=False, repr=False)
+class CommitInfo(betterproto.Message):
     round: int = betterproto.int32_field(1)
     votes: List["VoteInfo"] = betterproto.message_field(2)
+
+
+@dataclass(eq=False, repr=False)
+class ExtendedCommitInfo(betterproto.Message):
+    """
+    ExtendedCommitInfo is similar to CommitInfo except that it is only used in
+    the PrepareProposal request such that CometBFT can provide vote extensions
+    to the application.
+    """
+
+    round: int = betterproto.int32_field(1)
+    """
+    The round at which the block proposer decided in the previous height.
+    """
+
+    votes: List["ExtendedVoteInfo"] = betterproto.message_field(2)
+    """
+    List of validators' addresses in the last validator set with their voting
+    information, including vote extensions.
+    """
 
 
 @dataclass(eq=False, repr=False)
 class Event(betterproto.Message):
     """
     Event allows application developers to attach additional information to
-    ResponseBeginBlock, ResponseEndBlock, ResponseCheckTx and
-    ResponseDeliverTx. Later, transactions may be queried using these events.
+    ResponseFinalizeBlock and ResponseCheckTx. Later, transactions may be
+    queried using these events.
     """
 
     type: str = betterproto.string_field(1)
@@ -386,9 +495,27 @@ class Event(betterproto.Message):
 class EventAttribute(betterproto.Message):
     """EventAttribute is a single key-value pair, associated with an event."""
 
-    key: bytes = betterproto.bytes_field(1)
-    value: bytes = betterproto.bytes_field(2)
+    key: str = betterproto.string_field(1)
+    value: str = betterproto.string_field(2)
     index: bool = betterproto.bool_field(3)
+
+
+@dataclass(eq=False, repr=False)
+class ExecTxResult(betterproto.Message):
+    """
+    ExecTxResult contains results of executing one individual transaction. *
+    Its structure is equivalent to #ResponseDeliverTx which will be
+    deprecated/deleted
+    """
+
+    code: int = betterproto.uint32_field(1)
+    data: bytes = betterproto.bytes_field(2)
+    log: str = betterproto.string_field(3)
+    info: str = betterproto.string_field(4)
+    gas_wanted: int = betterproto.int64_field(5)
+    gas_used: int = betterproto.int64_field(6)
+    events: List["Event"] = betterproto.message_field(7)
+    codespace: str = betterproto.string_field(8)
 
 
 @dataclass(eq=False, repr=False)
@@ -401,13 +528,11 @@ class TxResult(betterproto.Message):
     height: int = betterproto.int64_field(1)
     index: int = betterproto.uint32_field(2)
     tx: bytes = betterproto.bytes_field(3)
-    result: "ResponseDeliverTx" = betterproto.message_field(4)
+    result: "ExecTxResult" = betterproto.message_field(4)
 
 
 @dataclass(eq=False, repr=False)
 class Validator(betterproto.Message):
-    """Validator"""
-
     address: bytes = betterproto.bytes_field(1)
     power: int = betterproto.int64_field(3)
     """PubKey pub_key = 2 [(gogoproto.nullable)=false];"""
@@ -415,23 +540,40 @@ class Validator(betterproto.Message):
 
 @dataclass(eq=False, repr=False)
 class ValidatorUpdate(betterproto.Message):
-    """ValidatorUpdate"""
-
     pub_key: "_crypto__.PublicKey" = betterproto.message_field(1)
     power: int = betterproto.int64_field(2)
 
 
 @dataclass(eq=False, repr=False)
 class VoteInfo(betterproto.Message):
-    """VoteInfo"""
-
     validator: "Validator" = betterproto.message_field(1)
-    signed_last_block: bool = betterproto.bool_field(2)
+    block_id_flag: "_types__.BlockIdFlag" = betterproto.enum_field(3)
 
 
 @dataclass(eq=False, repr=False)
-class Evidence(betterproto.Message):
-    type: "EvidenceType" = betterproto.enum_field(1)
+class ExtendedVoteInfo(betterproto.Message):
+    validator: "Validator" = betterproto.message_field(1)
+    """The validator that sent the vote."""
+
+    vote_extension: bytes = betterproto.bytes_field(3)
+    """
+    Non-deterministic extension provided by the sending validator's
+    application.
+    """
+
+    extension_signature: bytes = betterproto.bytes_field(4)
+    """Vote extension signature created by CometBFT"""
+
+    block_id_flag: "_types__.BlockIdFlag" = betterproto.enum_field(5)
+    """
+    block_id_flag indicates whether the validator voted for a block, nil, or
+    did not vote at all
+    """
+
+
+@dataclass(eq=False, repr=False)
+class Misbehavior(betterproto.Message):
+    type: "MisbehaviorType" = betterproto.enum_field(1)
     validator: "Validator" = betterproto.message_field(2)
     """The offending validator"""
 
@@ -458,7 +600,7 @@ class Snapshot(betterproto.Message):
     metadata: bytes = betterproto.bytes_field(5)
 
 
-class AbciApplicationStub(betterproto.ServiceStub):
+class AbciStub(betterproto.ServiceStub):
     async def echo(
         self,
         request_echo: "RequestEcho",
@@ -468,7 +610,7 @@ class AbciApplicationStub(betterproto.ServiceStub):
         metadata: Optional["MetadataLike"] = None
     ) -> "ResponseEcho":
         return await self._unary_unary(
-            "/tendermint.abci.ABCIApplication/Echo",
+            "/tendermint.abci.ABCI/Echo",
             request_echo,
             ResponseEcho,
             timeout=timeout,
@@ -485,7 +627,7 @@ class AbciApplicationStub(betterproto.ServiceStub):
         metadata: Optional["MetadataLike"] = None
     ) -> "ResponseFlush":
         return await self._unary_unary(
-            "/tendermint.abci.ABCIApplication/Flush",
+            "/tendermint.abci.ABCI/Flush",
             request_flush,
             ResponseFlush,
             timeout=timeout,
@@ -502,43 +644,9 @@ class AbciApplicationStub(betterproto.ServiceStub):
         metadata: Optional["MetadataLike"] = None
     ) -> "ResponseInfo":
         return await self._unary_unary(
-            "/tendermint.abci.ABCIApplication/Info",
+            "/tendermint.abci.ABCI/Info",
             request_info,
             ResponseInfo,
-            timeout=timeout,
-            deadline=deadline,
-            metadata=metadata,
-        )
-
-    async def set_option(
-        self,
-        request_set_option: "RequestSetOption",
-        *,
-        timeout: Optional[float] = None,
-        deadline: Optional["Deadline"] = None,
-        metadata: Optional["MetadataLike"] = None
-    ) -> "ResponseSetOption":
-        return await self._unary_unary(
-            "/tendermint.abci.ABCIApplication/SetOption",
-            request_set_option,
-            ResponseSetOption,
-            timeout=timeout,
-            deadline=deadline,
-            metadata=metadata,
-        )
-
-    async def deliver_tx(
-        self,
-        request_deliver_tx: "RequestDeliverTx",
-        *,
-        timeout: Optional[float] = None,
-        deadline: Optional["Deadline"] = None,
-        metadata: Optional["MetadataLike"] = None
-    ) -> "ResponseDeliverTx":
-        return await self._unary_unary(
-            "/tendermint.abci.ABCIApplication/DeliverTx",
-            request_deliver_tx,
-            ResponseDeliverTx,
             timeout=timeout,
             deadline=deadline,
             metadata=metadata,
@@ -553,7 +661,7 @@ class AbciApplicationStub(betterproto.ServiceStub):
         metadata: Optional["MetadataLike"] = None
     ) -> "ResponseCheckTx":
         return await self._unary_unary(
-            "/tendermint.abci.ABCIApplication/CheckTx",
+            "/tendermint.abci.ABCI/CheckTx",
             request_check_tx,
             ResponseCheckTx,
             timeout=timeout,
@@ -570,7 +678,7 @@ class AbciApplicationStub(betterproto.ServiceStub):
         metadata: Optional["MetadataLike"] = None
     ) -> "ResponseQuery":
         return await self._unary_unary(
-            "/tendermint.abci.ABCIApplication/Query",
+            "/tendermint.abci.ABCI/Query",
             request_query,
             ResponseQuery,
             timeout=timeout,
@@ -587,7 +695,7 @@ class AbciApplicationStub(betterproto.ServiceStub):
         metadata: Optional["MetadataLike"] = None
     ) -> "ResponseCommit":
         return await self._unary_unary(
-            "/tendermint.abci.ABCIApplication/Commit",
+            "/tendermint.abci.ABCI/Commit",
             request_commit,
             ResponseCommit,
             timeout=timeout,
@@ -604,43 +712,9 @@ class AbciApplicationStub(betterproto.ServiceStub):
         metadata: Optional["MetadataLike"] = None
     ) -> "ResponseInitChain":
         return await self._unary_unary(
-            "/tendermint.abci.ABCIApplication/InitChain",
+            "/tendermint.abci.ABCI/InitChain",
             request_init_chain,
             ResponseInitChain,
-            timeout=timeout,
-            deadline=deadline,
-            metadata=metadata,
-        )
-
-    async def begin_block(
-        self,
-        request_begin_block: "RequestBeginBlock",
-        *,
-        timeout: Optional[float] = None,
-        deadline: Optional["Deadline"] = None,
-        metadata: Optional["MetadataLike"] = None
-    ) -> "ResponseBeginBlock":
-        return await self._unary_unary(
-            "/tendermint.abci.ABCIApplication/BeginBlock",
-            request_begin_block,
-            ResponseBeginBlock,
-            timeout=timeout,
-            deadline=deadline,
-            metadata=metadata,
-        )
-
-    async def end_block(
-        self,
-        request_end_block: "RequestEndBlock",
-        *,
-        timeout: Optional[float] = None,
-        deadline: Optional["Deadline"] = None,
-        metadata: Optional["MetadataLike"] = None
-    ) -> "ResponseEndBlock":
-        return await self._unary_unary(
-            "/tendermint.abci.ABCIApplication/EndBlock",
-            request_end_block,
-            ResponseEndBlock,
             timeout=timeout,
             deadline=deadline,
             metadata=metadata,
@@ -655,7 +729,7 @@ class AbciApplicationStub(betterproto.ServiceStub):
         metadata: Optional["MetadataLike"] = None
     ) -> "ResponseListSnapshots":
         return await self._unary_unary(
-            "/tendermint.abci.ABCIApplication/ListSnapshots",
+            "/tendermint.abci.ABCI/ListSnapshots",
             request_list_snapshots,
             ResponseListSnapshots,
             timeout=timeout,
@@ -672,7 +746,7 @@ class AbciApplicationStub(betterproto.ServiceStub):
         metadata: Optional["MetadataLike"] = None
     ) -> "ResponseOfferSnapshot":
         return await self._unary_unary(
-            "/tendermint.abci.ABCIApplication/OfferSnapshot",
+            "/tendermint.abci.ABCI/OfferSnapshot",
             request_offer_snapshot,
             ResponseOfferSnapshot,
             timeout=timeout,
@@ -689,7 +763,7 @@ class AbciApplicationStub(betterproto.ServiceStub):
         metadata: Optional["MetadataLike"] = None
     ) -> "ResponseLoadSnapshotChunk":
         return await self._unary_unary(
-            "/tendermint.abci.ABCIApplication/LoadSnapshotChunk",
+            "/tendermint.abci.ABCI/LoadSnapshotChunk",
             request_load_snapshot_chunk,
             ResponseLoadSnapshotChunk,
             timeout=timeout,
@@ -706,7 +780,7 @@ class AbciApplicationStub(betterproto.ServiceStub):
         metadata: Optional["MetadataLike"] = None
     ) -> "ResponseApplySnapshotChunk":
         return await self._unary_unary(
-            "/tendermint.abci.ABCIApplication/ApplySnapshotChunk",
+            "/tendermint.abci.ABCI/ApplySnapshotChunk",
             request_apply_snapshot_chunk,
             ResponseApplySnapshotChunk,
             timeout=timeout,
@@ -714,8 +788,94 @@ class AbciApplicationStub(betterproto.ServiceStub):
             metadata=metadata,
         )
 
+    async def prepare_proposal(
+        self,
+        request_prepare_proposal: "RequestPrepareProposal",
+        *,
+        timeout: Optional[float] = None,
+        deadline: Optional["Deadline"] = None,
+        metadata: Optional["MetadataLike"] = None
+    ) -> "ResponsePrepareProposal":
+        return await self._unary_unary(
+            "/tendermint.abci.ABCI/PrepareProposal",
+            request_prepare_proposal,
+            ResponsePrepareProposal,
+            timeout=timeout,
+            deadline=deadline,
+            metadata=metadata,
+        )
 
-class AbciApplicationBase(ServiceBase):
+    async def process_proposal(
+        self,
+        request_process_proposal: "RequestProcessProposal",
+        *,
+        timeout: Optional[float] = None,
+        deadline: Optional["Deadline"] = None,
+        metadata: Optional["MetadataLike"] = None
+    ) -> "ResponseProcessProposal":
+        return await self._unary_unary(
+            "/tendermint.abci.ABCI/ProcessProposal",
+            request_process_proposal,
+            ResponseProcessProposal,
+            timeout=timeout,
+            deadline=deadline,
+            metadata=metadata,
+        )
+
+    async def extend_vote(
+        self,
+        request_extend_vote: "RequestExtendVote",
+        *,
+        timeout: Optional[float] = None,
+        deadline: Optional["Deadline"] = None,
+        metadata: Optional["MetadataLike"] = None
+    ) -> "ResponseExtendVote":
+        return await self._unary_unary(
+            "/tendermint.abci.ABCI/ExtendVote",
+            request_extend_vote,
+            ResponseExtendVote,
+            timeout=timeout,
+            deadline=deadline,
+            metadata=metadata,
+        )
+
+    async def verify_vote_extension(
+        self,
+        request_verify_vote_extension: "RequestVerifyVoteExtension",
+        *,
+        timeout: Optional[float] = None,
+        deadline: Optional["Deadline"] = None,
+        metadata: Optional["MetadataLike"] = None
+    ) -> "ResponseVerifyVoteExtension":
+        return await self._unary_unary(
+            "/tendermint.abci.ABCI/VerifyVoteExtension",
+            request_verify_vote_extension,
+            ResponseVerifyVoteExtension,
+            timeout=timeout,
+            deadline=deadline,
+            metadata=metadata,
+        )
+
+    async def finalize_block(
+        self,
+        request_finalize_block: "RequestFinalizeBlock",
+        *,
+        timeout: Optional[float] = None,
+        deadline: Optional["Deadline"] = None,
+        metadata: Optional["MetadataLike"] = None
+    ) -> "ResponseFinalizeBlock":
+        return await self._unary_unary(
+            "/tendermint.abci.ABCI/FinalizeBlock",
+            request_finalize_block,
+            ResponseFinalizeBlock,
+            timeout=timeout,
+            deadline=deadline,
+            metadata=metadata,
+        )
+
+
+class AbciBase(ServiceBase):
+
     async def echo(self, request_echo: "RequestEcho") -> "ResponseEcho":
         raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
 
@@ -723,16 +883,6 @@ class AbciApplicationBase(ServiceBase):
         raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
 
     async def info(self, request_info: "RequestInfo") -> "ResponseInfo":
-        raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
-
-    async def set_option(
-        self, request_set_option: "RequestSetOption"
-    ) -> "ResponseSetOption":
-        raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
-
-    async def deliver_tx(
-        self, request_deliver_tx: "RequestDeliverTx"
-    ) -> "ResponseDeliverTx":
         raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
 
     async def check_tx(self, request_check_tx: "RequestCheckTx") -> "ResponseCheckTx":
@@ -747,16 +897,6 @@ class AbciApplicationBase(ServiceBase):
     async def init_chain(
         self, request_init_chain: "RequestInitChain"
     ) -> "ResponseInitChain":
-        raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
-
-    async def begin_block(
-        self, request_begin_block: "RequestBeginBlock"
-    ) -> "ResponseBeginBlock":
-        raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
-
-    async def end_block(
-        self, request_end_block: "RequestEndBlock"
-    ) -> "ResponseEndBlock":
         raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
 
     async def list_snapshots(
@@ -779,6 +919,31 @@ class AbciApplicationBase(ServiceBase):
     ) -> "ResponseApplySnapshotChunk":
         raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
 
+    async def prepare_proposal(
+        self, request_prepare_proposal: "RequestPrepareProposal"
+    ) -> "ResponsePrepareProposal":
+        raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
+
+    async def process_proposal(
+        self, request_process_proposal: "RequestProcessProposal"
+    ) -> "ResponseProcessProposal":
+        raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
+
+    async def extend_vote(
+        self, request_extend_vote: "RequestExtendVote"
+    ) -> "ResponseExtendVote":
+        raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
+
+    async def verify_vote_extension(
+        self, request_verify_vote_extension: "RequestVerifyVoteExtension"
+    ) -> "ResponseVerifyVoteExtension":
+        raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
+
+    async def finalize_block(
+        self, request_finalize_block: "RequestFinalizeBlock"
+    ) -> "ResponseFinalizeBlock":
+        raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
+
     async def __rpc_echo(
         self, stream: "grpclib.server.Stream[RequestEcho, ResponseEcho]"
     ) -> None:
@@ -798,20 +963,6 @@ class AbciApplicationBase(ServiceBase):
     ) -> None:
         request = await stream.recv_message()
         response = await self.info(request)
-        await stream.send_message(response)
-
-    async def __rpc_set_option(
-        self, stream: "grpclib.server.Stream[RequestSetOption, ResponseSetOption]"
-    ) -> None:
-        request = await stream.recv_message()
-        response = await self.set_option(request)
-        await stream.send_message(response)
-
-    async def __rpc_deliver_tx(
-        self, stream: "grpclib.server.Stream[RequestDeliverTx, ResponseDeliverTx]"
-    ) -> None:
-        request = await stream.recv_message()
-        response = await self.deliver_tx(request)
         await stream.send_message(response)
 
     async def __rpc_check_tx(
@@ -840,20 +991,6 @@ class AbciApplicationBase(ServiceBase):
     ) -> None:
         request = await stream.recv_message()
         response = await self.init_chain(request)
-        await stream.send_message(response)
-
-    async def __rpc_begin_block(
-        self, stream: "grpclib.server.Stream[RequestBeginBlock, ResponseBeginBlock]"
-    ) -> None:
-        request = await stream.recv_message()
-        response = await self.begin_block(request)
-        await stream.send_message(response)
-
-    async def __rpc_end_block(
-        self, stream: "grpclib.server.Stream[RequestEndBlock, ResponseEndBlock]"
-    ) -> None:
-        request = await stream.recv_message()
-        response = await self.end_block(request)
         await stream.send_message(response)
 
     async def __rpc_list_snapshots(
@@ -888,96 +1025,141 @@ class AbciApplicationBase(ServiceBase):
         response = await self.apply_snapshot_chunk(request)
         await stream.send_message(response)
 
+    async def __rpc_prepare_proposal(
+        self,
+        stream: "grpclib.server.Stream[RequestPrepareProposal, ResponsePrepareProposal]",
+    ) -> None:
+        request = await stream.recv_message()
+        response = await self.prepare_proposal(request)
+        await stream.send_message(response)
+
+    async def __rpc_process_proposal(
+        self,
+        stream: "grpclib.server.Stream[RequestProcessProposal, ResponseProcessProposal]",
+    ) -> None:
+        request = await stream.recv_message()
+        response = await self.process_proposal(request)
+        await stream.send_message(response)
+
+    async def __rpc_extend_vote(
+        self, stream: "grpclib.server.Stream[RequestExtendVote, ResponseExtendVote]"
+    ) -> None:
+        request = await stream.recv_message()
+        response = await self.extend_vote(request)
+        await stream.send_message(response)
+
+    async def __rpc_verify_vote_extension(
+        self,
+        stream: "grpclib.server.Stream[RequestVerifyVoteExtension, ResponseVerifyVoteExtension]",
+    ) -> None:
+        request = await stream.recv_message()
+        response = await self.verify_vote_extension(request)
+        await stream.send_message(response)
+
+    async def __rpc_finalize_block(
+        self,
+        stream: "grpclib.server.Stream[RequestFinalizeBlock, ResponseFinalizeBlock]",
+    ) -> None:
+        request = await stream.recv_message()
+        response = await self.finalize_block(request)
+        await stream.send_message(response)
+
     def __mapping__(self) -> Dict[str, grpclib.const.Handler]:
         return {
-            "/tendermint.abci.ABCIApplication/Echo": grpclib.const.Handler(
+            "/tendermint.abci.ABCI/Echo": grpclib.const.Handler(
                 self.__rpc_echo,
                 grpclib.const.Cardinality.UNARY_UNARY,
                 RequestEcho,
                 ResponseEcho,
             ),
-            "/tendermint.abci.ABCIApplication/Flush": grpclib.const.Handler(
+            "/tendermint.abci.ABCI/Flush": grpclib.const.Handler(
                 self.__rpc_flush,
                 grpclib.const.Cardinality.UNARY_UNARY,
                 RequestFlush,
                 ResponseFlush,
             ),
-            "/tendermint.abci.ABCIApplication/Info": grpclib.const.Handler(
+            "/tendermint.abci.ABCI/Info": grpclib.const.Handler(
                 self.__rpc_info,
                 grpclib.const.Cardinality.UNARY_UNARY,
                 RequestInfo,
                 ResponseInfo,
             ),
-            "/tendermint.abci.ABCIApplication/SetOption": grpclib.const.Handler(
-                self.__rpc_set_option,
-                grpclib.const.Cardinality.UNARY_UNARY,
-                RequestSetOption,
-                ResponseSetOption,
-            ),
-            "/tendermint.abci.ABCIApplication/DeliverTx": grpclib.const.Handler(
-                self.__rpc_deliver_tx,
-                grpclib.const.Cardinality.UNARY_UNARY,
-                RequestDeliverTx,
-                ResponseDeliverTx,
-            ),
-            "/tendermint.abci.ABCIApplication/CheckTx": grpclib.const.Handler(
+            "/tendermint.abci.ABCI/CheckTx": grpclib.const.Handler(
                 self.__rpc_check_tx,
                 grpclib.const.Cardinality.UNARY_UNARY,
                 RequestCheckTx,
                 ResponseCheckTx,
             ),
-            "/tendermint.abci.ABCIApplication/Query": grpclib.const.Handler(
+            "/tendermint.abci.ABCI/Query": grpclib.const.Handler(
                 self.__rpc_query,
                 grpclib.const.Cardinality.UNARY_UNARY,
                 RequestQuery,
                 ResponseQuery,
             ),
-            "/tendermint.abci.ABCIApplication/Commit": grpclib.const.Handler(
+            "/tendermint.abci.ABCI/Commit": grpclib.const.Handler(
                 self.__rpc_commit,
                 grpclib.const.Cardinality.UNARY_UNARY,
                 RequestCommit,
                 ResponseCommit,
             ),
-            "/tendermint.abci.ABCIApplication/InitChain": grpclib.const.Handler(
+            "/tendermint.abci.ABCI/InitChain": grpclib.const.Handler(
                 self.__rpc_init_chain,
                 grpclib.const.Cardinality.UNARY_UNARY,
                 RequestInitChain,
                 ResponseInitChain,
             ),
-            "/tendermint.abci.ABCIApplication/BeginBlock": grpclib.const.Handler(
-                self.__rpc_begin_block,
-                grpclib.const.Cardinality.UNARY_UNARY,
-                RequestBeginBlock,
-                ResponseBeginBlock,
-            ),
-            "/tendermint.abci.ABCIApplication/EndBlock": grpclib.const.Handler(
-                self.__rpc_end_block,
-                grpclib.const.Cardinality.UNARY_UNARY,
-                RequestEndBlock,
-                ResponseEndBlock,
-            ),
-            "/tendermint.abci.ABCIApplication/ListSnapshots": grpclib.const.Handler(
+            "/tendermint.abci.ABCI/ListSnapshots": grpclib.const.Handler(
                 self.__rpc_list_snapshots,
                 grpclib.const.Cardinality.UNARY_UNARY,
                 RequestListSnapshots,
                 ResponseListSnapshots,
             ),
-            "/tendermint.abci.ABCIApplication/OfferSnapshot": grpclib.const.Handler(
+            "/tendermint.abci.ABCI/OfferSnapshot": grpclib.const.Handler(
                 self.__rpc_offer_snapshot,
                 grpclib.const.Cardinality.UNARY_UNARY,
                 RequestOfferSnapshot,
                 ResponseOfferSnapshot,
             ),
-            "/tendermint.abci.ABCIApplication/LoadSnapshotChunk": grpclib.const.Handler(
+            "/tendermint.abci.ABCI/LoadSnapshotChunk": grpclib.const.Handler(
                 self.__rpc_load_snapshot_chunk,
                 grpclib.const.Cardinality.UNARY_UNARY,
                 RequestLoadSnapshotChunk,
                 ResponseLoadSnapshotChunk,
             ),
-            "/tendermint.abci.ABCIApplication/ApplySnapshotChunk": grpclib.const.Handler(
+            "/tendermint.abci.ABCI/ApplySnapshotChunk": grpclib.const.Handler(
                 self.__rpc_apply_snapshot_chunk,
                 grpclib.const.Cardinality.UNARY_UNARY,
                 RequestApplySnapshotChunk,
                 ResponseApplySnapshotChunk,
+            ),
+            "/tendermint.abci.ABCI/PrepareProposal": grpclib.const.Handler(
+                self.__rpc_prepare_proposal,
+                grpclib.const.Cardinality.UNARY_UNARY,
+                RequestPrepareProposal,
+                ResponsePrepareProposal,
+            ),
+            "/tendermint.abci.ABCI/ProcessProposal": grpclib.const.Handler(
+                self.__rpc_process_proposal,
+                grpclib.const.Cardinality.UNARY_UNARY,
+                RequestProcessProposal,
+                ResponseProcessProposal,
+            ),
+            "/tendermint.abci.ABCI/ExtendVote": grpclib.const.Handler(
+                self.__rpc_extend_vote,
+                grpclib.const.Cardinality.UNARY_UNARY,
+                RequestExtendVote,
+                ResponseExtendVote,
+            ),
+            "/tendermint.abci.ABCI/VerifyVoteExtension": grpclib.const.Handler(
+                self.__rpc_verify_vote_extension,
+                grpclib.const.Cardinality.UNARY_UNARY,
+                RequestVerifyVoteExtension,
+                ResponseVerifyVoteExtension,
+            ),
+            "/tendermint.abci.ABCI/FinalizeBlock": grpclib.const.Handler(
+                self.__rpc_finalize_block,
+                grpclib.const.Cardinality.UNARY_UNARY,
+                RequestFinalizeBlock,
+                ResponseFinalizeBlock,
             ),
         }

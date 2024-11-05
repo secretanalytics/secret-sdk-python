@@ -55,7 +55,7 @@ class ProposalStatus(betterproto.Enum):
     """ProposalStatus enumerates the valid statuses of a proposal."""
 
     PROPOSAL_STATUS_UNSPECIFIED = 0
-    """PROPOSAL_STATUS_UNSPECIFIED defines the default propopsal status."""
+    """PROPOSAL_STATUS_UNSPECIFIED defines the default proposal status."""
 
     PROPOSAL_STATUS_DEPOSIT_PERIOD = 1
     """
@@ -96,7 +96,13 @@ class WeightedVoteOption(betterproto.Message):
     """
 
     option: "VoteOption" = betterproto.enum_field(1)
+    """
+    option defines the valid vote options, it must not contain duplicate vote
+    options.
+    """
+
     weight: str = betterproto.string_field(2)
+    """weight is the vote weight associated with the vote option."""
 
 
 @dataclass(eq=False, repr=False)
@@ -107,7 +113,10 @@ class TextProposal(betterproto.Message):
     """
 
     title: str = betterproto.string_field(1)
+    """title of the proposal."""
+
     description: str = betterproto.string_field(2)
+    """description associated with the proposal."""
 
 
 @dataclass(eq=False, repr=False)
@@ -118,8 +127,13 @@ class Deposit(betterproto.Message):
     """
 
     proposal_id: int = betterproto.uint64_field(1)
+    """proposal_id defines the unique id of the proposal."""
+
     depositor: str = betterproto.string_field(2)
+    """depositor defines the deposit addresses from the proposals."""
+
     amount: List["__base_v1_beta1__.Coin"] = betterproto.message_field(3)
+    """amount to be deposited by depositor."""
 
 
 @dataclass(eq=False, repr=False)
@@ -127,14 +141,35 @@ class Proposal(betterproto.Message):
     """Proposal defines the core field members of a governance proposal."""
 
     proposal_id: int = betterproto.uint64_field(1)
+    """proposal_id defines the unique id of the proposal."""
+
     content: "betterproto_lib_google_protobuf.Any" = betterproto.message_field(2)
+    """content is the proposal's content."""
+
     status: "ProposalStatus" = betterproto.enum_field(3)
+    """status defines the proposal status."""
+
     final_tally_result: "TallyResult" = betterproto.message_field(4)
+    """
+    final_tally_result is the final tally result of the proposal. When querying
+    a proposal via gRPC, this field is not populated until the proposal's
+    voting period has ended.
+    """
+
     submit_time: datetime = betterproto.message_field(5)
+    """submit_time is the time of proposal submission."""
+
     deposit_end_time: datetime = betterproto.message_field(6)
+    """deposit_end_time is the end time for deposition."""
+
     total_deposit: List["__base_v1_beta1__.Coin"] = betterproto.message_field(7)
+    """total_deposit is the total deposit on the proposal."""
+
     voting_start_time: datetime = betterproto.message_field(8)
+    """voting_start_time is the starting time to vote on a proposal."""
+
     voting_end_time: datetime = betterproto.message_field(9)
+    """voting_end_time is the end time of voting on a proposal."""
 
 
 @dataclass(eq=False, repr=False)
@@ -142,9 +177,16 @@ class TallyResult(betterproto.Message):
     """TallyResult defines a standard tally for a governance proposal."""
 
     yes: str = betterproto.string_field(1)
+    """yes is the number of yes votes on a proposal."""
+
     abstain: str = betterproto.string_field(2)
+    """abstain is the number of abstain votes on a proposal."""
+
     no: str = betterproto.string_field(3)
+    """no is the number of no votes on a proposal."""
+
     no_with_veto: str = betterproto.string_field(4)
+    """no_with_veto is the number of no with veto votes on a proposal."""
 
 
 @dataclass(eq=False, repr=False)
@@ -155,7 +197,11 @@ class Vote(betterproto.Message):
     """
 
     proposal_id: int = betterproto.uint64_field(1)
+    """proposal_id defines the unique id of the proposal."""
+
     voter: str = betterproto.string_field(2)
+    """voter is the voter address of the proposal."""
+
     option: "VoteOption" = betterproto.enum_field(3)
     """
     Deprecated: Prefer to use `options` instead. This field is set in queries
@@ -164,7 +210,7 @@ class Vote(betterproto.Message):
     """
 
     options: List["WeightedVoteOption"] = betterproto.message_field(4)
-    """Since: cosmos-sdk 0.43"""
+    """options is the weighted vote options. Since: cosmos-sdk 0.43"""
 
     def __post_init__(self) -> None:
         super().__post_init__()
@@ -193,7 +239,7 @@ class VotingParams(betterproto.Message):
     """VotingParams defines the params for voting on governance proposals."""
 
     voting_period: timedelta = betterproto.message_field(1)
-    """Length of the voting period."""
+    """Duration of the voting period."""
 
 
 @dataclass(eq=False, repr=False)
@@ -215,8 +261,8 @@ class TallyParams(betterproto.Message):
 
     veto_threshold: bytes = betterproto.bytes_field(3)
     """
-    Minimum value of Veto votes to Total votes ratio for proposal to be
-    vetoed. Default value: 1/3.
+    Minimum value of Veto votes to Total votes ratio for proposal to be vetoed.
+    Default value: 1/3.
     """
 
 
@@ -228,8 +274,16 @@ class MsgSubmitProposal(betterproto.Message):
     """
 
     content: "betterproto_lib_google_protobuf.Any" = betterproto.message_field(1)
+    """content is the proposal's content."""
+
     initial_deposit: List["__base_v1_beta1__.Coin"] = betterproto.message_field(2)
+    """
+    initial_deposit is the deposit value that must be paid at proposal
+    submission.
+    """
+
     proposer: str = betterproto.string_field(3)
+    """proposer is the account address of the proposer."""
 
 
 @dataclass(eq=False, repr=False)
@@ -239,6 +293,7 @@ class MsgSubmitProposalResponse(betterproto.Message):
     """
 
     proposal_id: int = betterproto.uint64_field(1)
+    """proposal_id defines the unique id of the proposal."""
 
 
 @dataclass(eq=False, repr=False)
@@ -246,8 +301,13 @@ class MsgVote(betterproto.Message):
     """MsgVote defines a message to cast a vote."""
 
     proposal_id: int = betterproto.uint64_field(1)
+    """proposal_id defines the unique id of the proposal."""
+
     voter: str = betterproto.string_field(2)
+    """voter is the voter address for the proposal."""
+
     option: "VoteOption" = betterproto.enum_field(3)
+    """option defines the vote option."""
 
 
 @dataclass(eq=False, repr=False)
@@ -264,8 +324,13 @@ class MsgVoteWeighted(betterproto.Message):
     """
 
     proposal_id: int = betterproto.uint64_field(1)
+    """proposal_id defines the unique id of the proposal."""
+
     voter: str = betterproto.string_field(2)
+    """voter is the voter address for the proposal."""
+
     options: List["WeightedVoteOption"] = betterproto.message_field(3)
+    """options defines the weighted vote options."""
 
 
 @dataclass(eq=False, repr=False)
@@ -285,8 +350,13 @@ class MsgDeposit(betterproto.Message):
     """
 
     proposal_id: int = betterproto.uint64_field(1)
+    """proposal_id defines the unique id of the proposal."""
+
     depositor: str = betterproto.string_field(2)
+    """depositor defines the deposit addresses from the proposals."""
+
     amount: List["__base_v1_beta1__.Coin"] = betterproto.message_field(3)
+    """amount to be deposited by depositor."""
 
 
 @dataclass(eq=False, repr=False)
@@ -344,6 +414,8 @@ class QueryProposalsResponse(betterproto.Message):
     """
 
     proposals: List["Proposal"] = betterproto.message_field(1)
+    """proposals defines all the requested governance proposals."""
+
     pagination: "__base_query_v1_beta1__.PageResponse" = betterproto.message_field(2)
     """pagination defines the pagination in the response."""
 
@@ -356,7 +428,7 @@ class QueryVoteRequest(betterproto.Message):
     """proposal_id defines the unique id of the proposal."""
 
     voter: str = betterproto.string_field(2)
-    """voter defines the oter address for the proposals."""
+    """voter defines the voter address for the proposals."""
 
 
 @dataclass(eq=False, repr=False)
@@ -366,7 +438,7 @@ class QueryVoteResponse(betterproto.Message):
     """
 
     vote: "Vote" = betterproto.message_field(1)
-    """vote defined the queried vote."""
+    """vote defines the queried vote."""
 
 
 @dataclass(eq=False, repr=False)
@@ -389,7 +461,7 @@ class QueryVotesResponse(betterproto.Message):
     """
 
     votes: List["Vote"] = betterproto.message_field(1)
-    """votes defined the queried votes."""
+    """votes defines the queried votes."""
 
     pagination: "__base_query_v1_beta1__.PageResponse" = betterproto.message_field(2)
     """pagination defines the pagination in the response."""
@@ -468,6 +540,8 @@ class QueryDepositsResponse(betterproto.Message):
     """
 
     deposits: List["Deposit"] = betterproto.message_field(1)
+    """deposits defines the requested deposits."""
+
     pagination: "__base_query_v1_beta1__.PageResponse" = betterproto.message_field(2)
     """pagination defines the pagination in the response."""
 
@@ -510,13 +584,13 @@ class GenesisState(betterproto.Message):
     """proposals defines all the proposals present at genesis."""
 
     deposit_params: "DepositParams" = betterproto.message_field(5)
-    """params defines all the paramaters of related to deposit."""
+    """deposit_params defines all the parameters related to deposit."""
 
     voting_params: "VotingParams" = betterproto.message_field(6)
-    """params defines all the paramaters of related to voting."""
+    """voting_params defines all the parameters related to voting."""
 
     tally_params: "TallyParams" = betterproto.message_field(7)
-    """params defines all the paramaters of related to tally."""
+    """tally_params defines all the parameters related to tally."""
 
 
 class MsgStub(betterproto.ServiceStub):
@@ -728,6 +802,7 @@ class QueryStub(betterproto.ServiceStub):
 
 
 class MsgBase(ServiceBase):
+
     async def submit_proposal(
         self, msg_submit_proposal: "MsgSubmitProposal"
     ) -> "MsgSubmitProposalResponse":
@@ -803,6 +878,7 @@ class MsgBase(ServiceBase):
 
 
 class QueryBase(ServiceBase):
+
     async def proposal(
         self, query_proposal_request: "QueryProposalRequest"
     ) -> "QueryProposalResponse":
