@@ -17,6 +17,7 @@ from secret_sdk.protobuf.cosmos.tx.v1beta1 import SignerInfo as SignerInfo_pb
 from secret_sdk.protobuf.cosmos.tx.v1beta1 import Tx as Tx_pb
 from secret_sdk.protobuf.cosmos.tx.v1beta1 import TxBody as TxBody_pb
 from secret_sdk.util.encrypt_utils import EncryptionUtils
+from secret_sdk.protobuf.tendermint.abci import Event
 
 from secret_sdk.core.compact_bit_array import CompactBitArray
 from secret_sdk.core.fee import Fee
@@ -592,6 +593,9 @@ class TxInfo(JSONSerializable):
     logs: Optional[List[TxLog]] = attr.ib()
     """Event log information."""
 
+    events: Optional[List[Event]] = attr.ib()
+    """All events emitted during transaction processing (including ante handler events)."""
+
     gas_wanted: int = attr.ib(converter=int)
     """Gas requested by transaction."""
 
@@ -620,6 +624,7 @@ class TxInfo(JSONSerializable):
             "txhash": self.txhash,
             "rawlog": self.rawlog,
             "logs": [log.to_data() for log in self.logs] if self.logs else None,
+            "events" : self.events,
             "gas_wanted": str(self.gas_wanted),
             "gas_used": str(self.gas_used),
             "timestamp": self.timestamp,
@@ -639,6 +644,7 @@ class TxInfo(JSONSerializable):
             data.get("txhash"),
             data.get("raw_log"),
             parse_tx_logs(data.get("logs")),
+            data.get("events"),
             data.get("gas_wanted"),
             data.get("gas_used"),
             Tx.from_data(data.get("tx")),
@@ -655,6 +661,7 @@ class TxInfo(JSONSerializable):
         proto.txhash = self.txhash
         proto.raw_log = self.rawlog
         proto.logs = [log.to_proto() for log in self.logs] if self.logs else None
+        proto.events = self.events
         proto.gas_wanted = self.gas_wanted
         proto.gas_used = self.gas_used
         proto.timestamp = self.timestamp
@@ -670,6 +677,7 @@ class TxInfo(JSONSerializable):
             txhash=proto.txhash,
             rawlog=proto.raw_log,
             logs=parse_tx_logs_proto(proto.logs),
+            events=proto.events,
             gas_wanted=proto.gas_wanted,
             gas_used=proto.gas_used,
             timestamp=proto.timestamp,
