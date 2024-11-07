@@ -222,8 +222,8 @@ class AsyncTxAPI(BaseAsyncAPI):
 
         txs_response = txs_response['tx_response']
         raw_log = txs_response['raw_log']
-        json_log = None
-        array_log = None
+        json_log = []
+        array_log = []
         events = txs_response['events']
 
         code = txs_response['code']
