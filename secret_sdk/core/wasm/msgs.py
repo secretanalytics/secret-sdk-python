@@ -249,6 +249,7 @@ class MsgExecuteContract(Msg):
 
         return MsgExecuteContract_pb(
             sender=address_to_bytes(self.sender),
+            sender_address=self.sender,
             contract=address_to_bytes(self.contract),
             msg=self.msg_encrypted,
             sent_funds=self.sent_funds.to_proto(),
