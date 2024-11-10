@@ -32,13 +32,19 @@ class DecCoin(betterproto.Message):
 
 @dataclass(eq=False, repr=False)
 class IntProto(betterproto.Message):
-    """IntProto defines a Protobuf wrapper around an Int object."""
+    """
+    IntProto defines a Protobuf wrapper around an Int object. Deprecated:
+    Prefer to use math.Int directly. It supports binary Marshal and Unmarshal.
+    """
 
     int: str = betterproto.string_field(1)
 
 
 @dataclass(eq=False, repr=False)
 class DecProto(betterproto.Message):
-    """DecProto defines a Protobuf wrapper around a Dec object."""
+    """
+    DecProto defines a Protobuf wrapper around a Dec object. Deprecated: Prefer
+    to use math.LegacyDec directly. It supports binary Marshal and Unmarshal.
+    """
 
     dec: str = betterproto.string_field(1)

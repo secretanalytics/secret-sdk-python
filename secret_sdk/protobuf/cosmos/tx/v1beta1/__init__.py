@@ -56,8 +56,8 @@ class BroadcastMode(betterproto.Enum):
 
     BROADCAST_MODE_BLOCK = 1
     """
-    BROADCAST_MODE_BLOCK defines a tx broadcasting mode where the client waits
-    for the tx to be committed in a block.
+    DEPRECATED: use BROADCAST_MODE_SYNC instead, BROADCAST_MODE_BLOCK is not
+    supported by the SDK from v0.47.x onwards.
     """
 
     BROADCAST_MODE_SYNC = 2
@@ -154,6 +154,44 @@ class SignDoc(betterproto.Message):
 
 
 @dataclass(eq=False, repr=False)
+class SignDocDirectAux(betterproto.Message):
+    """
+    SignDocDirectAux is the type used for generating sign bytes for
+    SIGN_MODE_DIRECT_AUX. Since: cosmos-sdk 0.46
+    """
+
+    body_bytes: bytes = betterproto.bytes_field(1)
+    """
+    body_bytes is protobuf serialization of a TxBody that matches the
+    representation in TxRaw.
+    """
+
+    public_key: "betterproto_lib_google_protobuf.Any" = betterproto.message_field(2)
+    """public_key is the public key of the signing account."""
+
+    chain_id: str = betterproto.string_field(3)
+    """
+    chain_id is the identifier of the chain this transaction targets. It
+    prevents signed transactions from being used on another chain by an
+    attacker.
+    """
+
+    account_number: int = betterproto.uint64_field(4)
+    """account_number is the account number of the account in state."""
+
+    sequence: int = betterproto.uint64_field(5)
+    """sequence is the sequence number of the signing account."""
+
+    tip: "Tip" = betterproto.message_field(6)
+    """tips have been depreacted and should not be used"""
+
+    def __post_init__(self) -> None:
+        super().__post_init__()
+        if self.is_set("tip"):
+            warnings.warn("SignDocDirectAux.tip is deprecated", DeprecationWarning)
+
+
+@dataclass(eq=False, repr=False)
 class TxBody(betterproto.Message):
     """TxBody is the body of a transaction that all signers sign over."""
 
@@ -181,18 +219,18 @@ class TxBody(betterproto.Message):
     processed by the chain
     """
 
-    extension_options: List[
-        "betterproto_lib_google_protobuf.Any"
-    ] = betterproto.message_field(1023)
+    extension_options: List["betterproto_lib_google_protobuf.Any"] = (
+        betterproto.message_field(1023)
+    )
     """
     extension_options are arbitrary options that can be added by chains when
     the default options are not sufficient. If any of these are present and
     can't be handled, the transaction will be rejected
     """
 
-    non_critical_extension_options: List[
-        "betterproto_lib_google_protobuf.Any"
-    ] = betterproto.message_field(2047)
+    non_critical_extension_options: List["betterproto_lib_google_protobuf.Any"] = (
+        betterproto.message_field(2047)
+    )
     """
     extension_options are arbitrary options that can be added by chains when
     the default options are not sufficient. If any of these are present and
@@ -222,6 +260,18 @@ class AuthInfo(betterproto.Message):
     based on the cost of evaluating the body and doing signature verification
     of the signers. This can be estimated via simulation.
     """
+
+    tip: "Tip" = betterproto.message_field(3)
+    """
+    Tip is the optional tip used for transactions fees paid in another denom.
+    This field is ignored if the chain didn't enable tips, i.e. didn't add the
+    `TipDecorator` in its posthandler. Since: cosmos-sdk 0.46
+    """
+
+    def __post_init__(self) -> None:
+        super().__post_init__()
+        if self.is_set("tip"):
+            warnings.warn("AuthInfo.tip is deprecated", DeprecationWarning)
 
 
 @dataclass(eq=False, repr=False)
@@ -328,6 +378,51 @@ class Fee(betterproto.Message):
 
 
 @dataclass(eq=False, repr=False)
+class Tip(betterproto.Message):
+    """Tip is the tip used for meta-transactions. Since: cosmos-sdk 0.46"""
+
+    amount: List["__base_v1_beta1__.Coin"] = betterproto.message_field(1)
+    """amount is the amount of the tip"""
+
+    tipper: str = betterproto.string_field(2)
+    """tipper is the address of the account paying for the tip"""
+
+    def __post_init__(self) -> None:
+        warnings.warn("Tip is deprecated", DeprecationWarning)
+        super().__post_init__()
+
+
+@dataclass(eq=False, repr=False)
+class AuxSignerData(betterproto.Message):
+    """
+    AuxSignerData is the intermediary format that an auxiliary signer (e.g. a
+    tipper) builds and sends to the fee payer (who will build and broadcast the
+    actual tx). AuxSignerData is not a valid tx in itself, and will be rejected
+    by the node if sent directly as-is. Since: cosmos-sdk 0.46
+    """
+
+    address: str = betterproto.string_field(1)
+    """
+    address is the bech32-encoded address of the auxiliary signer. If using
+    AuxSignerData across different chains, the bech32 prefix of the target
+    chain (where the final transaction is broadcasted) should be used.
+    """
+
+    sign_doc: "SignDocDirectAux" = betterproto.message_field(2)
+    """
+    sign_doc is the SIGN_MODE_DIRECT_AUX sign doc that the auxiliary signer
+    signs. Note: we use the same sign doc even if we're signing with
+    LEGACY_AMINO_JSON.
+    """
+
+    mode: "_signing_v1_beta1__.SignMode" = betterproto.enum_field(3)
+    """mode is the signing mode of the single signer."""
+
+    sig: bytes = betterproto.bytes_field(4)
+    """sig is the signature of the sign doc."""
+
+
+@dataclass(eq=False, repr=False)
 class GetTxsEventRequest(betterproto.Message):
     """
     GetTxsEventRequest is the request type for the Service.TxsByEvents RPC
@@ -335,12 +430,44 @@ class GetTxsEventRequest(betterproto.Message):
     """
 
     events: List[str] = betterproto.string_field(1)
-    """events is the list of transaction event type."""
+    """
+    events is the list of transaction event type. Deprecated post v0.47.x: use
+    query instead, which should contain a valid events query.
+    """
 
     pagination: "__base_query_v1_beta1__.PageRequest" = betterproto.message_field(2)
-    """pagination defines a pagination for the request."""
+    """
+    pagination defines a pagination for the request. Deprecated post v0.46.x:
+    use page and limit instead.
+    """
 
     order_by: "OrderBy" = betterproto.enum_field(3)
+    page: int = betterproto.uint64_field(4)
+    """
+    page is the page number to query, starts at 1. If not provided, will
+    default to first page.
+    """
+
+    limit: int = betterproto.uint64_field(5)
+    """
+    limit is the total number of results to be returned in the result page. If
+    left empty it will default to a value to be set by each app.
+    """
+
+    query: str = betterproto.string_field(6)
+    """
+    query defines the transaction event query that is proxied to Tendermint's
+    TxSearch RPC method. The query must be valid. Since cosmos-sdk 0.50
+    """
+
+    def __post_init__(self) -> None:
+        super().__post_init__()
+        if self.is_set("events"):
+            warnings.warn("GetTxsEventRequest.events is deprecated", DeprecationWarning)
+        if self.is_set("pagination"):
+            warnings.warn(
+                "GetTxsEventRequest.pagination is deprecated", DeprecationWarning
+            )
 
 
 @dataclass(eq=False, repr=False)
@@ -359,7 +486,20 @@ class GetTxsEventResponse(betterproto.Message):
     """tx_responses is the list of queried TxResponses."""
 
     pagination: "__base_query_v1_beta1__.PageResponse" = betterproto.message_field(3)
-    """pagination defines a pagination for the response."""
+    """
+    pagination defines a pagination for the response. Deprecated post v0.46.x:
+    use total instead.
+    """
+
+    total: int = betterproto.uint64_field(4)
+    """total is total number of results available"""
+
+    def __post_init__(self) -> None:
+        super().__post_init__()
+        if self.is_set("pagination"):
+            warnings.warn(
+                "GetTxsEventResponse.pagination is deprecated", DeprecationWarning
+            )
 
 
 @dataclass(eq=False, repr=False)
@@ -468,6 +608,90 @@ class GetBlockWithTxsResponse(betterproto.Message):
     """pagination defines a pagination for the response."""
 
 
+@dataclass(eq=False, repr=False)
+class TxDecodeRequest(betterproto.Message):
+    """
+    TxDecodeRequest is the request type for the Service.TxDecode RPC method.
+    Since: cosmos-sdk 0.47
+    """
+
+    tx_bytes: bytes = betterproto.bytes_field(1)
+    """tx_bytes is the raw transaction."""
+
+
+@dataclass(eq=False, repr=False)
+class TxDecodeResponse(betterproto.Message):
+    """
+    TxDecodeResponse is the response type for the Service.TxDecode method.
+    Since: cosmos-sdk 0.47
+    """
+
+    tx: "Tx" = betterproto.message_field(1)
+    """tx is the decoded transaction."""
+
+
+@dataclass(eq=False, repr=False)
+class TxEncodeRequest(betterproto.Message):
+    """
+    TxEncodeRequest is the request type for the Service.TxEncode RPC method.
+    Since: cosmos-sdk 0.47
+    """
+
+    tx: "Tx" = betterproto.message_field(1)
+    """tx is the transaction to encode."""
+
+
+@dataclass(eq=False, repr=False)
+class TxEncodeResponse(betterproto.Message):
+    """
+    TxEncodeResponse is the response type for the Service.TxEncode method.
+    Since: cosmos-sdk 0.47
+    """
+
+    tx_bytes: bytes = betterproto.bytes_field(1)
+    """tx_bytes is the encoded transaction bytes."""
+
+
+@dataclass(eq=False, repr=False)
+class TxEncodeAminoRequest(betterproto.Message):
+    """
+    TxEncodeAminoRequest is the request type for the Service.TxEncodeAmino RPC
+    method. Since: cosmos-sdk 0.47
+    """
+
+    amino_json: str = betterproto.string_field(1)
+
+
+@dataclass(eq=False, repr=False)
+class TxEncodeAminoResponse(betterproto.Message):
+    """
+    TxEncodeAminoResponse is the response type for the Service.TxEncodeAmino
+    RPC method. Since: cosmos-sdk 0.47
+    """
+
+    amino_binary: bytes = betterproto.bytes_field(1)
+
+
+@dataclass(eq=False, repr=False)
+class TxDecodeAminoRequest(betterproto.Message):
+    """
+    TxDecodeAminoRequest is the request type for the Service.TxDecodeAmino RPC
+    method. Since: cosmos-sdk 0.47
+    """
+
+    amino_binary: bytes = betterproto.bytes_field(1)
+
+
+@dataclass(eq=False, repr=False)
+class TxDecodeAminoResponse(betterproto.Message):
+    """
+    TxDecodeAminoResponse is the response type for the Service.TxDecodeAmino
+    RPC method. Since: cosmos-sdk 0.47
+    """
+
+    amino_json: str = betterproto.string_field(1)
+
+
 class ServiceStub(betterproto.ServiceStub):
     async def simulate(
         self,
@@ -554,8 +778,77 @@ class ServiceStub(betterproto.ServiceStub):
             metadata=metadata,
         )
 
+    async def tx_decode(
+        self,
+        tx_decode_request: "TxDecodeRequest",
+        *,
+        timeout: Optional[float] = None,
+        deadline: Optional["Deadline"] = None,
+        metadata: Optional["MetadataLike"] = None
+    ) -> "TxDecodeResponse":
+        return await self._unary_unary(
+            "/cosmos.tx.v1beta1.Service/TxDecode",
+            tx_decode_request,
+            TxDecodeResponse,
+            timeout=timeout,
+            deadline=deadline,
+            metadata=metadata,
+        )
+
+    async def tx_encode(
+        self,
+        tx_encode_request: "TxEncodeRequest",
+        *,
+        timeout: Optional[float] = None,
+        deadline: Optional["Deadline"] = None,
+        metadata: Optional["MetadataLike"] = None
+    ) -> "TxEncodeResponse":
+        return await self._unary_unary(
+            "/cosmos.tx.v1beta1.Service/TxEncode",
+            tx_encode_request,
+            TxEncodeResponse,
+            timeout=timeout,
+            deadline=deadline,
+            metadata=metadata,
+        )
+
+    async def tx_encode_amino(
+        self,
+        tx_encode_amino_request: "TxEncodeAminoRequest",
+        *,
+        timeout: Optional[float] = None,
+        deadline: Optional["Deadline"] = None,
+        metadata: Optional["MetadataLike"] = None
+    ) -> "TxEncodeAminoResponse":
+        return await self._unary_unary(
+            "/cosmos.tx.v1beta1.Service/TxEncodeAmino",
+            tx_encode_amino_request,
+            TxEncodeAminoResponse,
+            timeout=timeout,
+            deadline=deadline,
+            metadata=metadata,
+        )
+
+    async def tx_decode_amino(
+        self,
+        tx_decode_amino_request: "TxDecodeAminoRequest",
+        *,
+        timeout: Optional[float] = None,
+        deadline: Optional["Deadline"] = None,
+        metadata: Optional["MetadataLike"] = None
+    ) -> "TxDecodeAminoResponse":
+        return await self._unary_unary(
+            "/cosmos.tx.v1beta1.Service/TxDecodeAmino",
+            tx_decode_amino_request,
+            TxDecodeAminoResponse,
+            timeout=timeout,
+            deadline=deadline,
+            metadata=metadata,
+        )
+
 
 class ServiceBase(ServiceBase):
+
     async def simulate(self, simulate_request: "SimulateRequest") -> "SimulateResponse":
         raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
 
@@ -575,6 +868,26 @@ class ServiceBase(ServiceBase):
     async def get_block_with_txs(
         self, get_block_with_txs_request: "GetBlockWithTxsRequest"
     ) -> "GetBlockWithTxsResponse":
+        raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
+
+    async def tx_decode(
+        self, tx_decode_request: "TxDecodeRequest"
+    ) -> "TxDecodeResponse":
+        raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
+
+    async def tx_encode(
+        self, tx_encode_request: "TxEncodeRequest"
+    ) -> "TxEncodeResponse":
+        raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
+
+    async def tx_encode_amino(
+        self, tx_encode_amino_request: "TxEncodeAminoRequest"
+    ) -> "TxEncodeAminoResponse":
+        raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
+
+    async def tx_decode_amino(
+        self, tx_decode_amino_request: "TxDecodeAminoRequest"
+    ) -> "TxDecodeAminoResponse":
         raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
 
     async def __rpc_simulate(
@@ -613,6 +926,36 @@ class ServiceBase(ServiceBase):
         response = await self.get_block_with_txs(request)
         await stream.send_message(response)
 
+    async def __rpc_tx_decode(
+        self, stream: "grpclib.server.Stream[TxDecodeRequest, TxDecodeResponse]"
+    ) -> None:
+        request = await stream.recv_message()
+        response = await self.tx_decode(request)
+        await stream.send_message(response)
+
+    async def __rpc_tx_encode(
+        self, stream: "grpclib.server.Stream[TxEncodeRequest, TxEncodeResponse]"
+    ) -> None:
+        request = await stream.recv_message()
+        response = await self.tx_encode(request)
+        await stream.send_message(response)
+
+    async def __rpc_tx_encode_amino(
+        self,
+        stream: "grpclib.server.Stream[TxEncodeAminoRequest, TxEncodeAminoResponse]",
+    ) -> None:
+        request = await stream.recv_message()
+        response = await self.tx_encode_amino(request)
+        await stream.send_message(response)
+
+    async def __rpc_tx_decode_amino(
+        self,
+        stream: "grpclib.server.Stream[TxDecodeAminoRequest, TxDecodeAminoResponse]",
+    ) -> None:
+        request = await stream.recv_message()
+        response = await self.tx_decode_amino(request)
+        await stream.send_message(response)
+
     def __mapping__(self) -> Dict[str, grpclib.const.Handler]:
         return {
             "/cosmos.tx.v1beta1.Service/Simulate": grpclib.const.Handler(
@@ -644,5 +987,29 @@ class ServiceBase(ServiceBase):
                 grpclib.const.Cardinality.UNARY_UNARY,
                 GetBlockWithTxsRequest,
                 GetBlockWithTxsResponse,
+            ),
+            "/cosmos.tx.v1beta1.Service/TxDecode": grpclib.const.Handler(
+                self.__rpc_tx_decode,
+                grpclib.const.Cardinality.UNARY_UNARY,
+                TxDecodeRequest,
+                TxDecodeResponse,
+            ),
+            "/cosmos.tx.v1beta1.Service/TxEncode": grpclib.const.Handler(
+                self.__rpc_tx_encode,
+                grpclib.const.Cardinality.UNARY_UNARY,
+                TxEncodeRequest,
+                TxEncodeResponse,
+            ),
+            "/cosmos.tx.v1beta1.Service/TxEncodeAmino": grpclib.const.Handler(
+                self.__rpc_tx_encode_amino,
+                grpclib.const.Cardinality.UNARY_UNARY,
+                TxEncodeAminoRequest,
+                TxEncodeAminoResponse,
+            ),
+            "/cosmos.tx.v1beta1.Service/TxDecodeAmino": grpclib.const.Handler(
+                self.__rpc_tx_decode_amino,
+                grpclib.const.Cardinality.UNARY_UNARY,
+                TxDecodeAminoRequest,
+                TxDecodeAminoResponse,
             ),
         }

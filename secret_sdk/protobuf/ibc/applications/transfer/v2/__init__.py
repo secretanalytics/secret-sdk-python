@@ -26,3 +26,6 @@ class FungibleTokenPacketData(betterproto.Message):
 
     receiver: str = betterproto.string_field(4)
     """the recipient address on the destination chain"""
+
+    memo: str = betterproto.string_field(5)
+    """optional memo"""

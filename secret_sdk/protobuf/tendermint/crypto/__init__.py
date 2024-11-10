@@ -53,9 +53,7 @@ class ProofOps(betterproto.Message):
 
 @dataclass(eq=False, repr=False)
 class PublicKey(betterproto.Message):
-    """
-    PublicKey defines the keys available for use with Tendermint Validators
-    """
+    """PublicKey defines the keys available for use with Validators"""
 
     ed25519: bytes = betterproto.bytes_field(1, group="sum")
     secp256_k1: bytes = betterproto.bytes_field(2, group="sum")

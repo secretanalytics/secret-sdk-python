@@ -23,6 +23,13 @@ if TYPE_CHECKING:
 
 @dataclass(eq=False, repr=False)
 class SeedConfig(betterproto.Message):
+    master_key: str = betterproto.string_field(1)
+    encrypted_key: str = betterproto.string_field(2)
+    version: int = betterproto.uint32_field(3)
+
+
+@dataclass(eq=False, repr=False)
+class LegacySeedConfig(betterproto.Message):
     master_cert: str = betterproto.string_field(1)
     encrypted_key: str = betterproto.string_field(2)
 
@@ -35,12 +42,28 @@ class RegistrationNodeInfo(betterproto.Message):
 
 @dataclass(eq=False, repr=False)
 class RaAuthenticate(betterproto.Message):
-    sender: bytes = betterproto.bytes_field(1)
+    sender: str = betterproto.string_field(1)
+    """
+    bytes sender = 1 [ (gogoproto.casttype) =
+    "github.com/cosmos/cosmos-sdk/types.AccAddress" ];
+    """
+
     certificate: bytes = betterproto.bytes_field(2)
+    sender_addr: bytes = betterproto.bytes_field(3)
+    """
+    string sender_address = 3 [ (cosmos_proto.scalar) = "cosmos.AddressString"
+    ];
+    """
 
 
 @dataclass(eq=False, repr=False)
-class MasterCertificate(betterproto.Message):
+class RaAuthenticateResponse(betterproto.Message):
+    data: str = betterproto.string_field(1)
+    events: str = betterproto.string_field(2)
+
+
+@dataclass(eq=False, repr=False)
+class MasterKey(betterproto.Message):
     bytes: builtins.bytes = betterproto.bytes_field(1)
 
 
@@ -52,8 +75,8 @@ class Key(betterproto.Message):
 @dataclass(eq=False, repr=False)
 class GenesisState(betterproto.Message):
     registration: List["RegistrationNodeInfo"] = betterproto.message_field(1)
-    node_exch_master_certificate: "MasterCertificate" = betterproto.message_field(2)
-    io_master_certificate: "MasterCertificate" = betterproto.message_field(3)
+    node_exch_master_key: "MasterKey" = betterproto.message_field(2)
+    io_master_key: "MasterKey" = betterproto.message_field(3)
 
 
 @dataclass(eq=False, repr=False)
@@ -64,6 +87,25 @@ class QueryEncryptedSeedRequest(betterproto.Message):
 @dataclass(eq=False, repr=False)
 class QueryEncryptedSeedResponse(betterproto.Message):
     encrypted_seed: bytes = betterproto.bytes_field(1)
+
+
+class MsgStub(betterproto.ServiceStub):
+    async def register_auth(
+        self,
+        ra_authenticate: "RaAuthenticate",
+        *,
+        timeout: Optional[float] = None,
+        deadline: Optional["Deadline"] = None,
+        metadata: Optional["MetadataLike"] = None
+    ) -> "RaAuthenticateResponse":
+        return await self._unary_unary(
+            "/secret.registration.v1beta1.Msg/RegisterAuth",
+            ra_authenticate,
+            RaAuthenticateResponse,
+            timeout=timeout,
+            deadline=deadline,
+            metadata=metadata,
+        )
 
 
 class QueryStub(betterproto.ServiceStub):
@@ -119,7 +161,33 @@ class QueryStub(betterproto.ServiceStub):
         )
 
 
+class MsgBase(ServiceBase):
+
+    async def register_auth(
+        self, ra_authenticate: "RaAuthenticate"
+    ) -> "RaAuthenticateResponse":
+        raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
+
+    async def __rpc_register_auth(
+        self, stream: "grpclib.server.Stream[RaAuthenticate, RaAuthenticateResponse]"
+    ) -> None:
+        request = await stream.recv_message()
+        response = await self.register_auth(request)
+        await stream.send_message(response)
+
+    def __mapping__(self) -> Dict[str, grpclib.const.Handler]:
+        return {
+            "/secret.registration.v1beta1.Msg/RegisterAuth": grpclib.const.Handler(
+                self.__rpc_register_auth,
+                grpclib.const.Cardinality.UNARY_UNARY,
+                RaAuthenticate,
+                RaAuthenticateResponse,
+            ),
+        }
+
+
 class QueryBase(ServiceBase):
+
     async def tx_key(
         self,
         betterproto_lib_google_protobuf_empty: "betterproto_lib_google_protobuf.Empty",

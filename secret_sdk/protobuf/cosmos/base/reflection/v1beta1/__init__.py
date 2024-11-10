@@ -100,6 +100,7 @@ class ReflectionServiceStub(betterproto.ServiceStub):
 
 
 class ReflectionServiceBase(ServiceBase):
+
     async def list_all_interfaces(
         self, list_all_interfaces_request: "ListAllInterfacesRequest"
     ) -> "ListAllInterfacesResponse":

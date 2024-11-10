@@ -30,6 +30,24 @@ class AccessType(betterproto.Enum):
     EVERYBODY = 3
 
 
+class ContractCodeHistoryOperationType(betterproto.Enum):
+    """ContractCodeHistoryOperationType actions that caused a code change"""
+
+    CONTRACT_CODE_HISTORY_OPERATION_TYPE_UNSPECIFIED = 0
+    """
+    ContractCodeHistoryOperationTypeUnspecified placeholder for empty value
+    """
+
+    CONTRACT_CODE_HISTORY_OPERATION_TYPE_INIT = 1
+    """ContractCodeHistoryOperationTypeInit on chain contract instantiation"""
+
+    CONTRACT_CODE_HISTORY_OPERATION_TYPE_MIGRATE = 2
+    """ContractCodeHistoryOperationTypeMigrate code migration"""
+
+    CONTRACT_CODE_HISTORY_OPERATION_TYPE_GENESIS = 3
+    """ContractCodeHistoryOperationTypeGenesis based on genesis data"""
+
+
 @dataclass(eq=False, repr=False)
 class AccessTypeParam(betterproto.Message):
     value: "AccessType" = betterproto.enum_field(1)
@@ -46,8 +64,15 @@ class CodeInfo(betterproto.Message):
 
 
 @dataclass(eq=False, repr=False)
+class ContractKey(betterproto.Message):
+    og_contract_key: bytes = betterproto.bytes_field(1)
+    current_contract_key: bytes = betterproto.bytes_field(2)
+    current_contract_key_proof: bytes = betterproto.bytes_field(3)
+
+
+@dataclass(eq=False, repr=False)
 class ContractCustomInfo(betterproto.Message):
-    enclave_key: bytes = betterproto.bytes_field(1)
+    enclave_key: "ContractKey" = betterproto.message_field(1)
     label: str = betterproto.string_field(2)
 
 
@@ -56,15 +81,23 @@ class ContractInfo(betterproto.Message):
     """ContractInfo stores a WASM contract instance"""
 
     code_id: int = betterproto.uint64_field(1)
+    """CodeID is the reference to the stored Wasm code"""
+
     creator: bytes = betterproto.bytes_field(2)
+    """Creator address who initially instantiated the contract"""
+
     label: str = betterproto.string_field(4)
+    """Label is mandatory metadata to be stored with a contract instance."""
+
     created: "AbsoluteTxPosition" = betterproto.message_field(5)
-    """
-    never show this in query results, just use for sorting (Note: when using
-    json tag "-" amino refused to serialize it...)
-    """
+    """Created Tx position when the contract was instantiated."""
 
     ibc_port_id: str = betterproto.string_field(6)
+    admin: str = betterproto.string_field(7)
+    """Admin is an optional address that can execute migrations"""
+
+    admin_proof: bytes = betterproto.bytes_field(8)
+    """Proof that enclave executed the instantiate command"""
 
 
 @dataclass(eq=False, repr=False)
@@ -90,6 +123,20 @@ class Model(betterproto.Message):
 
     value: bytes = betterproto.bytes_field(2)
     """base64-encode raw value"""
+
+
+@dataclass(eq=False, repr=False)
+class ContractCodeHistoryEntry(betterproto.Message):
+    """ContractCodeHistoryEntry metadata to a contract."""
+
+    operation: "ContractCodeHistoryOperationType" = betterproto.enum_field(1)
+    code_id: int = betterproto.uint64_field(2)
+    """CodeID is the reference to the stored WASM code"""
+
+    updated: "AbsoluteTxPosition" = betterproto.message_field(3)
+    """Updated Tx position when the operation was executed."""
+
+    msg: bytes = betterproto.bytes_field(4)
 
 
 @dataclass(eq=False, repr=False)
@@ -207,11 +254,32 @@ class DecryptedAnswer(betterproto.Message):
 @dataclass(eq=False, repr=False)
 class DecryptedAnswers(betterproto.Message):
     answers: List["DecryptedAnswer"] = betterproto.message_field(1)
-    output_logs: List[
-        "___cosmos_base_abci_v1_beta1__.StringEvent"
-    ] = betterproto.message_field(2)
+    output_logs: List["___cosmos_base_abci_v1_beta1__.StringEvent"] = (
+        betterproto.message_field(2)
+    )
     output_error: str = betterproto.string_field(3)
     plaintext_error: str = betterproto.string_field(4)
+
+
+@dataclass(eq=False, repr=False)
+class QueryContractHistoryRequest(betterproto.Message):
+    """
+    QueryContractHistoryRequest is the request type for the
+    Query/ContractHistory RPC method
+    """
+
+    contract_address: str = betterproto.string_field(1)
+    """address is the address of the contract to query"""
+
+
+@dataclass(eq=False, repr=False)
+class QueryContractHistoryResponse(betterproto.Message):
+    """
+    QueryContractHistoryResponse is the response type for the
+    Query/ContractHistory RPC method
+    """
+
+    entries: List["ContractCodeHistoryEntry"] = betterproto.message_field(1)
 
 
 @dataclass(eq=False, repr=False)
@@ -257,8 +325,12 @@ class Sequence(betterproto.Message):
 
 @dataclass(eq=False, repr=False)
 class MsgStoreCode(betterproto.Message):
-    sender: bytes = betterproto.bytes_field(1)
-    """sender is the canonical address of the sender"""
+    sender: str = betterproto.string_field(1)
+    """
+    // sender is the canonical address of the sender bytes sender = 1 [
+    (gogoproto.casttype) =                        "github.com/cosmos/cosmos-
+    sdk/types.AccAddress" ]; Sender is the actor that signed the messages
+    """
 
     wasm_byte_code: bytes = betterproto.bytes_field(2)
     """WASMByteCode can be raw or gzip compressed"""
@@ -284,17 +356,31 @@ class MsgStoreCodeResponse(betterproto.Message):
 @dataclass(eq=False, repr=False)
 class MsgInstantiateContract(betterproto.Message):
     sender: bytes = betterproto.bytes_field(1)
-    """sender is the canonical address of the sender"""
+    """
+    sender is the canonical address of the sender string sender = 1 [
+    (cosmos_proto.scalar) = "cosmos.AddressString" ];
+    """
 
     callback_code_hash: str = betterproto.string_field(2)
     code_id: int = betterproto.uint64_field(3)
     label: str = betterproto.string_field(4)
     init_msg: bytes = betterproto.bytes_field(5)
+    """init_msg is an encrypted input to pass to the contract on init"""
+
     init_funds: List["___cosmos_base_v1_beta1__.Coin"] = betterproto.message_field(6)
     callback_sig: bytes = betterproto.bytes_field(7)
     """
     used internally for encryption, should always be empty in a signed
     transaction
+    """
+
+    admin: str = betterproto.string_field(8)
+    """Admin is an optional address that can execute migrations"""
+
+    sender_address: str = betterproto.string_field(9)
+    """
+    To get the message signer define sender_address as human adress for sender,
+    as a work around without the need to modify cosmwasm valiation logic
     """
 
 
@@ -318,13 +404,22 @@ class MsgExecuteContract(betterproto.Message):
     """contract is the canonical address of the contract"""
 
     msg: bytes = betterproto.bytes_field(3)
+    """msg is an encrypted input to pass to the contract on execute"""
+
     callback_code_hash: str = betterproto.string_field(4)
+    """
+    used internally for encryption, should always be empty in a signed
+    transaction
+    """
+
     sent_funds: List["___cosmos_base_v1_beta1__.Coin"] = betterproto.message_field(5)
     callback_sig: bytes = betterproto.bytes_field(6)
     """
     used internally for encryption, should always be empty in a signed
     transaction
     """
+
+    sender_address: str = betterproto.string_field(7)
 
 
 @dataclass(eq=False, repr=False)
@@ -333,6 +428,99 @@ class MsgExecuteContractResponse(betterproto.Message):
 
     data: bytes = betterproto.bytes_field(1)
     """Data contains base64-encoded bytes to returned from the contract"""
+
+
+@dataclass(eq=False, repr=False)
+class MsgMigrateContract(betterproto.Message):
+    """
+    MsgMigrateContract runs a code upgrade/ downgrade for a smart contract
+    """
+
+    sender: str = betterproto.string_field(1)
+    """Sender is the that actor that signed the messages"""
+
+    contract: str = betterproto.string_field(2)
+    """Contract is the address of the smart contract"""
+
+    code_id: int = betterproto.uint64_field(3)
+    """CodeID references the new WASM code"""
+
+    msg: bytes = betterproto.bytes_field(4)
+    """msg is an encrypted input to pass to the contract on migration"""
+
+    callback_sig: bytes = betterproto.bytes_field(7)
+    """
+    used internally for encryption, should always be empty in a signed
+    transaction
+    """
+
+    callback_code_hash: str = betterproto.string_field(8)
+    """
+    used internally for encryption, should always be empty in a signed
+    transaction
+    """
+
+
+@dataclass(eq=False, repr=False)
+class MsgMigrateContractResponse(betterproto.Message):
+    """MsgMigrateContractResponse returns contract migration result data."""
+
+    data: bytes = betterproto.bytes_field(1)
+    """
+    Data contains same raw bytes returned as data from the wasm contract. (May
+    be empty)
+    """
+
+
+@dataclass(eq=False, repr=False)
+class MsgUpdateAdmin(betterproto.Message):
+    """MsgUpdateAdmin sets a new admin for a smart contract"""
+
+    sender: str = betterproto.string_field(1)
+    """Sender is the that actor that signed the messages"""
+
+    new_admin: str = betterproto.string_field(2)
+    """NewAdmin address to be set"""
+
+    contract: str = betterproto.string_field(3)
+    """Contract is the address of the smart contract"""
+
+    callback_sig: bytes = betterproto.bytes_field(7)
+    """
+    used internally for encryption, should always be empty in a signed
+    transaction
+    """
+
+
+@dataclass(eq=False, repr=False)
+class MsgUpdateAdminResponse(betterproto.Message):
+    """MsgUpdateAdminResponse returns empty data"""
+
+    pass
+
+
+@dataclass(eq=False, repr=False)
+class MsgClearAdmin(betterproto.Message):
+    """MsgClearAdmin removes any admin stored for a smart contract"""
+
+    sender: str = betterproto.string_field(1)
+    """Sender is the that actor that signed the messages"""
+
+    contract: str = betterproto.string_field(3)
+    """Contract is the address of the smart contract"""
+
+    callback_sig: bytes = betterproto.bytes_field(7)
+    """
+    used internally for encryption, should always be empty in a signed
+    transaction
+    """
+
+
+@dataclass(eq=False, repr=False)
+class MsgClearAdminResponse(betterproto.Message):
+    """MsgClearAdminResponse returns empty data"""
+
+    pass
 
 
 class QueryStub(betterproto.ServiceStub):
@@ -489,6 +677,23 @@ class QueryStub(betterproto.ServiceStub):
             metadata=metadata,
         )
 
+    async def contract_history(
+        self,
+        query_contract_history_request: "QueryContractHistoryRequest",
+        *,
+        timeout: Optional[float] = None,
+        deadline: Optional["Deadline"] = None,
+        metadata: Optional["MetadataLike"] = None
+    ) -> "QueryContractHistoryResponse":
+        return await self._unary_unary(
+            "/secret.compute.v1beta1.Query/ContractHistory",
+            query_contract_history_request,
+            QueryContractHistoryResponse,
+            timeout=timeout,
+            deadline=deadline,
+            metadata=metadata,
+        )
+
 
 class MsgStub(betterproto.ServiceStub):
     async def store_code(
@@ -542,8 +747,60 @@ class MsgStub(betterproto.ServiceStub):
             metadata=metadata,
         )
 
+    async def migrate_contract(
+        self,
+        msg_migrate_contract: "MsgMigrateContract",
+        *,
+        timeout: Optional[float] = None,
+        deadline: Optional["Deadline"] = None,
+        metadata: Optional["MetadataLike"] = None
+    ) -> "MsgMigrateContractResponse":
+        return await self._unary_unary(
+            "/secret.compute.v1beta1.Msg/MigrateContract",
+            msg_migrate_contract,
+            MsgMigrateContractResponse,
+            timeout=timeout,
+            deadline=deadline,
+            metadata=metadata,
+        )
+
+    async def update_admin(
+        self,
+        msg_update_admin: "MsgUpdateAdmin",
+        *,
+        timeout: Optional[float] = None,
+        deadline: Optional["Deadline"] = None,
+        metadata: Optional["MetadataLike"] = None
+    ) -> "MsgUpdateAdminResponse":
+        return await self._unary_unary(
+            "/secret.compute.v1beta1.Msg/UpdateAdmin",
+            msg_update_admin,
+            MsgUpdateAdminResponse,
+            timeout=timeout,
+            deadline=deadline,
+            metadata=metadata,
+        )
+
+    async def clear_admin(
+        self,
+        msg_clear_admin: "MsgClearAdmin",
+        *,
+        timeout: Optional[float] = None,
+        deadline: Optional["Deadline"] = None,
+        metadata: Optional["MetadataLike"] = None
+    ) -> "MsgClearAdminResponse":
+        return await self._unary_unary(
+            "/secret.compute.v1beta1.Msg/ClearAdmin",
+            msg_clear_admin,
+            MsgClearAdminResponse,
+            timeout=timeout,
+            deadline=deadline,
+            metadata=metadata,
+        )
+
 
 class QueryBase(ServiceBase):
+
     async def contract_info(
         self, query_by_contract_address_request: "QueryByContractAddressRequest"
     ) -> "QueryContractInfoResponse":
@@ -588,6 +845,11 @@ class QueryBase(ServiceBase):
     async def address_by_label(
         self, query_by_label_request: "QueryByLabelRequest"
     ) -> "QueryContractAddressResponse":
+        raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
+
+    async def contract_history(
+        self, query_contract_history_request: "QueryContractHistoryRequest"
+    ) -> "QueryContractHistoryResponse":
         raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
 
     async def __rpc_contract_info(
@@ -661,6 +923,14 @@ class QueryBase(ServiceBase):
         response = await self.address_by_label(request)
         await stream.send_message(response)
 
+    async def __rpc_contract_history(
+        self,
+        stream: "grpclib.server.Stream[QueryContractHistoryRequest, QueryContractHistoryResponse]",
+    ) -> None:
+        request = await stream.recv_message()
+        response = await self.contract_history(request)
+        await stream.send_message(response)
+
     def __mapping__(self) -> Dict[str, grpclib.const.Handler]:
         return {
             "/secret.compute.v1beta1.Query/ContractInfo": grpclib.const.Handler(
@@ -717,10 +987,17 @@ class QueryBase(ServiceBase):
                 QueryByLabelRequest,
                 QueryContractAddressResponse,
             ),
+            "/secret.compute.v1beta1.Query/ContractHistory": grpclib.const.Handler(
+                self.__rpc_contract_history,
+                grpclib.const.Cardinality.UNARY_UNARY,
+                QueryContractHistoryRequest,
+                QueryContractHistoryResponse,
+            ),
         }
 
 
 class MsgBase(ServiceBase):
+
     async def store_code(
         self, msg_store_code: "MsgStoreCode"
     ) -> "MsgStoreCodeResponse":
@@ -734,6 +1011,21 @@ class MsgBase(ServiceBase):
     async def execute_contract(
         self, msg_execute_contract: "MsgExecuteContract"
     ) -> "MsgExecuteContractResponse":
+        raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
+
+    async def migrate_contract(
+        self, msg_migrate_contract: "MsgMigrateContract"
+    ) -> "MsgMigrateContractResponse":
+        raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
+
+    async def update_admin(
+        self, msg_update_admin: "MsgUpdateAdmin"
+    ) -> "MsgUpdateAdminResponse":
+        raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
+
+    async def clear_admin(
+        self, msg_clear_admin: "MsgClearAdmin"
+    ) -> "MsgClearAdminResponse":
         raise grpclib.GRPCError(grpclib.const.Status.UNIMPLEMENTED)
 
     async def __rpc_store_code(
@@ -759,6 +1051,28 @@ class MsgBase(ServiceBase):
         response = await self.execute_contract(request)
         await stream.send_message(response)
 
+    async def __rpc_migrate_contract(
+        self,
+        stream: "grpclib.server.Stream[MsgMigrateContract, MsgMigrateContractResponse]",
+    ) -> None:
+        request = await stream.recv_message()
+        response = await self.migrate_contract(request)
+        await stream.send_message(response)
+
+    async def __rpc_update_admin(
+        self, stream: "grpclib.server.Stream[MsgUpdateAdmin, MsgUpdateAdminResponse]"
+    ) -> None:
+        request = await stream.recv_message()
+        response = await self.update_admin(request)
+        await stream.send_message(response)
+
+    async def __rpc_clear_admin(
+        self, stream: "grpclib.server.Stream[MsgClearAdmin, MsgClearAdminResponse]"
+    ) -> None:
+        request = await stream.recv_message()
+        response = await self.clear_admin(request)
+        await stream.send_message(response)
+
     def __mapping__(self) -> Dict[str, grpclib.const.Handler]:
         return {
             "/secret.compute.v1beta1.Msg/StoreCode": grpclib.const.Handler(
@@ -778,5 +1092,23 @@ class MsgBase(ServiceBase):
                 grpclib.const.Cardinality.UNARY_UNARY,
                 MsgExecuteContract,
                 MsgExecuteContractResponse,
+            ),
+            "/secret.compute.v1beta1.Msg/MigrateContract": grpclib.const.Handler(
+                self.__rpc_migrate_contract,
+                grpclib.const.Cardinality.UNARY_UNARY,
+                MsgMigrateContract,
+                MsgMigrateContractResponse,
+            ),
+            "/secret.compute.v1beta1.Msg/UpdateAdmin": grpclib.const.Handler(
+                self.__rpc_update_admin,
+                grpclib.const.Cardinality.UNARY_UNARY,
+                MsgUpdateAdmin,
+                MsgUpdateAdminResponse,
+            ),
+            "/secret.compute.v1beta1.Msg/ClearAdmin": grpclib.const.Handler(
+                self.__rpc_clear_admin,
+                grpclib.const.Cardinality.UNARY_UNARY,
+                MsgClearAdmin,
+                MsgClearAdminResponse,
             ),
         }

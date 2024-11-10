@@ -15,15 +15,39 @@ from .. import (
 
 
 @dataclass(eq=False, repr=False)
-class AbciResponses(betterproto.Message):
+class LegacyAbciResponses(betterproto.Message):
     """
-    ABCIResponses retains the responses of the various ABCI calls during block
-    processing. It is persisted to disk for each height before calling Commit.
+    LegacyABCIResponses retains the responses of the legacy ABCI calls during
+    block processing. Note ReponseDeliverTx is renamed to ExecTxResult but they
+    are semantically the same Kept for backwards compatibility for versions
+    prior to v0.38
     """
 
-    deliver_txs: List["_abci__.ResponseDeliverTx"] = betterproto.message_field(1)
-    end_block: "_abci__.ResponseEndBlock" = betterproto.message_field(2)
-    begin_block: "_abci__.ResponseBeginBlock" = betterproto.message_field(3)
+    deliver_txs: List["_abci__.ExecTxResult"] = betterproto.message_field(1)
+    end_block: "ResponseEndBlock" = betterproto.message_field(2)
+    begin_block: "ResponseBeginBlock" = betterproto.message_field(3)
+
+
+@dataclass(eq=False, repr=False)
+class ResponseBeginBlock(betterproto.Message):
+    """
+    ResponseBeginBlock is kept for backwards compatibility for versions prior
+    to v0.38
+    """
+
+    events: List["_abci__.Event"] = betterproto.message_field(1)
+
+
+@dataclass(eq=False, repr=False)
+class ResponseEndBlock(betterproto.Message):
+    """
+    ResponseEndBlock is kept for backwards compatibility for versions prior to
+    v0.38
+    """
+
+    validator_updates: List["_abci__.ValidatorUpdate"] = betterproto.message_field(1)
+    consensus_param_updates: "_types__.ConsensusParams" = betterproto.message_field(2)
+    events: List["_abci__.Event"] = betterproto.message_field(3)
 
 
 @dataclass(eq=False, repr=False)
@@ -46,6 +70,15 @@ class ConsensusParamsInfo(betterproto.Message):
 
     consensus_params: "_types__.ConsensusParams" = betterproto.message_field(1)
     last_height_changed: int = betterproto.int64_field(2)
+
+
+@dataclass(eq=False, repr=False)
+class AbciResponsesInfo(betterproto.Message):
+    legacy_abci_responses: "LegacyAbciResponses" = betterproto.message_field(1)
+    height: int = betterproto.int64_field(2)
+    response_finalize_block: "_abci__.ResponseFinalizeBlock" = (
+        betterproto.message_field(3)
+    )
 
 
 @dataclass(eq=False, repr=False)

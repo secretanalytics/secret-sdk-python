@@ -222,19 +222,78 @@ class AsyncTxAPI(BaseAsyncAPI):
 
         txs_response = txs_response['tx_response']
         raw_log = txs_response['raw_log']
-        json_log = None
-        array_log = None
+        json_log = []
+        array_log = []
+        events = txs_response['events']
 
         code = txs_response['code']
-        if code == 0 and raw_log != '':
-            _json_log = json.loads(raw_log)
-            json_log = []
-            for i, log in enumerate(_json_log):
-                if 'msg_index' not in log or not log['msg_index']:
-                    # See https://github.com/cosmos/cosmos-sdk/pull/11147
-                    log['msg_index'] = i
-                json_log.append(TxLog(i, log.get('log'), log['events']))
-            array_log = self.decrypt_logs(_json_log, nonces)
+
+        if code == 0 and raw_log == "":
+            for event in events:
+                event_attributes = event.get('attributes', [])
+                msg_index_attr = next((attr for attr in event_attributes if attr.get('key') == 'msg_index'), None)
+                if not msg_index_attr:
+                    continue
+
+                msg_index = int(msg_index_attr.get('value'))
+                
+                for attr in event_attributes:
+                    if attr.get('key') == 'msg_index':
+                        continue
+
+                    # Try to decrypt if the event type is 'wasm'
+                    if event.get('type') == 'wasm':
+                        nonce = nonces[msg_index]
+                        if nonce and len(nonce) == 32:
+                            try:
+                                decrypted_key = self.decrypt_data_field(base64.b64decode(attr['key']), nonce).decode('utf-8').strip()
+                                attr['key'] = decrypted_key
+                            except Exception:
+                                pass
+
+                            try:
+                                decrypted_value = self.decrypt_data_field(base64.b64decode(attr['value']), nonce).decode('utf-8').strip()
+                                attr['value'] = decrypted_value
+                            except Exception:
+                                pass
+
+                    # Prepare entry for array_log
+                    entry_to_push = {
+                        'msg': msg_index,
+                        'type': event['type'],
+                        'key': attr['key'],
+                        'value': attr['value'],
+                    }
+                    
+                    # Append to array_log if entry_to_push is unique
+                    if not any(entry == entry_to_push for entry in array_log):
+                        array_log.append(entry_to_push)
+
+                    # Prepare entry for json_log
+                    json_log_msg_index_entry = next((log for log in json_log if log['msg_index'] == msg_index), None)
+                    if not json_log_msg_index_entry:
+                        json_log.append({
+                            'msg_index': msg_index,
+                            'events': [
+                                {
+                                    'type': event['type'],
+                                    'attributes': [{'key': attr['key'], 'value': attr['value']}]
+                                }
+                            ]
+                        })
+                    else:
+                        json_log_event_entry = next((log for log in json_log_msg_index_entry['events'] if log['type'] == event['type']), None)
+                        if not json_log_event_entry:
+                            json_log_msg_index_entry['events'].append({
+                                'type': event['type'],
+                                'attributes': [{'key': attr['key'], 'value': attr['value']}]
+                            })
+                        else:
+                            attribute_to_push = {'key': attr['key'], 'value': attr['value']}
+                            
+                            # Add to attributes if not already present
+                            if not any(attr == attribute_to_push for attr in json_log_event_entry['attributes']):
+                                json_log_event_entry['attributes'].append(attribute_to_push)
         elif code != 0 and raw_log != '':
             try:
                 error_message_rgx = re.compile(
@@ -292,6 +351,7 @@ class AsyncTxAPI(BaseAsyncAPI):
             tx=decoded_tx,
             tx_bytes=txs_response['tx'].get('value') if txs_response['tx'] else None,
             rawlog=raw_log,
+            events=txs_response['events'],
             logs=array_log if array_log else json_log,
             data=data,
             gas_used=int(txs_response['gas_used']),
@@ -392,7 +452,7 @@ class AsyncTxAPI(BaseAsyncAPI):
             broadcast_result = await BaseAsyncAPI._try_await(self.broadcast_async(tx_encoded, options))
         if mode == BroadcastMode.BROADCAST_MODE_SYNC:
             broadcast_result = await BaseAsyncAPI._try_await(self.broadcast_sync(tx_encoded, options))
-            if not broadcast_result.code != 0:
+            if broadcast_result.code != 0:
                 raise Exception(f"Broadcasting transaction failed with code {broadcast_result.code} (codespace: ${broadcast_result.codespace}).Log: {broadcast_result.raw_log}")
 
         return broadcast_result
