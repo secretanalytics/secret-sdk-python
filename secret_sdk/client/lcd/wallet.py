@@ -177,7 +177,7 @@ class AsyncWallet:
             create_tx_options.fee = fee
 
         signed_tx = await self.create_and_sign_tx(create_tx_options)
-        broadcast_mode = broadcast_mode if broadcast_mode else BroadcastMode.BROADCAST_MODE_BLOCK
+        broadcast_mode = broadcast_mode if broadcast_mode else BroadcastMode.BROADCAST_MODE_SYNC
         tx = await self.lcd.tx.broadcast_adapter(signed_tx, mode=broadcast_mode)
         return tx
 
@@ -378,7 +378,7 @@ class Wallet:
             create_tx_options.fee = fee
 
         signed_tx = self.create_and_sign_tx(create_tx_options)
-        broadcast_mode = broadcast_mode if broadcast_mode else BroadcastMode.BROADCAST_MODE_BLOCK
+        broadcast_mode = broadcast_mode if broadcast_mode else BroadcastMode.BROADCAST_MODE_SYNC
         tx = self.lcd.tx.broadcast_adapter(signed_tx, mode=broadcast_mode)
         return tx
 

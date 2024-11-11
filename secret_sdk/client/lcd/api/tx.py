@@ -447,6 +447,7 @@ class AsyncTxAPI(BaseAsyncAPI):
         broadcast_result = None
         tx_encoded = await super()._try_await(self.encode(tx))
         if mode == BroadcastMode.BROADCAST_MODE_BLOCK:
+            raise Exception("BROADCAST_MODE_BLOCK is deprecated. Please use BROADCAST_MODE_SYNC instead")
             broadcast_result = await BaseAsyncAPI._try_await(self.broadcast(tx_encoded, options))
         if mode == BroadcastMode.BROADCAST_MODE_ASYNC:
             broadcast_result = await BaseAsyncAPI._try_await(self.broadcast_async(tx_encoded, options))

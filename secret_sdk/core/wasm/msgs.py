@@ -83,7 +83,7 @@ class MsgStoreCode(Msg):
     def from_data(cls, data: dict) -> MsgStoreCode:
         return cls(
             sender=data["sender"],
-            wasm_byte_code=data["wasm_byte_code"],
+            wasm_byte_code=base64.b64decode(data["wasm_byte_code"]),
             source=data.get("source"),
             builder=data.get("builder")
         )
@@ -92,7 +92,7 @@ class MsgStoreCode(Msg):
         self.gzip_wasm()
 
         return MsgStoreCode_pb(
-            sender=address_to_bytes(self.sender),
+            sender=self.sender,
             wasm_byte_code=self.wasm_byte_code,
             source=self.source,
             builder=self.builder
@@ -101,7 +101,7 @@ class MsgStoreCode(Msg):
     @classmethod
     def from_proto(cls, proto: MsgStoreCode_pb) -> MsgStoreCode:
         return cls(
-            sender=AccAddress(bytes_to_address(proto.sender)),
+            sender=AccAddress(proto.sender),
             wasm_byte_code=base64.b64encode(proto.wasm_byte_code),
             source=proto.source,
             builder=proto.builder
@@ -170,6 +170,7 @@ class MsgInstantiateContract(Msg):
 
         return MsgInstantiateContract_pb(
             sender=address_to_bytes(self.sender),
+            sender_address=self.sender,
             code_id=self.code_id,
             label=self.label,
             init_msg=self.init_msg_encrypted,
