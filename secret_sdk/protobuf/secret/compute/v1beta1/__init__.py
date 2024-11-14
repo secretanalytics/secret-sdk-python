@@ -325,12 +325,8 @@ class Sequence(betterproto.Message):
 
 @dataclass(eq=False, repr=False)
 class MsgStoreCode(betterproto.Message):
-    sender: str = betterproto.string_field(1)
-    """
-    // sender is the canonical address of the sender bytes sender = 1 [
-    (gogoproto.casttype) =                        "github.com/cosmos/cosmos-
-    sdk/types.AccAddress" ]; Sender is the actor that signed the messages
-    """
+    sender: bytes = betterproto.bytes_field(1)
+    """sender is the canonical address of the sender"""
 
     wasm_byte_code: bytes = betterproto.bytes_field(2)
     """WASMByteCode can be raw or gzip compressed"""
@@ -356,10 +352,7 @@ class MsgStoreCodeResponse(betterproto.Message):
 @dataclass(eq=False, repr=False)
 class MsgInstantiateContract(betterproto.Message):
     sender: bytes = betterproto.bytes_field(1)
-    """
-    sender is the canonical address of the sender string sender = 1 [
-    (cosmos_proto.scalar) = "cosmos.AddressString" ];
-    """
+    """sender is the canonical address of the sender"""
 
     callback_code_hash: str = betterproto.string_field(2)
     code_id: int = betterproto.uint64_field(3)
@@ -376,12 +369,6 @@ class MsgInstantiateContract(betterproto.Message):
 
     admin: str = betterproto.string_field(8)
     """Admin is an optional address that can execute migrations"""
-
-    sender_address: str = betterproto.string_field(9)
-    """
-    To get the message signer define sender_address as human adress for sender,
-    as a work around without the need to modify cosmwasm valiation logic
-    """
 
 
 @dataclass(eq=False, repr=False)
@@ -418,8 +405,6 @@ class MsgExecuteContract(betterproto.Message):
     used internally for encryption, should always be empty in a signed
     transaction
     """
-
-    sender_address: str = betterproto.string_field(7)
 
 
 @dataclass(eq=False, repr=False)

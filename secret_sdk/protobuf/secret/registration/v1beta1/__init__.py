@@ -42,18 +42,8 @@ class RegistrationNodeInfo(betterproto.Message):
 
 @dataclass(eq=False, repr=False)
 class RaAuthenticate(betterproto.Message):
-    sender: str = betterproto.string_field(1)
-    """
-    bytes sender = 1 [ (gogoproto.casttype) =
-    "github.com/cosmos/cosmos-sdk/types.AccAddress" ];
-    """
-
+    sender: bytes = betterproto.bytes_field(1)
     certificate: bytes = betterproto.bytes_field(2)
-    sender_addr: bytes = betterproto.bytes_field(3)
-    """
-    string sender_address = 3 [ (cosmos_proto.scalar) = "cosmos.AddressString"
-    ];
-    """
 
 
 @dataclass(eq=False, repr=False)
