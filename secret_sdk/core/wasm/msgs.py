@@ -83,7 +83,7 @@ class MsgStoreCode(Msg):
     def from_data(cls, data: dict) -> MsgStoreCode:
         return cls(
             sender=data["sender"],
-            wasm_byte_code=data["wasm_byte_code"],
+            wasm_byte_code=base64.b64decode(data["wasm_byte_code"]),
             source=data.get("source"),
             builder=data.get("builder")
         )
@@ -249,7 +249,6 @@ class MsgExecuteContract(Msg):
 
         return MsgExecuteContract_pb(
             sender=address_to_bytes(self.sender),
-            sender_address=self.sender,
             contract=address_to_bytes(self.contract),
             msg=self.msg_encrypted,
             sent_funds=self.sent_funds.to_proto(),

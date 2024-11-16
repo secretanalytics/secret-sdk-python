@@ -15,3 +15,16 @@ def get_value_from_raw_log(
                 if f'{e["type"]}.{a["key"]}' == key:
                     return str(a['value'])
     return ''
+
+def get_value_from_events(
+    events: str,
+    key: str,
+):
+    if not events:
+        return ''
+
+    for e in events:
+        for a in e['attributes']:
+            if f'{e["type"]}.{a["key"]}' == key:
+                return str(a['value'])
+    return ''
