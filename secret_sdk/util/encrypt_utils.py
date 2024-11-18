@@ -54,8 +54,12 @@ def index_by_pub_key(m: Dict[str, Any], o: Any):
 
 
 class EncryptionUtils():
-    def __init__(self, consensus_io_pubkey: bytes):
-        self.seed = self.generate_new_seed()
+    def __init__(self, consensus_io_pubkey: bytes, encryption_seed: bytes = None):
+        if encryption_seed:
+            self.seed = encryption_seed
+        else:
+            self.seed = self.generate_new_seed()
+            
         self.privkey, self.pubkey = self.generate_new_key_pair_from_seed(self.seed)
         self.consensus_io_pubkey = consensus_io_pubkey
 
