@@ -77,6 +77,7 @@ class AsyncLCDClient:
         self,
         url: str,
         chain_id: Optional[str] = None,
+        encryption_seed: Optional[bytes] = None,
         gas_prices: Optional[Coins.Input] = default_gas_prices,
         gas_adjustment: Optional[Numeric.Input] = default_gas_adjustment,
         custom_fees: Optional[dict] = default_fees,
@@ -121,7 +122,7 @@ class AsyncLCDClient:
             consensus_io_pub_key = mainnetConsensusIoPubKey
         else:
             consensus_io_pub_key = RegistrationAPI(self).consensus_io_pub_key()
-        self.encrypt_utils = EncryptionUtils(consensus_io_pub_key)
+        self.encrypt_utils = EncryptionUtils(consensus_io_pub_key, encryption_seed)
 
     def wallet(self, key: Key) -> AsyncWallet:
         """Creates a :class:`AsyncWallet` object from a key.
@@ -273,6 +274,7 @@ class LCDClient(AsyncLCDClient):
         self,
         url: str,
         chain_id: str = None,
+        encryption_seed: Optional[bytes] = None,
         gas_prices: Optional[Coins.Input] = default_gas_prices,
         gas_adjustment: Optional[Numeric.Input] = default_gas_adjustment,
         custom_fees: Optional[dict] = default_fees,
@@ -282,6 +284,7 @@ class LCDClient(AsyncLCDClient):
         super().__init__(
             url,
             chain_id,
+            encryption_seed,
             gas_prices,
             gas_adjustment,
             custom_fees,
@@ -310,7 +313,7 @@ class LCDClient(AsyncLCDClient):
             consensus_io_pub_key = mainnetConsensusIoPubKey
         else:
             consensus_io_pub_key = self.registration.consensus_io_pub_key()
-        self.encrypt_utils = EncryptionUtils(consensus_io_pub_key)
+        self.encrypt_utils = EncryptionUtils(consensus_io_pub_key, encryption_seed)
 
     async def __aenter__(self):
         raise NotImplementedError(
