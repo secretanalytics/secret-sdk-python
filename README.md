@@ -81,8 +81,8 @@ Following examples are provided to help get building started.
 In order to interact with the Secret blockchain, you'll need a connection to a Secret node or an api. This can be done through setting up an LCDClient (The LCDClient is an object representing an HTTP connection to a Secret LCD node.):
 
 ```
->>> from secret_sdk.client.lcd import LCDClient
->>> secret = LCDClient(chain_id="secret-4", url=node_rest_endpoint)
+from secret_sdk.client.lcd import LCDClient
+secret = LCDClient(chain_id="secret-4", url=node_rest_endpoint)
 ```
 
 ## Getting Blockchain Information
@@ -91,7 +91,7 @@ Once properly configured, the `LCDClient` instance will allow you to interact wi
 
 
 ```
->>> secret.tendermint.block_info()['block']['header']['height']
+secret.tendermint.block_info()['block']['header']['height']
 ```
 
 `'1687543'`
@@ -103,50 +103,50 @@ If you want to make asynchronous, non-blocking LCD requests, you can use AsyncLC
 
 
 <pre><code>
->>> import asyncio 
->>> from secret_sdk.client.lcd import AsyncLCDClient
+import asyncio 
+from secret_sdk.client.lcd import AsyncLCDClient
 
->>> async def main():
+async def main():
         <strong>async with AsyncLCDClient(url=node_rest_endpoint, chain_id="secret-4") as secret:</strong>
             community_pool = await secret.distribution.community_pool()
             print(community_pool)
             <strong>await secret.session.close()  # you must close the session</strong>
 
->>> asyncio.get_event_loop().run_until_complete(main())
+asyncio.get_event_loop().run_until_complete(main())
 </code></pre>
 
 You can improve the efficiency of consecutive queries by making them asynchronous.
 
 <pre><code>
->>> import asyncio
->>> import uvloop
+import asyncio
+import uvloop
 
->>> from secret_sdk.client.lcd import AsyncLCDClient
->>> from secret_sdk.exceptions import LCDResponseError
+from secret_sdk.client.lcd import AsyncLCDClient
+from secret_sdk.exceptions import LCDResponseError
 
->>> def owner_of(token_id):
+def owner_of(token_id):
         return {
                 "owner_of": {
                     "token_id": token_id,
                 }
             }
 
->>> async def query_owner(secret, contract_address, token_id, query):
+async def query_owner(secret, contract_address, token_id, query):
         try:
             msg = await secret.wasm.contract_query(contract_address, query)
             return (token_id, msg["owner_of"]["owner"])
         except LCDResponseError:
             return (token_id, "")
 
->>> async def query_collection(contract_address, token_ids):
+async def query_collection(contract_address, token_ids):
         <strong>async with AsyncLCDClient(chain_id="secret-4", url=node_rest_endpoint) as secret: </strong>
             requests = [query_owner(secret, contract_address, token, owner_of(token)) for token in token_ids]
             <strong>owners = await asyncio.gather(*requests, return_exceptions=True)</strong>
             print(owners)
             <strong>await secret.session.close() # you must close the session </strong>
 
->>> uvloop.install()
->>> if __name__ == '__main__':
+uvloop.install()
+if __name__ == '__main__':
         asyncio.run(query_collection(contract_address, token_ids))
 </code></pre>
 
@@ -163,38 +163,38 @@ Use `LCDClient.wallet()` to create a Wallet from any Key instance. The Key provi
 
 
 ```
->>> from secret_sdk.client.lcd import LCDClient
->>> from secret_sdk.key.mnemonic import MnemonicKey
+from secret_sdk.client.lcd import LCDClient
+from secret_sdk.key.mnemonic import MnemonicKey
 
->>> mk = MnemonicKey(mnemonic=MNEMONIC) 
->>> secret = LCDClient(node_rest_endpoint, "secret-4")
->>> wallet = secret.wallet(mk)
+mk = MnemonicKey(mnemonic=MNEMONIC) 
+secret = LCDClient(node_rest_endpoint, "secret-4")
+wallet = secret.wallet(mk)
 ```
 
 Once you have your Wallet, you can create a StdTx using `Wallet.create_and_sign_tx` then broadcast it to the network with `secret.tx.broadcast` with your broadcast mode of choice (block, sync, async - see cosmos docs).
 
 ```
->>> from secret_sdk.core.auth import StdFee
->>> from secret_sdk.core.bank import MsgSend
+from secret_sdk.core import StdFee
+from secret_sdk.core.bank import MsgSend
 
->>> send_msg = MsgSend(
+send_msg = MsgSend(
             wallet.key.acc_address,
             RECIPIENT,
             "1000000uscrt"    # send 1 scrt
         )
->>> tx = wallet.create_and_sign_tx(
+tx = wallet.create_and_sign_tx(
         msgs=[send_msg],
         memo="My first transaction!",
         fee=StdFee(200000, "120000uscrt")
     )
->>> result = secret.tx.broadcast(tx)
->>> print(result)
+result = secret.tx.broadcast(tx)
+print(result)
 ```
 
 Or use the abstraction `wallet.send_tokens` (see `wallet.execute_tx` to execute a smart contract with `handle_msg`).
 
 ```
->>> tx = wallet.send_tokens(recipient_addr=RECIPIENT, transfer_amount="1000000uscrt")
+tx = wallet.send_tokens(recipient_addr=RECIPIENT, transfer_amount="1000000uscrt")
 ```
 
 ### Batch Transactions
